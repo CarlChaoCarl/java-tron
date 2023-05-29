@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.IntStream;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -208,18 +209,62 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   private static final byte[] ALLOW_TVM_SHANGHAI = "ALLOW_TVM_SHANGHAI".getBytes();
 
+  @Getter
+  @Setter
+  private volatile boolean reloadGlobalFlag = true;
+
+  private long unfreezeDelay = 0L;
+  private long allowCreationOfContracts = 0L;
+  private long allowTransactionFeePool = 0L;
+  private long allowTvmConstantinople = 0L;
+  private long allowSameTokenName = 0L;
+  private long allowBlackHoleOptimization = 0L;
+  private long freeNetLimit = 0L;
+  private long allowTvmCompatibleEvm = 0L;
+  private long allowTvmFreeze = 0L;
+  private long allowNewReward = 0L;
+  private long publicNetLimit = 0L;
+  private long forbidTransferToContract = 0L;
+  private long allowProtoFilterNum = 0L;
+  private long energyFee = 0L;
+  private long allowAssetOptimization = 0L;
+  private long allowAdaptiveEnergy = 0L;
+  private long maintenanceTimeInterval = 0L;
+  private int totalSignNum = 0;
+  private long allowMultiSign = 0L;
+  private long allowTvmSolidity059 = 0L;
+  private long dynamicEnergyMaxFactor = 0L;
+  private long allowTvmVote = 0L;
+  private long dynamicEnergyThreshold = 0L;
+  private long maxFeeLimit = 0L;
+  private long allowOptimizedReturnValueOfChainId = 0L;
+  private long maxCpuTimeOfOneTx = 0L;
+  private long allowHigherLimitForMaxCpuTimeOfOneTx = 0L;
+  private long allowTvmTransferTrc10 = 0L;
+  private long allowShieldedTRC20Transaction = 0L;
+  private long dynamicEnergyIncreaseFactor = 0L;
+  private long allowTvmIstanbul = 0L;
+  private long allowDynamicEnergy = 0L;
+  private long allowTvmLondon = 0L;
+  private long transactionFee = 0L;
+
   @Autowired
   private DynamicPropertiesStore(@Value("properties") String dbName) {
     super(dbName);
 
+    this.initializeProperties();
+    this.setReloadGlobalFlag(false);
+  }
+
+  private void initializeProperties() {
     try {
-      this.getTotalSignNum();
+      this.reloadTotalSignNumFromDB();
     } catch (IllegalArgumentException e) {
       this.saveTotalSignNum(5);
     }
 
     try {
-      this.getAllowMultiSign();
+      this.reloadAllowMultiSignFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowMultiSign(CommonParameter.getInstance()
           .getAllowMultiSign());
@@ -340,7 +385,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getMaintenanceTimeInterval();
+      this.reloadMaintenanceTimeIntervalFromDB();
     } catch (IllegalArgumentException e) {
       this.saveMaintenanceTimeInterval(CommonParameter.getInstance()
           .getMaintenanceTimeInterval()); // 6 hours
@@ -365,7 +410,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getPublicNetLimit();
+      this.reloadPublicNetLimitFromDB();
     } catch (IllegalArgumentException e) {
       this.savePublicNetLimit(14_400_000_000L);
     }
@@ -377,7 +422,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getFreeNetLimit();
+      this.reloadFreeNetLimitFromDB();
     } catch (IllegalArgumentException e) {
       this.saveFreeNetLimit(5000L);
     }
@@ -407,7 +452,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getAllowAdaptiveEnergy();
+      this.reloadAllowAdaptiveEnergyFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowAdaptiveEnergy(CommonParameter.getInstance()
           .getAllowAdaptiveEnergy());
@@ -426,13 +471,13 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getEnergyFee();
+      this.reloadEnergyFeeFromDB();
     } catch (IllegalArgumentException e) {
       this.saveEnergyFee(DEFAULT_ENERGY_FEE); // 100 sun per energy
     }
 
     try {
-      this.getMaxCpuTimeOfOneTx();
+      this.reloadMaxCpuTimeOfOneTxFromDB();
     } catch (IllegalArgumentException e) {
       this.saveMaxCpuTimeOfOneTx(50L);
     }
@@ -474,7 +519,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getTransactionFee();
+      this.reloadTransactionFeeFromDB();
     } catch (IllegalArgumentException e) {
       this.saveTransactionFee(DEFAULT_TRANSACTION_FEE); // 10sun/byte
     }
@@ -534,7 +579,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getAllowTransactionFeePool();
+      this.reloadAllowTransactionFeePoolFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowTransactionFeePool(CommonParameter.getInstance().getAllowTransactionFeePool());
     }
@@ -601,28 +646,28 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getAllowTvmTransferTrc10();
+      this.reloadAllowTvmTransferTrc10FromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowTvmTransferTrc10(CommonParameter.getInstance()
           .getAllowTvmTransferTrc10());
     }
 
     try {
-      this.getAllowTvmConstantinople();
+      this.reloadAllowTvmConstantinopleFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowTvmConstantinople(CommonParameter.getInstance()
           .getAllowTvmConstantinople());
     }
 
     try {
-      this.getAllowTvmSolidity059();
+      this.reloadAllowTvmSolidity059FromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowTvmSolidity059(CommonParameter.getInstance()
           .getAllowTvmSolidity059());
     }
 
     try {
-      this.getForbidTransferToContract();
+      this.reloadForbidTransferToContractFromDB();
     } catch (IllegalArgumentException e) {
       this.saveForbidTransferToContract(CommonParameter.getInstance()
           .getForbidTransferToContract());
@@ -645,7 +690,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getAllowSameTokenName();
+      this.reloadAllowSameTokenNameFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowSameTokenName(CommonParameter.getInstance()
           .getAllowSameTokenName());
@@ -658,7 +703,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getAllowCreationOfContracts();
+      this.reloadAllowCreationOfContractsFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowCreationOfContracts(CommonParameter.getInstance()
           .getAllowCreationOfContracts());
@@ -671,14 +716,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getAllowShieldedTRC20Transaction();
+      this.reloadAllowShieldedTRC20TransactionFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowShieldedTRC20Transaction(
           CommonParameter.getInstance().getAllowShieldedTRC20Transaction());
     }
 
     try {
-      this.getAllowTvmIstanbul();
+      this.reloadAllowTvmIstanbulFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowTvmIstanbul(
           CommonParameter.getInstance().getAllowTvmIstanbul());
@@ -744,7 +789,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getAllowProtoFilterNum();
+      this.reloadAllowProtoFilterNumFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowProtoFilterNum(CommonParameter.getInstance()
           .getAllowProtoFilterNum());
@@ -764,7 +809,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getMaxFeeLimit();
+      this.reloadMaxFeeLimitFromDB();
     } catch (IllegalArgumentException e) {
       this.saveMaxFeeLimit(1_000_000_000L);
     }
@@ -776,7 +821,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getAllowBlackHoleOptimization();
+      this.reloadAllowBlackHoleOptimizationFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowBlackHoleOptimization(
           CommonParameter.getInstance().getAllowBlackHoleOptimization());
@@ -789,13 +834,13 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getAllowTvmFreeze();
+      this.reloadAllowTvmFreezeFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowTvmFreeze(CommonParameter.getInstance().getAllowTvmFreeze());
     }
 
     try {
-      this.getAllowTvmVote();
+      this.reloadAllowTvmVoteFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowTvmVote(CommonParameter.getInstance().getAllowTvmVote());
       if (CommonParameter.getInstance().getAllowTvmVote() == 1) {
@@ -805,19 +850,19 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getAllowTvmLondon();
+      this.reloadAllowTvmLondonFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowTvmLondon(CommonParameter.getInstance().getAllowTvmLondon());
     }
 
     try {
-      this.getAllowTvmCompatibleEvm();
+      this.reloadAllowTvmCompatibleEvmFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowTvmCompatibleEvm(CommonParameter.getInstance().getAllowTvmCompatibleEvm());
     }
 
     try {
-      this.getAllowAssetOptimization();
+      this.reloadAllowAssetOptimizationFromDB();
     } catch (IllegalArgumentException e) {
       this.setAllowAssetOptimization(CommonParameter
           .getInstance().getAllowAssetOptimization());
@@ -861,7 +906,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getAllowHigherLimitForMaxCpuTimeOfOneTx();
+      this.reloadAllowHigherLimitForMaxCpuTimeOfOneTxFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowHigherLimitForMaxCpuTimeOfOneTx(
           CommonParameter.getInstance().getAllowHigherLimitForMaxCpuTimeOfOneTx());
@@ -880,12 +925,12 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getAllowNewReward();
+      this.reloadAllowNewRewardFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowNewReward(CommonParameter.getInstance().getAllowNewReward());
       if (CommonParameter.getInstance().getAllowNewReward() == 1) {
         this.put(NEW_REWARD_ALGORITHM_EFFECTIVE_CYCLE,
-                new BytesCapsule(ByteArray.fromLong(getCurrentCycleNumber())));
+            new BytesCapsule(ByteArray.fromLong(getCurrentCycleNumber())));
       }
     }
 
@@ -905,7 +950,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getUnfreezeDelayDays();
+      this.reloadUnfreezeDelayDaysFromDB();
     } catch (IllegalArgumentException e) {
       this.saveUnfreezeDelayDays(
           CommonParameter.getInstance().getUnfreezeDelayDays()
@@ -913,7 +958,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getAllowOptimizedReturnValueOfChainId();
+      this.reloadAllowOptimizedReturnValueOfChainIdFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowOptimizedReturnValueOfChainId(
           CommonParameter.getInstance().getAllowOptimizedReturnValueOfChainId()
@@ -921,29 +966,30 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     }
 
     try {
-      this.getAllowDynamicEnergy();
+      this.reloadAllowDynamicEnergyFromDB();
     } catch (IllegalArgumentException e) {
       this.saveAllowDynamicEnergy(CommonParameter.getInstance().getAllowDynamicEnergy());
     }
 
     try {
-      this.getDynamicEnergyThreshold();
+      this.reloadDynamicEnergyThresholdFromDB();
     } catch (IllegalArgumentException e) {
       this.saveDynamicEnergyThreshold(CommonParameter.getInstance().getDynamicEnergyThreshold());
     }
 
     try {
-      this.getDynamicEnergyIncreaseFactor();
+      this.reloadDynamicEnergyIncreaseFactorFromDB();
     } catch (IllegalArgumentException e) {
       this.saveDynamicEnergyIncreaseFactor(CommonParameter.getInstance().getDynamicEnergyIncreaseFactor());
     }
 
     try {
-      this.getDynamicEnergyMaxFactor();
+      this.reloadDynamicEnergyMaxFactorFromDB();
     } catch (IllegalArgumentException e) {
       this.saveDynamicEnergyMaxFactor(CommonParameter.getInstance().getDynamicEnergyMaxFactor());
     }
   }
+
 
   public String intArrayToString(int[] a) {
     StringBuilder sb = new StringBuilder();
@@ -1103,14 +1149,25 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     logger.debug("MAINTENANCE_TIME_INTERVAL:" + timeInterval);
     this.put(MAINTENANCE_TIME_INTERVAL,
         new BytesCapsule(ByteArray.fromLong(timeInterval)));
+    this.maintenanceTimeInterval = timeInterval;
   }
 
   public long getMaintenanceTimeInterval() {
-    return Optional.ofNullable(getUnchecked(MAINTENANCE_TIME_INTERVAL))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.maintenanceTimeInterval;
+  }
+
+  public long reloadMaintenanceTimeIntervalFromDB() {
+    maintenanceTimeInterval = Optional.ofNullable(getUnchecked(MAINTENANCE_TIME_INTERVAL))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found MAINTENANCE_TIME_INTERVAL"));
+    return maintenanceTimeInterval;
   }
 
   public void saveAccountUpgradeCost(long accountUpgradeCost) {
@@ -1197,14 +1254,25 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void savePublicNetLimit(long publicNetLimit) {
     this.put(DynamicResourceProperties.PUBLIC_NET_LIMIT,
         new BytesCapsule(ByteArray.fromLong(publicNetLimit)));
+    this.publicNetLimit = publicNetLimit;
   }
 
   public long getPublicNetLimit() {
-    return Optional.ofNullable(getUnchecked(DynamicResourceProperties.PUBLIC_NET_LIMIT))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.publicNetLimit;
+  }
+
+  public long reloadPublicNetLimitFromDB() {
+    publicNetLimit = Optional.ofNullable(getUnchecked(DynamicResourceProperties.PUBLIC_NET_LIMIT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found PUBLIC_NET_LIMIT"));
+    return publicNetLimit;
   }
 
   public void savePublicNetTime(long publicNetTime) {
@@ -1223,14 +1291,25 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveFreeNetLimit(long freeNetLimit) {
     this.put(DynamicResourceProperties.FREE_NET_LIMIT,
         new BytesCapsule(ByteArray.fromLong(freeNetLimit)));
+    this.freeNetLimit = freeNetLimit;
   }
 
   public long getFreeNetLimit() {
-    return Optional.ofNullable(getUnchecked(DynamicResourceProperties.FREE_NET_LIMIT))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.freeNetLimit;
+  }
+
+  public long reloadFreeNetLimitFromDB() {
+    freeNetLimit =  Optional.ofNullable(getUnchecked(DynamicResourceProperties.FREE_NET_LIMIT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found FREE_NET_LIMIT"));
+    return freeNetLimit;
   }
 
   public void saveTotalNetWeight(long totalNetWeight) {
@@ -1409,27 +1488,49 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveEnergyFee(long totalEnergyFee) {
     this.put(ENERGY_FEE,
         new BytesCapsule(ByteArray.fromLong(totalEnergyFee)));
+    this.energyFee = totalEnergyFee;
   }
 
   public long getEnergyFee() {
-    return Optional.ofNullable(getUnchecked(ENERGY_FEE))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.energyFee;
+  }
+
+  public long reloadEnergyFeeFromDB() {
+    energyFee = Optional.ofNullable(getUnchecked(ENERGY_FEE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found ENERGY_FEE"));
+    return energyFee;
   }
 
   public void saveMaxCpuTimeOfOneTx(long time) {
     this.put(MAX_CPU_TIME_OF_ONE_TX,
         new BytesCapsule(ByteArray.fromLong(time)));
+    this.maxCpuTimeOfOneTx = time;
   }
 
   public long getMaxCpuTimeOfOneTx() {
-    return Optional.ofNullable(getUnchecked(MAX_CPU_TIME_OF_ONE_TX))
+    if (reloadGlobalFlag) {
+      //reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.maxCpuTimeOfOneTx;
+  }
+
+  public long reloadMaxCpuTimeOfOneTxFromDB() {
+    maxCpuTimeOfOneTx = Optional.ofNullable(getUnchecked(MAX_CPU_TIME_OF_ONE_TX))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found MAX_CPU_TIME_OF_ONE_TX"));
+    return maxCpuTimeOfOneTx;
   }
 
   public void saveCreateAccountFee(long fee) {
@@ -1516,14 +1617,25 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveTransactionFee(long fee) {
     this.put(TRANSACTION_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
+    this.transactionFee = fee;
   }
 
   public long getTransactionFee() {
-    return Optional.ofNullable(getUnchecked(TRANSACTION_FEE))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.transactionFee;
+  }
+
+  public long reloadTransactionFeeFromDB() {
+    transactionFee = Optional.ofNullable(getUnchecked(TRANSACTION_FEE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found TRANSACTION_FEE"));
+    return transactionFee;
   }
 
   public void saveAssetIssueFee(long fee) {
@@ -1655,14 +1767,25 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowTransactionFeePool(long value) {
     this.put(ALLOW_TRANSACTION_FEE_POOL,
         new BytesCapsule(ByteArray.fromLong(value)));
+    this.allowTransactionFeePool = value;
   }
 
   public long getAllowTransactionFeePool() {
-    return Optional.ofNullable(getUnchecked(ALLOW_TRANSACTION_FEE_POOL))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowTransactionFeePool;
+  }
+
+  public long reloadAllowTransactionFeePoolFromDB() {
+    this.allowTransactionFeePool = Optional.ofNullable(getUnchecked(ALLOW_TRANSACTION_FEE_POOL))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found ALLOW_TRANSACTION_FEE_POOL"));
+    return this.allowTransactionFeePool;
   }
 
   public void addTransactionFeePool(long amount) {
@@ -1806,64 +1929,119 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowAdaptiveEnergy(long value) {
     this.put(ALLOW_ADAPTIVE_ENERGY,
         new BytesCapsule(ByteArray.fromLong(value)));
+    this.allowAdaptiveEnergy = value;
   }
 
   public long getAllowAdaptiveEnergy() {
-    return Optional.ofNullable(getUnchecked(ALLOW_ADAPTIVE_ENERGY))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowAdaptiveEnergy;
+  }
+
+  public long reloadAllowAdaptiveEnergyFromDB() {
+    allowAdaptiveEnergy = Optional.ofNullable(getUnchecked(ALLOW_ADAPTIVE_ENERGY))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found ALLOW_ADAPTIVE_ENERGY"));
+    return allowAdaptiveEnergy;
   }
 
   public void saveAllowTvmTransferTrc10(long value) {
     this.put(ALLOW_TVM_TRANSFER_TRC10,
         new BytesCapsule(ByteArray.fromLong(value)));
+    this.allowTvmTransferTrc10 = value;
   }
 
   public long getAllowTvmTransferTrc10() {
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_TRANSFER_TRC10))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowTvmTransferTrc10;
+  }
+
+  public long reloadAllowTvmTransferTrc10FromDB() {
+    allowTvmTransferTrc10 = Optional.ofNullable(getUnchecked(ALLOW_TVM_TRANSFER_TRC10))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found ALLOW_TVM_TRANSFER_TRC10"));
+    return allowTvmTransferTrc10;
   }
 
   public void saveAllowTvmConstantinople(long value) {
     this.put(ALLOW_TVM_CONSTANTINOPLE,
         new BytesCapsule(ByteArray.fromLong(value)));
+    allowTvmConstantinople = value;
   }
 
   public long getAllowTvmConstantinople() {
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_CONSTANTINOPLE))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return allowTvmConstantinople;
+  }
+
+  public long reloadAllowTvmConstantinopleFromDB() {
+    allowTvmConstantinople = Optional.ofNullable(getUnchecked(ALLOW_TVM_CONSTANTINOPLE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found ALLOW_TVM_CONSTANTINOPLE"));
+    return allowTvmConstantinople;
   }
 
   public void saveAllowTvmSolidity059(long value) {
     this.put(ALLOW_TVM_SOLIDITY_059,
         new BytesCapsule(ByteArray.fromLong(value)));
+    this.allowTvmSolidity059 = value;
   }
 
   public long getAllowTvmSolidity059() {
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_SOLIDITY_059))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowTvmSolidity059;
+  }
+
+  public long reloadAllowTvmSolidity059FromDB() {
+    allowTvmSolidity059 =  Optional.ofNullable(getUnchecked(ALLOW_TVM_SOLIDITY_059))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(() -> new IllegalArgumentException("not found ALLOW_TVM_SOLIDITY_059"));
+    return allowTvmSolidity059;
   }
 
   public void saveForbidTransferToContract(long value) {
     this.put(FORBID_TRANSFER_TO_CONTRACT,
         new BytesCapsule(ByteArray.fromLong(value)));
+    this.forbidTransferToContract = value;
   }
 
   public long getForbidTransferToContract() {
-    return Optional.ofNullable(getUnchecked(FORBID_TRANSFER_TO_CONTRACT))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.forbidTransferToContract;
+  }
+
+  public long reloadForbidTransferToContractFromDB() {
+    forbidTransferToContract = Optional.ofNullable(getUnchecked(FORBID_TRANSFER_TO_CONTRACT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(() -> new IllegalArgumentException("not found FORBID_TRANSFER_TO_CONTRACT"));
+    return forbidTransferToContract;
   }
 
   public void saveAvailableContractType(byte[] value) {
@@ -1929,53 +2107,97 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowSameTokenName(long rate) {
     this.put(ALLOW_SAME_TOKEN_NAME,
         new BytesCapsule(ByteArray.fromLong(rate)));
+    allowSameTokenName = rate;
   }
 
   public long getAllowSameTokenName() {
-    return Optional.ofNullable(getUnchecked(ALLOW_SAME_TOKEN_NAME))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return allowSameTokenName;
+  }
+
+  public long reloadAllowSameTokenNameFromDB() {
+    allowSameTokenName = Optional.ofNullable(getUnchecked(ALLOW_SAME_TOKEN_NAME))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found ALLOW_SAME_TOKEN_NAME"));
+    return allowSameTokenName;
   }
 
   public void saveAllowCreationOfContracts(long allowCreationOfContracts) {
     this.put(ALLOW_CREATION_OF_CONTRACTS,
         new BytesCapsule(ByteArray.fromLong(allowCreationOfContracts)));
+    this.allowCreationOfContracts = allowCreationOfContracts;
   }
 
   public void saveTotalSignNum(int num) {
     this.put(DynamicPropertiesStore.TOTAL_SIGN_NUM,
         new BytesCapsule(ByteArray.fromInt(num)));
+    this.totalSignNum = num;
   }
 
   public int getTotalSignNum() {
-    return Optional.ofNullable(getUnchecked(TOTAL_SIGN_NUM))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.totalSignNum;
+  }
+
+  private int reloadTotalSignNumFromDB() {
+    this.totalSignNum = Optional.ofNullable(getUnchecked(TOTAL_SIGN_NUM))
         .map(BytesCapsule::getData)
         .map(ByteArray::toInt)
         .orElseThrow(
             () -> new IllegalArgumentException("not found TOTAL_SIGN_NUM"));
+    return this.totalSignNum;
   }
 
   public void saveAllowMultiSign(long allowMultiSing) {
     this.put(ALLOW_MULTI_SIGN,
         new BytesCapsule(ByteArray.fromLong(allowMultiSing)));
+    this.allowMultiSign = allowMultiSing;
   }
 
   public long getAllowMultiSign() {
-    return Optional.ofNullable(getUnchecked(ALLOW_MULTI_SIGN))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowMultiSign;
+  }
+
+  private long reloadAllowMultiSignFromDB() {
+    this.allowMultiSign = Optional.ofNullable(getUnchecked(ALLOW_MULTI_SIGN))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found ALLOW_MULTI_SIGN"));
+    return this.allowMultiSign;
   }
 
   public long getAllowCreationOfContracts() {
-    return Optional.ofNullable(getUnchecked(ALLOW_CREATION_OF_CONTRACTS))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowCreationOfContracts;
+ }
+
+  public long reloadAllowCreationOfContractsFromDB() {
+    this.allowCreationOfContracts =  Optional.ofNullable(getUnchecked(ALLOW_CREATION_OF_CONTRACTS))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found ALLOW_CREATION_OF_CONTRACTS"));
+    return this.allowCreationOfContracts;
   }
 
   public boolean supportVM() {
@@ -1999,29 +2221,52 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowShieldedTRC20Transaction(long allowShieldedTRC20Transaction) {
     this.put(DynamicPropertiesStore.ALLOW_SHIELDED_TRC20_TRANSACTION,
         new BytesCapsule(ByteArray.fromLong(allowShieldedTRC20Transaction)));
+    this.allowShieldedTRC20Transaction = allowShieldedTRC20Transaction;
   }
 
   public long getAllowShieldedTRC20Transaction() {
+    if (reloadGlobalFlag) {
+      //reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowShieldedTRC20Transaction;
+  }
+
+  public long reloadAllowShieldedTRC20TransactionFromDB() {
     String msg = "not found ALLOW_SHIELDED_TRC20_TRANSACTION";
-    return Optional.ofNullable(getUnchecked(ALLOW_SHIELDED_TRC20_TRANSACTION))
+    allowShieldedTRC20Transaction =
+        Optional.ofNullable(getUnchecked(ALLOW_SHIELDED_TRC20_TRANSACTION))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException(msg));
+    return allowShieldedTRC20Transaction;
   }
 
   public void saveAllowTvmIstanbul(long allowTVMIstanbul) {
     this.put(DynamicPropertiesStore.ALLOW_TVM_ISTANBUL,
         new BytesCapsule(ByteArray.fromLong(allowTVMIstanbul)));
+    this.allowTvmIstanbul = allowTVMIstanbul;
   }
 
   public long getAllowTvmIstanbul() {
+    if (reloadGlobalFlag) {
+      //reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowTvmIstanbul;
+  }
+
+  public long reloadAllowTvmIstanbulFromDB() {
     String msg = "not found ALLOW_TVM_ISTANBUL";
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_ISTANBUL))
+    allowTvmIstanbul = Optional.ofNullable(getUnchecked(ALLOW_TVM_ISTANBUL))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException(msg));
+    return allowTvmIstanbul;
   }
 
   public boolean supportShieldedTransaction() {
@@ -2076,6 +2321,8 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
         .orElseThrow(
             () -> new IllegalArgumentException("not found latest SOLIDIFIED_BLOCK_NUM"));
   }
+
+
 
   public void saveLatestProposalNum(long number) {
     this.put(LATEST_PROPOSAL_NUM, new BytesCapsule(ByteArray.fromLong(number)));
@@ -2142,6 +2389,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
         .map(ByteArray::toInt)
         .orElseThrow(() -> new IllegalArgumentException("not found maintenance flag"));
   }
+
 
   /**
    * get id of global latest block.
@@ -2286,10 +2534,20 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
    * get allow protobuf number.
    */
   public long getAllowProtoFilterNum() {
-    return Optional.ofNullable(getUnchecked(ALLOW_PROTO_FILTER_NUM))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowProtoFilterNum;
+  }
+
+  public long reloadAllowProtoFilterNumFromDB() {
+    allowProtoFilterNum = Optional.ofNullable(getUnchecked(ALLOW_PROTO_FILTER_NUM))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(() -> new IllegalArgumentException("not found allow protobuf number"));
+    return allowProtoFilterNum;
   }
 
   /**
@@ -2298,6 +2556,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowProtoFilterNum(long num) {
     logger.info("Update allow protobuf number = {}.", num);
     this.put(ALLOW_PROTO_FILTER_NUM, new BytesCapsule(ByteArray.fromLong(num)));
+    this.allowProtoFilterNum = num;
   }
 
   public void saveAllowAccountStateRoot(long allowAccountStateRoot) {
@@ -2361,16 +2620,27 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getMaxFeeLimit() {
-    return Optional.ofNullable(getUnchecked(MAX_FEE_LIMIT))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.maxFeeLimit;
+  }
+
+  public long reloadMaxFeeLimitFromDB() {
+    maxFeeLimit = Optional.ofNullable(getUnchecked(MAX_FEE_LIMIT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found MAX_FEE_LIMIT"));
+    return maxFeeLimit;
   }
 
   public void saveMaxFeeLimit(long maxFeeLimit) {
     this.put(MAX_FEE_LIMIT,
         new BytesCapsule(ByteArray.fromLong(maxFeeLimit)));
+    this.maxFeeLimit = maxFeeLimit;
   }
 
   public long getBurnTrxAmount() {
@@ -2398,14 +2668,25 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveAllowBlackHoleOptimization(long value) {
     this.put(ALLOW_BLACKHOLE_OPTIMIZATION, new BytesCapsule(ByteArray.fromLong(value)));
+    allowBlackHoleOptimization = value;
   }
 
   public long getAllowBlackHoleOptimization() {
-    return Optional.ofNullable(getUnchecked(ALLOW_BLACKHOLE_OPTIMIZATION))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return allowBlackHoleOptimization;
+  }
+
+  public long reloadAllowBlackHoleOptimizationFromDB() {
+    allowBlackHoleOptimization = Optional.ofNullable(getUnchecked(ALLOW_BLACKHOLE_OPTIMIZATION))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found ALLOW_BLACKHOLE_OPTIMIZATION"));
+    return allowBlackHoleOptimization;
   }
 
   public boolean supportAllowNewResourceModel() {
@@ -2435,57 +2716,101 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowTvmFreeze(long allowTvmFreeze) {
     this.put(DynamicPropertiesStore.ALLOW_TVM_FREEZE,
         new BytesCapsule(ByteArray.fromLong(allowTvmFreeze)));
+    this.allowTvmFreeze = allowTvmFreeze;
   }
 
   public long getAllowTvmFreeze() {
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowTvmFreeze;
+  }
+
+  public long reloadAllowTvmFreezeFromDB() {
     String msg = "not found ALLOW_TVM_FREEZE";
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_FREEZE))
+    allowTvmFreeze = Optional.ofNullable(getUnchecked(ALLOW_TVM_FREEZE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException(msg));
+    return allowTvmFreeze;
   }
 
   public void saveAllowTvmVote(long allowTvmVote) {
     this.put(DynamicPropertiesStore.ALLOW_TVM_VOTE,
         new BytesCapsule(ByteArray.fromLong(allowTvmVote)));
+    this.allowTvmVote = allowTvmVote;
   }
 
   public long getAllowTvmVote() {
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowTvmVote;
+  }
+
+  public long reloadAllowTvmVoteFromDB() {
     String msg = "not found ALLOW_TVM_VOTE";
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_VOTE))
+    allowTvmVote = Optional.ofNullable(getUnchecked(ALLOW_TVM_VOTE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException(msg));
+    return allowTvmVote;
   }
 
   public void saveAllowTvmLondon(long allowTvmLondon) {
     this.put(DynamicPropertiesStore.ALLOW_TVM_LONDON,
         new BytesCapsule(ByteArray.fromLong(allowTvmLondon)));
+    this.allowTvmLondon = allowTvmLondon;
   }
 
   public long getAllowTvmLondon() {
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowTvmLondon;
+  }
+
+  public long reloadAllowTvmLondonFromDB() {
     String msg = "not found ALLOW_TVM_LONDON";
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_LONDON))
+    allowTvmLondon =  Optional.ofNullable(getUnchecked(ALLOW_TVM_LONDON))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException(msg));
+    return allowTvmLondon;
   }
 
   public void saveAllowTvmCompatibleEvm(long allowTvmCompatibleEvm) {
     this.put(DynamicPropertiesStore.ALLOW_TVM_COMPATIBLE_EVM,
         new BytesCapsule(ByteArray.fromLong(allowTvmCompatibleEvm)));
+    this.allowTvmCompatibleEvm = allowTvmCompatibleEvm;
   }
 
   public long getAllowTvmCompatibleEvm() {
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowTvmCompatibleEvm;
+  }
+
+  public long reloadAllowTvmCompatibleEvmFromDB() {
     String msg = "not found ALLOW_TVM_COMPATIBLE_EVM";
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_COMPATIBLE_EVM))
+    allowTvmCompatibleEvm = Optional.ofNullable(getUnchecked(ALLOW_TVM_COMPATIBLE_EVM))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException(msg));
+    return allowTvmCompatibleEvm;
   }
 
   public boolean useNewRewardAlgorithm() {
@@ -2536,15 +2861,26 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   // 1: enable
   public long getAllowAssetOptimization() {
-    return Optional.ofNullable(getUnchecked(ALLOW_ASSET_OPTIMIZATION))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowAssetOptimization;
+  }
+
+  public long reloadAllowAssetOptimizationFromDB() {
+    allowAssetOptimization = Optional.ofNullable(getUnchecked(ALLOW_ASSET_OPTIMIZATION))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found ALLOW_ASSET_OPTIMIZATION"));
+    return allowAssetOptimization;
   }
 
   public void setAllowAssetOptimization(long value) {
     this.put(ALLOW_ASSET_OPTIMIZATION, new BytesCapsule(ByteArray.fromLong(value)));
+    this.allowAssetOptimization = value;
   }
 
   // for energy price history
@@ -2612,15 +2948,27 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowHigherLimitForMaxCpuTimeOfOneTx(long value) {
     this.put(ALLOW_HIGHER_LIMIT_FOR_MAX_CPU_TIME_OF_ONE_TX,
         new BytesCapsule(ByteArray.fromLong(value)));
+    this.allowHigherLimitForMaxCpuTimeOfOneTx = value;
   }
 
   public long getAllowHigherLimitForMaxCpuTimeOfOneTx() {
+    if (reloadGlobalFlag) {
+      //reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowHigherLimitForMaxCpuTimeOfOneTx;
+  }
+
+  public long reloadAllowHigherLimitForMaxCpuTimeOfOneTxFromDB() {
     String msg = "not found ALLOW_HIGHER_LIMIT_FOR_MAX_CPU_TIME_OF_ONE_TX";
-    return Optional.ofNullable(getUnchecked(ALLOW_HIGHER_LIMIT_FOR_MAX_CPU_TIME_OF_ONE_TX))
+    allowHigherLimitForMaxCpuTimeOfOneTx =
+        Optional.ofNullable(getUnchecked(ALLOW_HIGHER_LIMIT_FOR_MAX_CPU_TIME_OF_ONE_TX))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException(msg));
+    return allowHigherLimitForMaxCpuTimeOfOneTx;
   }
 
   public long getMemoFee() {
@@ -2646,14 +2994,25 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getAllowNewReward() {
-    return Optional.ofNullable(getUnchecked(ALLOW_NEW_REWARD))
-            .map(BytesCapsule::getData)
-            .map(ByteArray::toLong)
-            .orElseThrow(() -> new IllegalArgumentException("not found AllowNewReward"));
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowNewReward;
+  }
+
+  public long reloadAllowNewRewardFromDB() {
+    allowNewReward = Optional.ofNullable(getUnchecked(ALLOW_NEW_REWARD))
+        .map(BytesCapsule::getData)
+        .map(ByteArray::toLong)
+        .orElseThrow(() -> new IllegalArgumentException("not found AllowNewReward"));
+    return allowNewReward;
   }
 
   public void saveAllowNewReward(long newReward) {
     this.put(ALLOW_NEW_REWARD, new BytesCapsule(ByteArray.fromLong(newReward)));
+    this.allowNewReward = newReward;
   }
 
   public long getAllowDelegateOptimization() {
@@ -2673,11 +3032,21 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getAllowDynamicEnergy() {
-    return Optional.ofNullable(getUnchecked(ALLOW_DYNAMIC_ENERGY))
+    if (reloadGlobalFlag) {
+      //reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.allowDynamicEnergy;
+  }
+
+  public long reloadAllowDynamicEnergyFromDB() {
+    allowDynamicEnergy = Optional.ofNullable(getUnchecked(ALLOW_DYNAMIC_ENERGY))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found ALLOW_DYNAMIC_ENERGY"));
+    return allowDynamicEnergy;
   }
 
   public boolean supportAllowDynamicEnergy() {
@@ -2686,42 +3055,79 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveAllowDynamicEnergy(long value) {
     this.put(ALLOW_DYNAMIC_ENERGY, new BytesCapsule(ByteArray.fromLong(value)));
+    this.allowDynamicEnergy = value;
   }
 
   public long getDynamicEnergyThreshold() {
-    return Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_THRESHOLD))
+    if (reloadGlobalFlag) {
+      //reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.dynamicEnergyThreshold;
+  }
+
+  public long reloadDynamicEnergyThresholdFromDB() {
+    dynamicEnergyThreshold = Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_THRESHOLD))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found DYNAMIC_ENERGY_THRESHOLD"));
+    return dynamicEnergyThreshold;
   }
+
 
   public void saveDynamicEnergyThreshold(long value) {
     this.put(DYNAMIC_ENERGY_THRESHOLD, new BytesCapsule(ByteArray.fromLong(value)));
+    this.dynamicEnergyThreshold = value;
   }
 
   public long getDynamicEnergyIncreaseFactor() {
-    return Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_INCREASE_FACTOR))
+    if (reloadGlobalFlag) {
+      //reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.dynamicEnergyIncreaseFactor;
+  }
+
+  public long reloadDynamicEnergyIncreaseFactorFromDB() {
+    dynamicEnergyIncreaseFactor =
+        Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_INCREASE_FACTOR))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found DYNAMIC_ENERGY_INCREASE_FACTOR"));
+    return dynamicEnergyIncreaseFactor;
   }
+
 
   public void saveDynamicEnergyIncreaseFactor(long value) {
     this.put(DYNAMIC_ENERGY_INCREASE_FACTOR, new BytesCapsule(ByteArray.fromLong(value)));
+    this.dynamicEnergyIncreaseFactor = value;
   }
 
   public long getDynamicEnergyMaxFactor() {
-    return Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_MAX_FACTOR))
+    if (reloadGlobalFlag) {
+      // reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.dynamicEnergyMaxFactor;
+  }
+
+  public long reloadDynamicEnergyMaxFactorFromDB() {
+    dynamicEnergyMaxFactor = Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_MAX_FACTOR))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found DYNAMIC_ENERGY_MAX_FACTOR"));
+    return dynamicEnergyMaxFactor;
   }
 
   public void saveDynamicEnergyMaxFactor(long value) {
     this.put(DYNAMIC_ENERGY_MAX_FACTOR, new BytesCapsule(ByteArray.fromLong(value)));
+    this.dynamicEnergyMaxFactor = value;
   }
 
   public boolean allowNewReward() {
@@ -2729,10 +3135,19 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getUnfreezeDelayDays() {
-    return Optional.ofNullable(getUnchecked(UNFREEZE_DELAY_DAYS))
-            .map(BytesCapsule::getData)
-            .map(ByteArray::toLong)
-            .orElseThrow(() -> new IllegalArgumentException("not found UNFREEZE_DELAY_DAYS"));
+    if (reloadGlobalFlag) {
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return this.unfreezeDelay;
+  }
+
+  private long reloadUnfreezeDelayDaysFromDB() {
+    this.unfreezeDelay = Optional.ofNullable(getUnchecked(UNFREEZE_DELAY_DAYS))
+        .map(BytesCapsule::getData)
+        .map(ByteArray::toLong)
+        .orElseThrow(() -> new IllegalArgumentException("not found UNFREEZE_DELAY_DAYS"));
+    return this.unfreezeDelay;
   }
 
   public boolean supportUnfreezeDelay() {
@@ -2741,20 +3156,33 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveUnfreezeDelayDays(long value) {
     this.put(UNFREEZE_DELAY_DAYS, new BytesCapsule(ByteArray.fromLong(value)));
+    unfreezeDelay = value;
   }
 
   public void saveAllowOptimizedReturnValueOfChainId(long value) {
     this.put(ALLOW_OPTIMIZED_RETURN_VALUE_OF_CHAIN_ID,
         new BytesCapsule(ByteArray.fromLong(value)));
+    this.allowOptimizedReturnValueOfChainId = value;
   }
 
   public long getAllowOptimizedReturnValueOfChainId() {
+    if (reloadGlobalFlag) {
+      //reload all
+      this.initializeProperties();
+      this.setReloadGlobalFlag(false);
+    }
+    return allowOptimizedReturnValueOfChainId;
+  }
+
+  public long reloadAllowOptimizedReturnValueOfChainIdFromDB() {
     String msg = "not found ALLOW_OPTIMIZED_RETURN_VALUE_OF_CHAIN_ID";
-    return Optional.ofNullable(getUnchecked(ALLOW_OPTIMIZED_RETURN_VALUE_OF_CHAIN_ID))
+    allowOptimizedReturnValueOfChainId =
+        Optional.ofNullable(getUnchecked(ALLOW_OPTIMIZED_RETURN_VALUE_OF_CHAIN_ID))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException(msg));
+    return allowOptimizedReturnValueOfChainId;
   }
 
   public void saveAllowTvmShangHai(long allowTvmShangHai) {
