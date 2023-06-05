@@ -58,6 +58,7 @@ import org.tron.core.store.MarketOrderStore;
 import org.tron.core.store.MarketPairPriceToOrderStore;
 import org.tron.core.store.MarketPairToPriceStore;
 import org.tron.core.store.NullifierStore;
+import org.tron.core.store.ProposalSettingStore;
 import org.tron.core.store.ProposalStore;
 import org.tron.core.store.SectionBloomStore;
 import org.tron.core.store.StorageRowStore;
@@ -98,6 +99,9 @@ public class ChainBaseManager {
   @Autowired
   @Getter
   private DynamicPropertiesStore dynamicPropertiesStore;
+  @Autowired
+  @Getter
+  private ProposalSettingStore proposalSettingStore;
   @Autowired
   @Getter
   private BlockIndexStore blockIndexStore;
@@ -270,6 +274,7 @@ public class ChainBaseManager {
     closeOneStore(witnessScheduleStore);
     closeOneStore(assetIssueStore);
     closeOneStore(dynamicPropertiesStore);
+    closeOneStore(proposalSettingStore);
     closeOneStore(abiStore);
     closeOneStore(codeStore);
     closeOneStore(contractStore);

@@ -35,6 +35,7 @@ import org.tron.common.parameter.CommonParameter;
 import org.tron.common.storage.WriteOptionsWrapper;
 import org.tron.common.utils.FileUtil;
 import org.tron.common.utils.StorageUtils;
+import org.tron.core.ChainBaseManager;
 import org.tron.core.db.RevokingDatabase;
 import org.tron.core.db.TronDatabase;
 import org.tron.core.db2.ISession;
@@ -186,7 +187,17 @@ public class SnapshotManager implements RevokingDatabase {
   }
 
   private void retreat() {
-    dbs.forEach(db -> db.setHead(db.getHead().retreat()));
+    dbs.forEach(db ->
+        {
+          db.setHead(db.getHead().retreat());
+          if (db.getHead().isProposalOptimized() && db.getHead() instanceof SnapshotImpl) {
+            SnapshotImpl snapshot =(SnapshotImpl) db.getHead();
+            if (!snapshot.getDb().isEmpty()) {
+              ChainBaseManager.getChainBaseManager().getProposalSettingStore().resetCache();
+            }
+          }
+        }
+    );
     --size;
   }
 

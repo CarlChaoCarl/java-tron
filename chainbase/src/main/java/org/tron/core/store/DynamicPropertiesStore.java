@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.tron.common.parameter.CommonParameter;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Sha256Hash;
+import org.tron.core.ChainBaseManager;
 import org.tron.core.capsule.BytesCapsule;
 import org.tron.core.config.Parameter.ChainConstant;
 import org.tron.core.db.TronStoreWithRevoking;
@@ -133,6 +134,8 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
       "ALLOW_SHIELDED_TRC20_TRANSACTION"
           .getBytes();
   private static final byte[] ALLOW_TVM_ISTANBUL = "ALLOW_TVM_ISTANBUL".getBytes();
+  private static final String ALLOW_TVM_ISTANBUL_STR = "ALLOW_TVM_ISTANBUL";
+
   private static final byte[] ALLOW_TVM_CONSTANTINOPLE = "ALLOW_TVM_CONSTANTINOPLE".getBytes();
   private static final byte[] ALLOW_TVM_SOLIDITY_059 = "ALLOW_TVM_SOLIDITY_059".getBytes();
   private static final byte[] FORBID_TRANSFER_TO_CONTRACT = "FORBID_TRANSFER_TO_CONTRACT"
@@ -1108,9 +1111,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     logger.debug("MAINTENANCE_TIME_INTERVAL:" + timeInterval);
     this.put(MAINTENANCE_TIME_INTERVAL,
         new BytesCapsule(ByteArray.fromLong(timeInterval)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMaintenanceTimeInterval(timeInterval);
   }
 
   public long getMaintenanceTimeInterval() {
+    long maintenanceTimeInterval = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getMaintenanceTimeInterval();
+    if (maintenanceTimeInterval > 0) {
+      return maintenanceTimeInterval;
+    }
     return Optional.ofNullable(getUnchecked(MAINTENANCE_TIME_INTERVAL))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1122,9 +1130,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     logger.debug("ACCOUNT_UPGRADE_COST:" + accountUpgradeCost);
     this.put(ACCOUNT_UPGRADE_COST,
         new BytesCapsule(ByteArray.fromLong(accountUpgradeCost)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAccountUpgradeCost(accountUpgradeCost);
   }
 
   public long getAccountUpgradeCost() {
+    long accountUpgradeCost = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAccountUpgradeCost();
+    if (accountUpgradeCost > 0) {
+      return accountUpgradeCost;
+    }
     return Optional.ofNullable(getUnchecked(ACCOUNT_UPGRADE_COST))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1136,9 +1149,15 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     logger.debug("WITNESS_PAY_PER_BLOCK:" + pay);
     this.put(WITNESS_PAY_PER_BLOCK,
         new BytesCapsule(ByteArray.fromLong(pay)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveWitnessPayPerBlock(pay);
   }
 
   public long getWitnessPayPerBlock() {
+    long witnessPayPerBlock = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getWitnessPayPerBlock();
+    if (witnessPayPerBlock > 0) {
+      return witnessPayPerBlock;
+    }
+
     return Optional.ofNullable(getUnchecked(WITNESS_PAY_PER_BLOCK))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1150,9 +1169,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     logger.debug("WITNESS_127_PAY_PER_BLOCK:" + pay);
     this.put(WITNESS_127_PAY_PER_BLOCK,
         new BytesCapsule(ByteArray.fromLong(pay)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveWitness127PayPerBlock(pay);
   }
 
   public long getWitness127PayPerBlock() {
+    long witness127PayPerBlock = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getWitness127PayPerBlock();
+    if (witness127PayPerBlock > 0) {
+      return witness127PayPerBlock;
+    }
     return Optional.ofNullable(getUnchecked(WITNESS_127_PAY_PER_BLOCK))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1163,9 +1187,15 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     logger.debug("WITNESS_STANDBY_ALLOWANCE:" + allowance);
     this.put(WITNESS_STANDBY_ALLOWANCE,
         new BytesCapsule(ByteArray.fromLong(allowance)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveWitnessStandbyAllowance(allowance);
   }
 
   public long getWitnessStandbyAllowance() {
+    long witnessStandbyAllowance = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getWitnessStandbyAllowance();
+    if (witnessStandbyAllowance > 0) {
+      return witnessStandbyAllowance;
+    }
+
     return Optional.ofNullable(getUnchecked(WITNESS_STANDBY_ALLOWANCE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1228,9 +1258,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveFreeNetLimit(long freeNetLimit) {
     this.put(DynamicResourceProperties.FREE_NET_LIMIT,
         new BytesCapsule(ByteArray.fromLong(freeNetLimit)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveFreeNetLimit(freeNetLimit);
   }
 
   public long getFreeNetLimit() {
+    long freeNetLimit = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getFreeNetLimit();
+    if (freeNetLimit > 0) {
+      return freeNetLimit;
+    }
     return Optional.ofNullable(getUnchecked(DynamicResourceProperties.FREE_NET_LIMIT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1280,9 +1315,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveTotalNetLimit(long totalNetLimit) {
     this.put(DynamicResourceProperties.TOTAL_NET_LIMIT,
         new BytesCapsule(ByteArray.fromLong(totalNetLimit)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveTotalNetLimit(totalNetLimit);
   }
 
   public long getTotalNetLimit() {
+    long totalNetLimit = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getTotalNetLimit();
+    if (totalNetLimit > 0) {
+      return totalNetLimit;
+    }
     return Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_NET_LIMIT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1302,6 +1342,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveTotalEnergyLimit2(long totalEnergyLimit) {
     this.put(DynamicResourceProperties.TOTAL_ENERGY_LIMIT,
         new BytesCapsule(ByteArray.fromLong(totalEnergyLimit)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveTotalEnergyLimit2(totalEnergyLimit);
 
     long ratio = getAdaptiveResourceLimitTargetRatio();
     saveTotalEnergyTargetLimit(totalEnergyLimit / ratio);
@@ -1321,9 +1362,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveTotalEnergyCurrentLimit(long totalEnergyCurrentLimit) {
     this.put(DynamicResourceProperties.TOTAL_ENERGY_CURRENT_LIMIT,
         new BytesCapsule(ByteArray.fromLong(totalEnergyCurrentLimit)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveTotalEnergyCurrentLimit(totalEnergyCurrentLimit);
   }
 
   public long getTotalEnergyCurrentLimit() {
+    long totalEnergyCurrentLimit = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getTotalEnergyCurrentLimit();
+    if (totalEnergyCurrentLimit > 0) {
+      return totalEnergyCurrentLimit;
+    }
     return Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_ENERGY_CURRENT_LIMIT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1334,9 +1380,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveTotalEnergyTargetLimit(long targetTotalEnergyLimit) {
     this.put(DynamicResourceProperties.TOTAL_ENERGY_TARGET_LIMIT,
         new BytesCapsule(ByteArray.fromLong(targetTotalEnergyLimit)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveTotalEnergyTargetLimit(targetTotalEnergyLimit);
   }
 
   public long getTotalEnergyTargetLimit() {
+    long totalEnergyTargetLimit = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getTotalEnergyTargetLimit();
+    if (totalEnergyTargetLimit > 0) {
+      return totalEnergyTargetLimit;
+    }
     return Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_ENERGY_TARGET_LIMIT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1360,9 +1411,16 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAdaptiveResourceLimitMultiplier(long adaptiveResourceLimitMultiplier) {
     this.put(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_MULTIPLIER,
         new BytesCapsule(ByteArray.fromLong(adaptiveResourceLimitMultiplier)));
+    ChainBaseManager.getChainBaseManager()
+        .getProposalSettingStore().saveAdaptiveResourceLimitMultiplier(adaptiveResourceLimitMultiplier);
   }
 
   public long getAdaptiveResourceLimitMultiplier() {
+    long adaptiveResourceLimitMultiplier = ChainBaseManager.getChainBaseManager()
+        .getProposalSettingStore().getAdaptiveResourceLimitMultiplier();
+    if (adaptiveResourceLimitMultiplier > 0) {
+      return adaptiveResourceLimitMultiplier;
+    }
     return Optional
         .ofNullable(getUnchecked(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_MULTIPLIER))
         .map(BytesCapsule::getData)
@@ -1374,9 +1432,16 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAdaptiveResourceLimitTargetRatio(long adaptiveResourceLimitTargetRatio) {
     this.put(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO,
         new BytesCapsule(ByteArray.fromLong(adaptiveResourceLimitTargetRatio)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore()
+        .saveAdaptiveResourceLimitTargetRatio(adaptiveResourceLimitTargetRatio);
   }
 
   public long getAdaptiveResourceLimitTargetRatio() {
+    long adaptiveResourceLimitTargetRatio = ChainBaseManager.getChainBaseManager()
+        .getProposalSettingStore().getAdaptiveResourceLimitTargetRatio();
+    if (adaptiveResourceLimitTargetRatio > 0) {
+      return adaptiveResourceLimitTargetRatio;
+    }
     return Optional
         .ofNullable(getUnchecked(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO))
         .map(BytesCapsule::getData)
@@ -1414,9 +1479,15 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveEnergyFee(long totalEnergyFee) {
     this.put(ENERGY_FEE,
         new BytesCapsule(ByteArray.fromLong(totalEnergyFee)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveEnergyFee(totalEnergyFee);
   }
 
   public long getEnergyFee() {
+    long energyFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getEnergyFee();
+    if (energyFee > 0) {
+      return energyFee;
+    }
+
     return Optional.ofNullable(getUnchecked(ENERGY_FEE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1427,9 +1498,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveMaxCpuTimeOfOneTx(long time) {
     this.put(MAX_CPU_TIME_OF_ONE_TX,
         new BytesCapsule(ByteArray.fromLong(time)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMaxCpuTimeOfOneTx(time);
   }
 
   public long getMaxCpuTimeOfOneTx() {
+    long maxCpuTimeOfOneTx = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getMaxCpuTimeOfOneTx();
+    if (maxCpuTimeOfOneTx > 0) {
+      return maxCpuTimeOfOneTx;
+    }
     return Optional.ofNullable(getUnchecked(MAX_CPU_TIME_OF_ONE_TX))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1440,6 +1516,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveCreateAccountFee(long fee) {
     this.put(CREATE_ACCOUNT_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveCreateAccountFee(fee);
   }
 
   public long getShieldedTransactionCreateAccountFee() {
@@ -1483,6 +1560,11 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getCreateAccountFee() {
+    long createAccountFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getCreateAccountFee();
+    if (createAccountFee > 0) {
+      return createAccountFee;
+    }
+
     return Optional.ofNullable(getUnchecked(CREATE_ACCOUNT_FEE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1493,9 +1575,15 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveCreateNewAccountFeeInSystemContract(long fee) {
     this.put(CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT,
         new BytesCapsule(ByteArray.fromLong(fee)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveCreateNewAccountFeeInSystemContract(fee);
   }
 
   public long getCreateNewAccountFeeInSystemContract() {
+    long createNewAccountFeeInSystemContract = ChainBaseManager.getChainBaseManager()
+        .getProposalSettingStore().getCreateNewAccountFeeInSystemContract();
+    if (createNewAccountFeeInSystemContract > 0) {
+      return createNewAccountFeeInSystemContract;
+    }
     return Optional.ofNullable(getUnchecked(CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1507,9 +1595,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveCreateNewAccountBandwidthRate(long rate) {
     this.put(CREATE_NEW_ACCOUNT_BANDWIDTH_RATE,
         new BytesCapsule(ByteArray.fromLong(rate)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveCreateNewAccountBandwidthRate(rate);
   }
 
   public long getCreateNewAccountBandwidthRate() {
+    long createNewAccountBandwidthRate = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getCreateNewAccountBandwidthRate();
+    if (createNewAccountBandwidthRate > 0) {
+      return createNewAccountBandwidthRate;
+    }
     return Optional.ofNullable(getUnchecked(CREATE_NEW_ACCOUNT_BANDWIDTH_RATE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1521,9 +1614,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveTransactionFee(long fee) {
     this.put(TRANSACTION_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveTransactionFee(fee);
   }
 
   public long getTransactionFee() {
+    long transactionFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getTransactionFee();
+    if (transactionFee > 0) {
+      return transactionFee;
+    }
     return Optional.ofNullable(getUnchecked(TRANSACTION_FEE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1534,19 +1632,27 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAssetIssueFee(long fee) {
     this.put(ASSET_ISSUE_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAssetIssueFee(fee);
   }
 
   public void saveUpdateAccountPermissionFee(long fee) {
     this.put(UPDATE_ACCOUNT_PERMISSION_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveUpdateAccountPermissionFee(fee);
   }
 
   public void saveMultiSignFee(long fee) {
     this.put(MULTI_SIGN_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMultiSignFee(fee);
   }
 
   public long getAssetIssueFee() {
+    long assetIssueFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAssetIssueFee();
+    if (assetIssueFee > 0) {
+      return assetIssueFee;
+    }
+
     return Optional.ofNullable(getUnchecked(ASSET_ISSUE_FEE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1555,6 +1661,10 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getUpdateAccountPermissionFee() {
+    long updateAccountPermissionFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getUpdateAccountPermissionFee();
+    if (updateAccountPermissionFee > 0) {
+      return updateAccountPermissionFee;
+    }
     return Optional.ofNullable(getUnchecked(UPDATE_ACCOUNT_PERMISSION_FEE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1563,6 +1673,10 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getMultiSignFee() {
+    long multiSignFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getMultiSignFee();
+    if (multiSignFee > 0) {
+      return multiSignFee;
+    }
     return Optional.ofNullable(getUnchecked(MULTI_SIGN_FEE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1573,9 +1687,15 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveExchangeCreateFee(long fee) {
     this.put(EXCHANGE_CREATE_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveExchangeCreateFee(fee);
   }
 
   public long getExchangeCreateFee() {
+    long exchangeCreateFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getExchangeCreateFee();
+    if (exchangeCreateFee > 0) {
+      return exchangeCreateFee;
+    }
+
     return Optional.ofNullable(getUnchecked(EXCHANGE_CREATE_FEE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1599,9 +1719,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowMarketTransaction(long allowMarketTransaction) {
     this.put(DynamicPropertiesStore.ALLOW_MARKET_TRANSACTION,
         new BytesCapsule(ByteArray.fromLong(allowMarketTransaction)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowMarketTransaction(allowMarketTransaction);
   }
 
   public long getAllowMarketTransaction() {
+    long allowMarketTransaction = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowMarketTransaction();
+    if (allowMarketTransaction > 0) {
+      return allowMarketTransaction;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_MARKET_TRANSACTION))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1616,9 +1741,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveMarketSellFee(long fee) {
     this.put(MARKET_SELL_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMarketSellFee(fee);
   }
 
   public long getMarketSellFee() {
+    long marketSellFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getMarketSellFee();
+    if (marketSellFee > 0) {
+      return marketSellFee;
+    }
     return Optional.ofNullable(getUnchecked(MARKET_SELL_FEE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1629,9 +1759,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveMarketCancelFee(long fee) {
     this.put(MARKET_CANCEL_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMarketCancelFee(fee);
   }
 
   public long getMarketCancelFee() {
+    long marketCancelFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getMarketCancelFee();
+    if (marketCancelFee > 0) {
+      return marketCancelFee;
+    }
     return Optional.ofNullable(getUnchecked(MARKET_CANCEL_FEE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1660,9 +1795,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowTransactionFeePool(long value) {
     this.put(ALLOW_TRANSACTION_FEE_POOL,
         new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTransactionFeePool(value);
   }
 
   public long getAllowTransactionFeePool() {
+    long allowTransactionFeePool = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTransactionFeePool();
+    if (allowTransactionFeePool > 0) {
+      return allowTransactionFeePool;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_TRANSACTION_FEE_POOL))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1785,9 +1925,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveRemoveThePowerOfTheGr(long rate) {
     this.put(REMOVE_THE_POWER_OF_THE_GR,
         new BytesCapsule(ByteArray.fromLong(rate)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveRemoveThePowerOfTheGr(rate);
   }
 
   public long getRemoveThePowerOfTheGr() {
+    long removeThePowerOfTheGr = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getRemoveThePowerOfTheGr();
+    if (removeThePowerOfTheGr > 0) {
+      return removeThePowerOfTheGr;
+    }
     return Optional.ofNullable(getUnchecked(REMOVE_THE_POWER_OF_THE_GR))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1798,9 +1943,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowDelegateResource(long value) {
     this.put(ALLOW_DELEGATE_RESOURCE,
         new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowDelegateResource(value);
   }
 
   public long getAllowDelegateResource() {
+    long allowDelegateResource = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowDelegateResource();
+    if (allowDelegateResource > 0) {
+      return allowDelegateResource;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_DELEGATE_RESOURCE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1811,9 +1961,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowAdaptiveEnergy(long value) {
     this.put(ALLOW_ADAPTIVE_ENERGY,
         new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowAdaptiveEnergy(value);
   }
 
   public long getAllowAdaptiveEnergy() {
+    long allowAdaptiveEnergy = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowAdaptiveEnergy();
+    if (allowAdaptiveEnergy > 0) {
+      return allowAdaptiveEnergy;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_ADAPTIVE_ENERGY))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1824,9 +1979,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowTvmTransferTrc10(long value) {
     this.put(ALLOW_TVM_TRANSFER_TRC10,
         new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmTransferTrc10(value);
   }
 
   public long getAllowTvmTransferTrc10() {
+    long allowTvmTransferTrc10 = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmTransferTrc10();
+    if (allowTvmTransferTrc10 > 0) {
+      return allowTvmTransferTrc10;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_TVM_TRANSFER_TRC10))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1837,9 +1997,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowTvmConstantinople(long value) {
     this.put(ALLOW_TVM_CONSTANTINOPLE,
         new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmConstantinople(value);
   }
 
   public long getAllowTvmConstantinople() {
+    long allowTvmConstantinople = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmConstantinople();
+    if (allowTvmConstantinople > 0) {
+      return allowTvmConstantinople;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_TVM_CONSTANTINOPLE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1850,9 +2015,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowTvmSolidity059(long value) {
     this.put(ALLOW_TVM_SOLIDITY_059,
         new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmSolidity059(value);
   }
 
   public long getAllowTvmSolidity059() {
+    long allowTvmSolidity059 = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmSolidity059();
+    if (allowTvmSolidity059 > 0) {
+      return allowTvmSolidity059;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_TVM_SOLIDITY_059))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1862,9 +2032,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveForbidTransferToContract(long value) {
     this.put(FORBID_TRANSFER_TO_CONTRACT,
         new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveForbidTransferToContract(value);
   }
 
   public long getForbidTransferToContract() {
+    long forbidTransferToContract = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getForbidTransferToContract();
+    if (forbidTransferToContract > 0) {
+      return forbidTransferToContract;
+    }
     return Optional.ofNullable(getUnchecked(FORBID_TRANSFER_TO_CONTRACT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1921,9 +2096,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowUpdateAccountName(long rate) {
     this.put(ALLOW_UPDATE_ACCOUNT_NAME,
         new BytesCapsule(ByteArray.fromLong(rate)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowUpdateAccountName(rate);
   }
 
   public long getAllowUpdateAccountName() {
+    long allowUpdateAccountName = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowUpdateAccountName();
+    if (allowUpdateAccountName > 0) {
+      return allowUpdateAccountName;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_UPDATE_ACCOUNT_NAME))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1934,9 +2114,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowSameTokenName(long rate) {
     this.put(ALLOW_SAME_TOKEN_NAME,
         new BytesCapsule(ByteArray.fromLong(rate)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowSameTokenName(rate);
   }
 
   public long getAllowSameTokenName() {
+    long allowSameTokenName = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowSameTokenName();
+    if (allowSameTokenName > 0) {
+      return allowSameTokenName;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_SAME_TOKEN_NAME))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1947,6 +2132,8 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowCreationOfContracts(long allowCreationOfContracts) {
     this.put(ALLOW_CREATION_OF_CONTRACTS,
         new BytesCapsule(ByteArray.fromLong(allowCreationOfContracts)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore()
+        .saveAllowCreationOfContracts(allowCreationOfContracts);
   }
 
   public void saveTotalSignNum(int num) {
@@ -1965,9 +2152,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowMultiSign(long allowMultiSing) {
     this.put(ALLOW_MULTI_SIGN,
         new BytesCapsule(ByteArray.fromLong(allowMultiSing)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowMultiSign(allowMultiSing);
   }
 
   public long getAllowMultiSign() {
+    long allowMultiSign = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowMultiSign();
+    if (allowMultiSign > 0) {
+      return allowMultiSign;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_MULTI_SIGN))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1976,6 +2168,11 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getAllowCreationOfContracts() {
+    long allowCreationOfContracts = ChainBaseManager.getChainBaseManager()
+        .getProposalSettingStore().getAllowCreationOfContracts();
+    if (allowCreationOfContracts > 0) {
+      return allowCreationOfContracts;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_CREATION_OF_CONTRACTS))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2004,9 +2201,16 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowShieldedTRC20Transaction(long allowShieldedTRC20Transaction) {
     this.put(DynamicPropertiesStore.ALLOW_SHIELDED_TRC20_TRANSACTION,
         new BytesCapsule(ByteArray.fromLong(allowShieldedTRC20Transaction)));
+    ChainBaseManager.getChainBaseManager()
+        .getProposalSettingStore().saveAllowShieldedTRC20Transaction(allowShieldedTRC20Transaction);
   }
 
   public long getAllowShieldedTRC20Transaction() {
+    long allowShieldedTRC20Transaction = ChainBaseManager.getChainBaseManager()
+        .getProposalSettingStore().getAllowShieldedTRC20Transaction();
+    if (allowShieldedTRC20Transaction > 0) {
+      return allowShieldedTRC20Transaction;
+    }
     String msg = "not found ALLOW_SHIELDED_TRC20_TRANSACTION";
     return Optional.ofNullable(getUnchecked(ALLOW_SHIELDED_TRC20_TRANSACTION))
         .map(BytesCapsule::getData)
@@ -2018,9 +2222,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowTvmIstanbul(long allowTVMIstanbul) {
     this.put(DynamicPropertiesStore.ALLOW_TVM_ISTANBUL,
         new BytesCapsule(ByteArray.fromLong(allowTVMIstanbul)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmIstanbul(allowTVMIstanbul);
   }
 
   public long getAllowTvmIstanbul() {
+    long allowTvmIstanbul = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmIstanbul();
+    if (allowTvmIstanbul > 0) {
+      return allowTvmIstanbul;
+    }
     String msg = "not found ALLOW_TVM_ISTANBUL";
     return Optional.ofNullable(getUnchecked(ALLOW_TVM_ISTANBUL))
         .map(BytesCapsule::getData)
@@ -2300,6 +2509,10 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
    * get allow protobuf number.
    */
   public long getAllowProtoFilterNum() {
+    long allowProtoFilterNum = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowProtoFilterNum();
+    if (allowProtoFilterNum > 0) {
+      return allowProtoFilterNum;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_PROTO_FILTER_NUM))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2312,14 +2525,20 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowProtoFilterNum(long num) {
     logger.info("Update allow protobuf number = {}.", num);
     this.put(ALLOW_PROTO_FILTER_NUM, new BytesCapsule(ByteArray.fromLong(num)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowProtoFilterNum(num);
   }
 
   public void saveAllowAccountStateRoot(long allowAccountStateRoot) {
     this.put(ALLOW_ACCOUNT_STATE_ROOT,
         new BytesCapsule(ByteArray.fromLong(allowAccountStateRoot)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowAccountStateRoot(allowAccountStateRoot);
   }
 
   public long getAllowAccountStateRoot() {
+    long allowAccountStateRoot = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowAccountStateRoot();
+    if (allowAccountStateRoot > 0) {
+      return allowAccountStateRoot;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_ACCOUNT_STATE_ROOT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2345,9 +2564,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveChangeDelegation(long number) {
     this.put(CHANGE_DELEGATION,
         new BytesCapsule(ByteArray.fromLong(number)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveChangeDelegation(number);
   }
 
   public long getChangeDelegation() {
+    long changeDelegation = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getChangeDelegation();
+    if (changeDelegation > 0) {
+      return changeDelegation;
+    }
     return Optional.ofNullable(getUnchecked(CHANGE_DELEGATION))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2361,9 +2585,15 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowPBFT(long number) {
     this.put(ALLOW_PBFT,
         new BytesCapsule(ByteArray.fromLong(number)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowPBFT(number);
   }
 
   public long getAllowPBFT() {
+    long allowPBFT = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowPBFT();
+    if (allowPBFT > 0) {
+      return allowPBFT;
+    }
+
     return Optional.ofNullable(getUnchecked(ALLOW_PBFT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2375,6 +2605,10 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getMaxFeeLimit() {
+    long maxFeeLimit = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getMaxFeeLimit();
+    if (maxFeeLimit > 0) {
+      return maxFeeLimit;
+    }
     return Optional.ofNullable(getUnchecked(MAX_FEE_LIMIT))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2385,6 +2619,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveMaxFeeLimit(long maxFeeLimit) {
     this.put(MAX_FEE_LIMIT,
         new BytesCapsule(ByteArray.fromLong(maxFeeLimit)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMaxFeeLimit(maxFeeLimit);
   }
 
   public long getBurnTrxAmount() {
@@ -2412,9 +2647,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveAllowBlackHoleOptimization(long value) {
     this.put(ALLOW_BLACKHOLE_OPTIMIZATION, new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowBlackHoleOptimization(value);
   }
 
   public long getAllowBlackHoleOptimization() {
+    long allowBlackHoleOptimization = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowBlackHoleOptimization();
+    if (allowBlackHoleOptimization > 0) {
+      return allowBlackHoleOptimization;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_BLACKHOLE_OPTIMIZATION))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2436,9 +2676,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveAllowNewResourceModel(long value) {
     this.put(ALLOW_NEW_RESOURCE_MODEL, new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowNewResourceModel(value);
   }
 
   public long getAllowNewResourceModel() {
+    long allowNewResourceModel = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowNewResourceModel();
+    if (allowNewResourceModel > 0) {
+      return allowNewResourceModel;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_NEW_RESOURCE_MODEL))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2449,9 +2694,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowTvmFreeze(long allowTvmFreeze) {
     this.put(DynamicPropertiesStore.ALLOW_TVM_FREEZE,
         new BytesCapsule(ByteArray.fromLong(allowTvmFreeze)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmFreeze(allowTvmFreeze);
   }
 
   public long getAllowTvmFreeze() {
+    long allowTvmFreeze = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmFreeze();
+    if (allowTvmFreeze > 0) {
+      return allowTvmFreeze;
+    }
     String msg = "not found ALLOW_TVM_FREEZE";
     return Optional.ofNullable(getUnchecked(ALLOW_TVM_FREEZE))
         .map(BytesCapsule::getData)
@@ -2463,9 +2713,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowTvmVote(long allowTvmVote) {
     this.put(DynamicPropertiesStore.ALLOW_TVM_VOTE,
         new BytesCapsule(ByteArray.fromLong(allowTvmVote)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmVote(allowTvmVote);
   }
 
   public long getAllowTvmVote() {
+    long allowTvmVote = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmVote();
+    if (allowTvmVote > 0) {
+      return allowTvmVote;
+    }
     String msg = "not found ALLOW_TVM_VOTE";
     return Optional.ofNullable(getUnchecked(ALLOW_TVM_VOTE))
         .map(BytesCapsule::getData)
@@ -2477,9 +2732,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowTvmLondon(long allowTvmLondon) {
     this.put(DynamicPropertiesStore.ALLOW_TVM_LONDON,
         new BytesCapsule(ByteArray.fromLong(allowTvmLondon)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmLondon(allowTvmLondon);
   }
 
   public long getAllowTvmLondon() {
+    long allowTvmLondon = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmLondon();
+    if (allowTvmLondon > 0) {
+      return allowTvmLondon;
+    }
     String msg = "not found ALLOW_TVM_LONDON";
     return Optional.ofNullable(getUnchecked(ALLOW_TVM_LONDON))
         .map(BytesCapsule::getData)
@@ -2491,9 +2751,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowTvmCompatibleEvm(long allowTvmCompatibleEvm) {
     this.put(DynamicPropertiesStore.ALLOW_TVM_COMPATIBLE_EVM,
         new BytesCapsule(ByteArray.fromLong(allowTvmCompatibleEvm)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmCompatibleEvm(allowTvmCompatibleEvm);
   }
 
   public long getAllowTvmCompatibleEvm() {
+    long allowTvmCompatibleEvm = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmCompatibleEvm();
+    if (allowTvmCompatibleEvm > 0) {
+      return allowTvmCompatibleEvm;
+    }
     String msg = "not found ALLOW_TVM_COMPATIBLE_EVM";
     return Optional.ofNullable(getUnchecked(ALLOW_TVM_COMPATIBLE_EVM))
         .map(BytesCapsule::getData)
@@ -2537,6 +2802,10 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   // 1: enable
   public long getAllowAccountAssetOptimization() {
+    long allowAccountAssetOptimization = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowAccountAssetOptimization();
+    if (allowAccountAssetOptimization > 0) {
+      return allowAccountAssetOptimization;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_ACCOUNT_ASSET_OPTIMIZATION))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2546,10 +2815,15 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void setAllowAccountAssetOptimization(long value) {
     this.put(ALLOW_ACCOUNT_ASSET_OPTIMIZATION, new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().setAllowAccountAssetOptimization(value);
   }
 
   // 1: enable
   public long getAllowAssetOptimization() {
+    long allowAssetOptimization = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowAssetOptimization();
+    if (allowAssetOptimization > 0) {
+      return allowAssetOptimization;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_ASSET_OPTIMIZATION))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2559,6 +2833,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void setAllowAssetOptimization(long value) {
     this.put(ALLOW_ASSET_OPTIMIZATION, new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().setAllowAssetOptimization(value);
   }
 
   // for energy price history
@@ -2626,9 +2901,15 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowHigherLimitForMaxCpuTimeOfOneTx(long value) {
     this.put(ALLOW_HIGHER_LIMIT_FOR_MAX_CPU_TIME_OF_ONE_TX,
         new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowHigherLimitForMaxCpuTimeOfOneTx(value);
   }
 
   public long getAllowHigherLimitForMaxCpuTimeOfOneTx() {
+    long allowHigherLimitForMaxCpuTimeOfOneTx = ChainBaseManager.getChainBaseManager()
+        .getProposalSettingStore().getAllowHigherLimitForMaxCpuTimeOfOneTx();
+    if (allowHigherLimitForMaxCpuTimeOfOneTx > 0) {
+      return allowHigherLimitForMaxCpuTimeOfOneTx;
+    }
     String msg = "not found ALLOW_HIGHER_LIMIT_FOR_MAX_CPU_TIME_OF_ONE_TX";
     return Optional.ofNullable(getUnchecked(ALLOW_HIGHER_LIMIT_FOR_MAX_CPU_TIME_OF_ONE_TX))
         .map(BytesCapsule::getData)
@@ -2638,6 +2919,10 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getMemoFee() {
+    long memoFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getMemoFee();
+    if (memoFee > 0) {
+      return memoFee;
+    }
     return Optional.ofNullable(getUnchecked(MEMO_FEE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2646,6 +2931,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveMemoFee(long value) {
     this.put(MEMO_FEE, new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMemoFee(value);
   }
 
   public String getMemoFeeHistory() {
@@ -2660,6 +2946,10 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getAllowNewReward() {
+    long allowNewReward = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowNewReward();
+    if (allowNewReward > 0) {
+      return allowNewReward;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_NEW_REWARD))
             .map(BytesCapsule::getData)
             .map(ByteArray::toLong)
@@ -2668,9 +2958,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveAllowNewReward(long newReward) {
     this.put(ALLOW_NEW_REWARD, new BytesCapsule(ByteArray.fromLong(newReward)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowNewReward(newReward);
   }
 
   public long getAllowDelegateOptimization() {
+    long allowDelegateOptimization = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowDelegateOptimization();
+    if (allowDelegateOptimization > 0) {
+      return allowDelegateOptimization;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_DELEGATE_OPTIMIZATION))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2684,9 +2979,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveAllowDelegateOptimization(long value) {
     this.put(ALLOW_DELEGATE_OPTIMIZATION, new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowDelegateOptimization(value);
   }
 
   public long getAllowDynamicEnergy() {
+    long allowDynamicEnergy = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowDynamicEnergy();
+    if (allowDynamicEnergy > 0) {
+      return allowDynamicEnergy;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_DYNAMIC_ENERGY))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2700,9 +3000,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveAllowDynamicEnergy(long value) {
     this.put(ALLOW_DYNAMIC_ENERGY, new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowDynamicEnergy(value);
   }
 
   public long getDynamicEnergyThreshold() {
+    long dynamicEnergyThreshold = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getDynamicEnergyThreshold();
+    if (dynamicEnergyThreshold > 0) {
+      return dynamicEnergyThreshold;
+    }
     return Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_THRESHOLD))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2712,9 +3017,15 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveDynamicEnergyThreshold(long value) {
     this.put(DYNAMIC_ENERGY_THRESHOLD, new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveDynamicEnergyThreshold(value);
   }
 
   public long getDynamicEnergyIncreaseFactor() {
+    long dynamicEnergyIncreaseFactor = ChainBaseManager.getChainBaseManager()
+        .getProposalSettingStore().getDynamicEnergyIncreaseFactor();
+    if (dynamicEnergyIncreaseFactor > 0) {
+      return dynamicEnergyIncreaseFactor;
+    }
     return Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_INCREASE_FACTOR))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2724,9 +3035,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveDynamicEnergyIncreaseFactor(long value) {
     this.put(DYNAMIC_ENERGY_INCREASE_FACTOR, new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveDynamicEnergyIncreaseFactor(value);
   }
 
   public long getDynamicEnergyMaxFactor() {
+    long dynamicEnergyMaxFactor = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getDynamicEnergyMaxFactor();
+    if (dynamicEnergyMaxFactor > 0) {
+      return dynamicEnergyMaxFactor;
+    }
     return Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_MAX_FACTOR))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2736,6 +3052,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveDynamicEnergyMaxFactor(long value) {
     this.put(DYNAMIC_ENERGY_MAX_FACTOR, new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveDynamicEnergyMaxFactor(value);
   }
 
   public boolean allowNewReward() {
@@ -2743,6 +3060,10 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getUnfreezeDelayDays() {
+    long unfreezeDelayDays = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getUnfreezeDelayDays();
+    if (unfreezeDelayDays > 0) {
+      return unfreezeDelayDays;
+    }
     return Optional.ofNullable(getUnchecked(UNFREEZE_DELAY_DAYS))
             .map(BytesCapsule::getData)
             .map(ByteArray::toLong)
@@ -2755,14 +3076,21 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveUnfreezeDelayDays(long value) {
     this.put(UNFREEZE_DELAY_DAYS, new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveUnfreezeDelayDays(value);
   }
 
   public void saveAllowOptimizedReturnValueOfChainId(long value) {
     this.put(ALLOW_OPTIMIZED_RETURN_VALUE_OF_CHAIN_ID,
         new BytesCapsule(ByteArray.fromLong(value)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowOptimizedReturnValueOfChainId(value);
   }
 
   public long getAllowOptimizedReturnValueOfChainId() {
+    long allowOptimizedReturnValueOfChainId = ChainBaseManager.getChainBaseManager()
+        .getProposalSettingStore().getAllowOptimizedReturnValueOfChainId();
+    if (allowOptimizedReturnValueOfChainId > 0) {
+      return allowOptimizedReturnValueOfChainId;
+    }
     String msg = "not found ALLOW_OPTIMIZED_RETURN_VALUE_OF_CHAIN_ID";
     return Optional.ofNullable(getUnchecked(ALLOW_OPTIMIZED_RETURN_VALUE_OF_CHAIN_ID))
         .map(BytesCapsule::getData)
@@ -2774,9 +3102,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowTvmShangHai(long allowTvmShangHai) {
     this.put(DynamicPropertiesStore.ALLOW_TVM_SHANGHAI,
         new BytesCapsule(ByteArray.fromLong(allowTvmShangHai)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmShangHai(allowTvmShangHai);
   }
 
   public long getAllowTvmShangHai() {
+    long allowTvmShangHai = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmShangHai();
+    if (allowTvmShangHai > 0) {
+      return allowTvmShangHai;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_TVM_SHANGHAI))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2786,9 +3119,14 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowCancelUnfreezeV2(long allowCancelUnfreezeV2) {
     this.put(DynamicPropertiesStore.ALLOW_CANCEL_UNFREEZE_V2,
         new BytesCapsule(ByteArray.fromLong(allowCancelUnfreezeV2)));
+    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowCancelUnfreezeV2(allowCancelUnfreezeV2);
   }
 
   public long getAllowCancelUnfreezeV2() {
+    long allowCancelUnfreezeV2 = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowCancelUnfreezeV2();
+    if (allowCancelUnfreezeV2 > 0) {
+      return allowCancelUnfreezeV2;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_CANCEL_UNFREEZE_V2))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -2802,9 +3140,16 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowOptimizeLockDelegateResource(long allowOptimizeLockDelegateResource) {
     this.put(DynamicPropertiesStore.ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE,
         new BytesCapsule(ByteArray.fromLong(allowOptimizeLockDelegateResource)));
+    ChainBaseManager.getChainBaseManager()
+        .getProposalSettingStore().saveAllowOptimizeLockDelegateResource(allowOptimizeLockDelegateResource);
   }
 
   public long getAllowOptimizeLockDelegateResource() {
+    long allowOptimizeLockDelegateResource = ChainBaseManager.getChainBaseManager()
+        .getProposalSettingStore().getAllowOptimizeLockDelegateResource();
+    if (allowOptimizeLockDelegateResource > 0) {
+      return allowOptimizeLockDelegateResource;
+    }
     return Optional.ofNullable(getUnchecked(ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
