@@ -47,5 +47,5 @@ public interface Snapshot extends Iterable<Map.Entry<byte[], byte[]>>, Instance<
 
   String getDbName();
 
-  boolean isOptimized();
+  boolean isProposalOptimized();
 }

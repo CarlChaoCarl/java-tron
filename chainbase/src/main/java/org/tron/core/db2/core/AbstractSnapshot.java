@@ -15,7 +15,7 @@ public abstract class AbstractSnapshot<K, V> implements Snapshot {
 
   protected WeakReference<Snapshot> next;
 
-  protected boolean isOptimized;
+  protected boolean isProposalOptimized;
 
   @Override
   public Snapshot advance() {
@@ -38,7 +38,7 @@ public abstract class AbstractSnapshot<K, V> implements Snapshot {
   }
 
   @Override
-  public boolean isOptimized(){
-    return isOptimized;
+  public boolean isProposalOptimized() {
+    return isProposalOptimized;
   }
 }

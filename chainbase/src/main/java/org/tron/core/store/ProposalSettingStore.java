@@ -1,11 +1,6 @@
 package org.tron.core.store;
 
 import com.google.protobuf.ByteString;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.IntStream;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
@@ -15,17 +10,21 @@ import org.springframework.stereotype.Component;
 import org.tron.common.parameter.CommonParameter;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Sha256Hash;
-import org.tron.core.ChainBaseManager;
 import org.tron.core.capsule.BytesCapsule;
-import org.tron.core.config.Parameter;
 import org.tron.core.config.Parameter.ChainConstant;
 import org.tron.core.db.TronStoreWithRevoking;
 import org.tron.core.exception.BadItemException;
 import org.tron.core.exception.ItemNotFoundException;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.IntStream;
+
 @Slf4j(topic = "DB")
 @Component
-public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> {
+public class ProposalSettingStore extends TronStoreWithRevoking<BytesCapsule> {
 
   private static final byte[] LATEST_BLOCK_HEADER_TIMESTAMP = "latest_block_header_timestamp"
       .getBytes();
@@ -211,741 +210,15 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   private static final byte[] ALLOW_TVM_SHANGHAI = "ALLOW_TVM_SHANGHAI".getBytes();
 
+  private Map<String, Long> cacheValues = new HashMap<String, Long>();
+
+  public void resetCache() {
+    this.cacheValues.clear();
+  }
+
   @Autowired
-  private DynamicPropertiesStore(@Value("properties") String dbName) {
+  private ProposalSettingStore(@Value("proposal_setting") String dbName) {
     super(dbName);
-
-    try {
-      this.getTotalSignNum();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalSignNum(5);
-    }
-
-    try {
-      this.getAllowMultiSign();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowMultiSign(CommonParameter.getInstance()
-          .getAllowMultiSign());
-    }
-
-    try {
-      this.getLatestBlockHeaderTimestamp();
-    } catch (IllegalArgumentException e) {
-      this.saveLatestBlockHeaderTimestamp(0);
-    }
-
-    try {
-      this.getLatestBlockHeaderNumber();
-    } catch (IllegalArgumentException e) {
-      this.saveLatestBlockHeaderNumber(0);
-    }
-
-    try {
-      this.getLatestBlockHeaderHash();
-    } catch (IllegalArgumentException e) {
-      this.saveLatestBlockHeaderHash(ByteString.copyFrom(ByteArray.fromHexString("00")));
-    }
-
-    try {
-      this.getStateFlag();
-    } catch (IllegalArgumentException e) {
-      this.saveStateFlag(0);
-    }
-
-    try {
-      this.getLatestSolidifiedBlockNum();
-    } catch (IllegalArgumentException e) {
-      this.saveLatestSolidifiedBlockNum(0);
-    }
-
-    try {
-      this.getLatestProposalNum();
-    } catch (IllegalArgumentException e) {
-      this.saveLatestProposalNum(0);
-    }
-
-    try {
-      this.getLatestExchangeNum();
-    } catch (IllegalArgumentException e) {
-      this.saveLatestExchangeNum(0);
-    }
-
-    try {
-      this.getBlockFilledSlotsIndex();
-    } catch (IllegalArgumentException e) {
-      this.saveBlockFilledSlotsIndex(0);
-    }
-
-    try {
-      this.getTokenIdNum();
-    } catch (IllegalArgumentException e) {
-      this.saveTokenIdNum(1000000L);
-    }
-
-    try {
-      this.getTokenUpdateDone();
-    } catch (IllegalArgumentException e) {
-      this.saveTokenUpdateDone(0);
-    }
-
-    try {
-      this.getAbiMoveDone();
-    } catch (IllegalArgumentException e) {
-      this.saveAbiMoveDone(0);
-    }
-
-    try {
-      this.getMaxFrozenTime();
-    } catch (IllegalArgumentException e) {
-      this.saveMaxFrozenTime(3);
-    }
-
-    try {
-      this.getMinFrozenTime();
-    } catch (IllegalArgumentException e) {
-      this.saveMinFrozenTime(3);
-    }
-
-    try {
-      this.getMaxFrozenSupplyNumber();
-    } catch (IllegalArgumentException e) {
-      this.saveMaxFrozenSupplyNumber(10);
-    }
-
-    try {
-      this.getMaxFrozenSupplyTime();
-    } catch (IllegalArgumentException e) {
-      this.saveMaxFrozenSupplyTime(3652);
-    }
-
-    try {
-      this.getMinFrozenSupplyTime();
-    } catch (IllegalArgumentException e) {
-      this.saveMinFrozenSupplyTime(1);
-    }
-
-    try {
-      this.getWitnessAllowanceFrozenTime();
-    } catch (IllegalArgumentException e) {
-      this.saveWitnessAllowanceFrozenTime(1);
-    }
-
-    try {
-      this.getWitnessPayPerBlock();
-    } catch (IllegalArgumentException e) {
-      this.saveWitnessPayPerBlock(32000000L);
-    }
-
-    try {
-      this.getWitnessStandbyAllowance();
-    } catch (IllegalArgumentException e) {
-      this.saveWitnessStandbyAllowance(115_200_000_000L);
-    }
-
-    try {
-      this.getMaintenanceTimeInterval();
-    } catch (IllegalArgumentException e) {
-      this.saveMaintenanceTimeInterval(CommonParameter.getInstance()
-          .getMaintenanceTimeInterval()); // 6 hours
-    }
-
-    try {
-      this.getAccountUpgradeCost();
-    } catch (IllegalArgumentException e) {
-      this.saveAccountUpgradeCost(9_999_000_000L);
-    }
-
-    try {
-      this.getPublicNetUsage();
-    } catch (IllegalArgumentException e) {
-      this.savePublicNetUsage(0L);
-    }
-
-    try {
-      this.getOneDayNetLimit();
-    } catch (IllegalArgumentException e) {
-      this.saveOneDayNetLimit(57_600_000_000L);
-    }
-
-    try {
-      this.getPublicNetLimit();
-    } catch (IllegalArgumentException e) {
-      this.savePublicNetLimit(14_400_000_000L);
-    }
-
-    try {
-      this.getPublicNetTime();
-    } catch (IllegalArgumentException e) {
-      this.savePublicNetTime(0L);
-    }
-
-    try {
-      this.getFreeNetLimit();
-    } catch (IllegalArgumentException e) {
-      this.saveFreeNetLimit(5000L);
-    }
-
-    try {
-      this.getTotalNetWeight();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalNetWeight(0L);
-    }
-
-    try {
-      this.getTotalNetLimit();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalNetLimit(43_200_000_000L);
-    }
-
-    try {
-      this.getTotalEnergyWeight();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalEnergyWeight(0L);
-    }
-
-    try {
-      this.getTotalTronPowerWeight();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalTronPowerWeight(0L);
-    }
-
-    try {
-      this.getAllowAdaptiveEnergy();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowAdaptiveEnergy(CommonParameter.getInstance()
-          .getAllowAdaptiveEnergy());
-    }
-
-    try {
-      this.getAdaptiveResourceLimitTargetRatio();
-    } catch (IllegalArgumentException e) {
-      this.saveAdaptiveResourceLimitTargetRatio(14400);// 24 * 60 * 10,one minute 1/10 total limit
-    }
-
-    try {
-      this.getTotalEnergyLimit();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalEnergyLimit(50_000_000_000L);
-    }
-
-    try {
-      this.getEnergyFee();
-    } catch (IllegalArgumentException e) {
-      this.saveEnergyFee(DEFAULT_ENERGY_FEE); // 100 sun per energy
-    }
-
-    try {
-      this.getMaxCpuTimeOfOneTx();
-    } catch (IllegalArgumentException e) {
-      this.saveMaxCpuTimeOfOneTx(50L);
-    }
-
-    try {
-      this.getCreateAccountFee();
-    } catch (IllegalArgumentException e) {
-      this.saveCreateAccountFee(100_000L); // 0.1TRX
-    }
-
-    try {
-      this.getShieldedTransactionFee();
-    } catch (IllegalArgumentException e) {
-      this.saveShieldedTransactionFee(100_000L);
-    }
-
-    try {
-      this.getShieldedTransactionCreateAccountFee();
-    } catch (IllegalArgumentException e) {
-      this.saveShieldedTransactionCreateAccountFee(1_000_000L);
-    }
-
-    try {
-      this.getTotalShieldedPoolValue();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalShieldedPoolValue(0L); // 0
-    }
-
-    try {
-      this.getCreateNewAccountFeeInSystemContract();
-    } catch (IllegalArgumentException e) {
-      this.saveCreateNewAccountFeeInSystemContract(0L); //changed by committee later
-    }
-
-    try {
-      this.getCreateNewAccountBandwidthRate();
-    } catch (IllegalArgumentException e) {
-      this.saveCreateNewAccountBandwidthRate(1L); //changed by committee later
-    }
-
-    try {
-      this.getTransactionFee();
-    } catch (IllegalArgumentException e) {
-      this.saveTransactionFee(DEFAULT_TRANSACTION_FEE); // 10sun/byte
-    }
-
-    try {
-      this.getAssetIssueFee();
-    } catch (IllegalArgumentException e) {
-      this.saveAssetIssueFee(1024000000L);
-    }
-
-    try {
-      this.getUpdateAccountPermissionFee();
-    } catch (IllegalArgumentException e) {
-      this.saveUpdateAccountPermissionFee(100000000L);
-    }
-
-    try {
-      this.getMultiSignFee();
-    } catch (IllegalArgumentException e) {
-      this.saveMultiSignFee(1000000L);
-    }
-
-    try {
-      this.getExchangeCreateFee();
-    } catch (IllegalArgumentException e) {
-      this.saveExchangeCreateFee(1024000000L);
-    }
-
-    try {
-      this.getExchangeBalanceLimit();
-    } catch (IllegalArgumentException e) {
-      this.saveExchangeBalanceLimit(1_000_000_000_000_000L);
-    }
-
-    try {
-      this.getAllowMarketTransaction();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowMarketTransaction(CommonParameter.getInstance().getAllowMarketTransaction());
-    }
-
-    try {
-      this.getMarketSellFee();
-    } catch (IllegalArgumentException e) {
-      this.saveMarketSellFee(0L); // 0L
-    }
-
-    try {
-      this.getMarketCancelFee();
-    } catch (IllegalArgumentException e) {
-      this.saveMarketCancelFee(0L);
-    }
-
-    try {
-      this.getMarketQuantityLimit();
-    } catch (IllegalArgumentException e) {
-      this.saveMarketQuantityLimit(1_000_000_000_000_000L);
-    }
-
-    try {
-      this.getAllowTransactionFeePool();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowTransactionFeePool(CommonParameter.getInstance().getAllowTransactionFeePool());
-    }
-
-    try {
-      this.getTransactionFeePool();
-    } catch (IllegalArgumentException e) {
-      this.saveTransactionFeePool(0L);
-    }
-
-    try {
-      this.getTotalTransactionCost();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalTransactionCost(0L);
-    }
-
-    try {
-      this.getTotalCreateWitnessCost();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalCreateWitnessFee(0L);
-    }
-
-    try {
-      this.getTotalCreateAccountCost();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalCreateAccountFee(0L);
-    }
-
-    try {
-      this.getTotalStoragePool();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalStoragePool(100_000_000_000_000L);
-    }
-
-    try {
-      this.getTotalStorageTax();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalStorageTax(0);
-    }
-
-    try {
-      this.getTotalStorageReserved();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalStorageReserved(128L * 1024 * 1024 * 1024); // 137438953472 bytes
-    }
-
-    try {
-      this.getStorageExchangeTaxRate();
-    } catch (IllegalArgumentException e) {
-      this.saveStorageExchangeTaxRate(10);
-    }
-
-    try {
-      this.getRemoveThePowerOfTheGr();
-    } catch (IllegalArgumentException e) {
-      this.saveRemoveThePowerOfTheGr(0);
-    }
-
-    try {
-      this.getAllowDelegateResource();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowDelegateResource(CommonParameter.getInstance()
-          .getAllowDelegateResource());
-    }
-
-    try {
-      this.getAllowTvmTransferTrc10();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowTvmTransferTrc10(CommonParameter.getInstance()
-          .getAllowTvmTransferTrc10());
-    }
-
-    try {
-      this.getAllowTvmConstantinople();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowTvmConstantinople(CommonParameter.getInstance()
-          .getAllowTvmConstantinople());
-    }
-
-    try {
-      this.getAllowTvmSolidity059();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowTvmSolidity059(CommonParameter.getInstance()
-          .getAllowTvmSolidity059());
-    }
-
-    try {
-      this.getForbidTransferToContract();
-    } catch (IllegalArgumentException e) {
-      this.saveForbidTransferToContract(CommonParameter.getInstance()
-          .getForbidTransferToContract());
-    }
-
-    try {
-      this.getAvailableContractType();
-    } catch (IllegalArgumentException e) {
-      String contractType = "7fff1fc0037e0000000000000000000000000000000000000000000000000000";
-      byte[] bytes = ByteArray.fromHexString(contractType);
-      this.saveAvailableContractType(bytes);
-    }
-
-    try {
-      this.getActiveDefaultOperations();
-    } catch (IllegalArgumentException e) {
-      String contractType = "7fff1fc0033e0000000000000000000000000000000000000000000000000000";
-      byte[] bytes = ByteArray.fromHexString(contractType);
-      this.saveActiveDefaultOperations(bytes);
-    }
-
-    try {
-      this.getAllowSameTokenName();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowSameTokenName(CommonParameter.getInstance()
-          .getAllowSameTokenName());
-    }
-
-    try {
-      this.getAllowUpdateAccountName();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowUpdateAccountName(0);
-    }
-
-    try {
-      this.getAllowCreationOfContracts();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowCreationOfContracts(CommonParameter.getInstance()
-          .getAllowCreationOfContracts());
-    }
-
-    try {
-      this.getAllowShieldedTransaction();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowShieldedTransaction(0L);
-    }
-
-    try {
-      this.getAllowShieldedTRC20Transaction();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowShieldedTRC20Transaction(
-          CommonParameter.getInstance().getAllowShieldedTRC20Transaction());
-    }
-
-    try {
-      this.getAllowTvmIstanbul();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowTvmIstanbul(
-          CommonParameter.getInstance().getAllowTvmIstanbul());
-    }
-
-    try {
-      this.getBlockFilledSlots();
-    } catch (IllegalArgumentException e) {
-      int[] blockFilledSlots = new int[getBlockFilledSlotsNumber()];
-      Arrays.fill(blockFilledSlots, 1);
-      this.saveBlockFilledSlots(blockFilledSlots);
-    }
-
-    try {
-      this.getNextMaintenanceTime();
-    } catch (IllegalArgumentException e) {
-      this.saveNextMaintenanceTime(
-          Long.parseLong(CommonParameter.getInstance()
-              .getGenesisBlock().getTimestamp()));
-    }
-
-    try {
-      this.getTotalEnergyCurrentLimit();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalEnergyCurrentLimit(getTotalEnergyLimit());
-    }
-
-    try {
-      this.getTotalEnergyTargetLimit();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalEnergyTargetLimit(getTotalEnergyLimit() / 14400);
-    }
-
-    try {
-      this.getTotalEnergyAverageUsage();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalEnergyAverageUsage(0);
-    }
-
-    try {
-      this.getAdaptiveResourceLimitMultiplier();
-    } catch (IllegalArgumentException e) {
-      this.saveAdaptiveResourceLimitMultiplier(1000);
-    }
-
-    try {
-      this.getTotalEnergyAverageTime();
-    } catch (IllegalArgumentException e) {
-      this.saveTotalEnergyAverageTime(0);
-    }
-
-    try {
-      this.getBlockEnergyUsage();
-    } catch (IllegalArgumentException e) {
-      this.saveBlockEnergyUsage(0);
-    }
-
-    try {
-      this.getAllowAccountStateRoot();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowAccountStateRoot(CommonParameter.getInstance()
-          .getAllowAccountStateRoot());
-    }
-
-    try {
-      this.getAllowProtoFilterNum();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowProtoFilterNum(CommonParameter.getInstance()
-          .getAllowProtoFilterNum());
-    }
-
-    try {
-      this.getChangeDelegation();
-    } catch (IllegalArgumentException e) {
-      this.saveChangeDelegation(CommonParameter.getInstance()
-          .getChangedDelegation());
-    }
-
-    try {
-      this.getAllowPBFT();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowPBFT(CommonParameter.getInstance().getAllowPBFT());
-    }
-
-    try {
-      this.getMaxFeeLimit();
-    } catch (IllegalArgumentException e) {
-      this.saveMaxFeeLimit(1_000_000_000L);
-    }
-
-    try {
-      this.getBurnTrxAmount();
-    } catch (IllegalArgumentException e) {
-      this.saveBurnTrx(0L);
-    }
-
-    try {
-      this.getAllowBlackHoleOptimization();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowBlackHoleOptimization(
-          CommonParameter.getInstance().getAllowBlackHoleOptimization());
-    }
-
-    try {
-      this.getAllowNewResourceModel();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowNewResourceModel(CommonParameter.getInstance().getAllowNewResourceModel());
-    }
-
-    try {
-      this.getAllowTvmFreeze();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowTvmFreeze(CommonParameter.getInstance().getAllowTvmFreeze());
-    }
-
-    try {
-      this.getAllowTvmVote();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowTvmVote(CommonParameter.getInstance().getAllowTvmVote());
-      if (CommonParameter.getInstance().getAllowTvmVote() == 1) {
-        this.put(NEW_REWARD_ALGORITHM_EFFECTIVE_CYCLE,
-            new BytesCapsule(ByteArray.fromLong(getCurrentCycleNumber())));
-      }
-    }
-
-    try {
-      this.getAllowTvmLondon();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowTvmLondon(CommonParameter.getInstance().getAllowTvmLondon());
-    }
-
-    try {
-      this.getAllowTvmCompatibleEvm();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowTvmCompatibleEvm(CommonParameter.getInstance().getAllowTvmCompatibleEvm());
-    }
-
-    try {
-      this.getAllowAssetOptimization();
-    } catch (IllegalArgumentException e) {
-      this.setAllowAssetOptimization(CommonParameter
-          .getInstance().getAllowAssetOptimization());
-    }
-
-    try {
-      this.getAllowAccountAssetOptimization();
-    } catch (IllegalArgumentException e) {
-      this.setAllowAccountAssetOptimization(CommonParameter
-          .getInstance().getAllowAccountAssetOptimization());
-    }
-
-    try {
-      this.getEnergyPriceHistoryDone();
-    } catch (IllegalArgumentException e) {
-      this.saveEnergyPriceHistoryDone(0);
-    }
-
-    try {
-      this.getEnergyPriceHistory();
-    } catch (IllegalArgumentException e) {
-      this.saveEnergyPriceHistory(DEFAULT_ENERGY_PRICE_HISTORY);
-    }
-
-    try {
-      this.getBandwidthPriceHistoryDone();
-    } catch (IllegalArgumentException e) {
-      this.saveBandwidthPriceHistoryDone(0);
-    }
-
-    try {
-      this.getBandwidthPriceHistory();
-    } catch (IllegalArgumentException e) {
-      this.saveBandwidthPriceHistory(DEFAULT_BANDWIDTH_PRICE_HISTORY);
-    }
-
-    try {
-      this.getSetBlackholeAccountPermission();
-    } catch (IllegalArgumentException e) {
-      this.saveSetBlackholePermission(0);
-    }
-
-    try {
-      this.getAllowHigherLimitForMaxCpuTimeOfOneTx();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowHigherLimitForMaxCpuTimeOfOneTx(
-          CommonParameter.getInstance().getAllowHigherLimitForMaxCpuTimeOfOneTx());
-    }
-
-    try {
-      this.getNewRewardAlgorithmEffectiveCycle();
-    } catch (IllegalArgumentException e) {
-      if (CommonParameter.getInstance().getAllowNewRewardAlgorithm() == 1) {
-        this.put(NEW_REWARD_ALGORITHM_EFFECTIVE_CYCLE,
-            new BytesCapsule(ByteArray.fromLong(getCurrentCycleNumber())));
-      } else {
-        this.put(NEW_REWARD_ALGORITHM_EFFECTIVE_CYCLE,
-            new BytesCapsule(ByteArray.fromLong(Long.MAX_VALUE)));
-      }
-    }
-
-    try {
-      this.getAllowNewReward();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowNewReward(CommonParameter.getInstance().getAllowNewReward());
-      if (CommonParameter.getInstance().getAllowNewReward() == 1) {
-        this.put(NEW_REWARD_ALGORITHM_EFFECTIVE_CYCLE,
-                new BytesCapsule(ByteArray.fromLong(getCurrentCycleNumber())));
-      }
-    }
-
-    try {
-      this.getMemoFee();
-    } catch (IllegalArgumentException e) {
-      long memoFee = CommonParameter.getInstance().getMemoFee();
-      this.saveMemoFee(memoFee);
-      this.saveMemoFeeHistory("0:" + memoFee);
-    }
-
-    try {
-      this.getAllowDelegateOptimization();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowDelegateOptimization(
-          CommonParameter.getInstance().getAllowDelegateOptimization());
-    }
-
-    try {
-      this.getUnfreezeDelayDays();
-    } catch (IllegalArgumentException e) {
-      this.saveUnfreezeDelayDays(
-          CommonParameter.getInstance().getUnfreezeDelayDays()
-      );
-    }
-
-    try {
-      this.getAllowOptimizedReturnValueOfChainId();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowOptimizedReturnValueOfChainId(
-          CommonParameter.getInstance().getAllowOptimizedReturnValueOfChainId()
-      );
-    }
-
-    try {
-      this.getAllowDynamicEnergy();
-    } catch (IllegalArgumentException e) {
-      this.saveAllowDynamicEnergy(CommonParameter.getInstance().getAllowDynamicEnergy());
-    }
-
-    try {
-      this.getDynamicEnergyThreshold();
-    } catch (IllegalArgumentException e) {
-      this.saveDynamicEnergyThreshold(CommonParameter.getInstance().getDynamicEnergyThreshold());
-    }
-
-    try {
-      this.getDynamicEnergyIncreaseFactor();
-    } catch (IllegalArgumentException e) {
-      this.saveDynamicEnergyIncreaseFactor(CommonParameter.getInstance().getDynamicEnergyIncreaseFactor());
-    }
-
-    try {
-      this.getDynamicEnergyMaxFactor();
-    } catch (IllegalArgumentException e) {
-      this.saveDynamicEnergyMaxFactor(CommonParameter.getInstance().getDynamicEnergyMaxFactor());
-    }
   }
 
   public String intArrayToString(int[] a) {
@@ -1106,7 +379,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     logger.debug("MAINTENANCE_TIME_INTERVAL:" + timeInterval);
     this.put(MAINTENANCE_TIME_INTERVAL,
         new BytesCapsule(ByteArray.fromLong(timeInterval)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMaintenanceTimeInterval(timeInterval);
+    this.cacheValues.put(new String(MAINTENANCE_TIME_INTERVAL), timeInterval);
   }
 
   public long getMaintenanceTimeInterval() {
@@ -1643,7 +916,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public void saveAllowMarketTransaction(long allowMarketTransaction) {
-    this.put(DynamicPropertiesStore.ALLOW_MARKET_TRANSACTION,
+    this.put(ProposalSettingStore.ALLOW_MARKET_TRANSACTION,
         new BytesCapsule(ByteArray.fromLong(allowMarketTransaction)));
   }
 
@@ -2053,7 +1326,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public void saveTotalSignNum(int num) {
-    this.put(DynamicPropertiesStore.TOTAL_SIGN_NUM,
+    this.put(ProposalSettingStore.TOTAL_SIGN_NUM,
         new BytesCapsule(ByteArray.fromInt(num)));
     this.cacheValues.put(new String(TOTAL_SIGN_NUM), (long)num);
   }
@@ -2115,7 +1388,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
 
   public void saveAllowShieldedTransaction(long allowShieldedTransaction) {
-    this.put(DynamicPropertiesStore.ALLOW_SHIELDED_TRANSACTION,
+    this.put(ProposalSettingStore.ALLOW_SHIELDED_TRANSACTION,
         new BytesCapsule(ByteArray.fromLong(allowShieldedTransaction)));
   }
 
@@ -2128,7 +1401,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public void saveAllowShieldedTRC20Transaction(long allowShieldedTRC20Transaction) {
-    this.put(DynamicPropertiesStore.ALLOW_SHIELDED_TRC20_TRANSACTION,
+    this.put(ProposalSettingStore.ALLOW_SHIELDED_TRC20_TRANSACTION,
         new BytesCapsule(ByteArray.fromLong(allowShieldedTRC20Transaction)));
     this.cacheValues.put(new String(ALLOW_SHIELDED_TRC20_TRANSACTION), allowShieldedTRC20Transaction);
   }
@@ -2150,7 +1423,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public void saveAllowTvmIstanbul(long allowTVMIstanbul) {
-    this.put(DynamicPropertiesStore.ALLOW_TVM_ISTANBUL,
+    this.put(ProposalSettingStore.ALLOW_TVM_ISTANBUL,
         new BytesCapsule(ByteArray.fromLong(allowTVMIstanbul)));
     this.cacheValues.put(new String(ALLOW_TVM_ISTANBUL), allowTVMIstanbul);
   }
@@ -2339,7 +1612,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getMaintenanceSkipSlots() {
-    return Parameter.ChainConstant.MAINTENANCE_SKIP_SLOTS;
+    return ChainConstant.MAINTENANCE_SKIP_SLOTS;
   }
 
   public void saveNextMaintenanceTime(long nextMaintenanceTime) {
@@ -2604,7 +1877,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public void saveAllowTvmFreeze(long allowTvmFreeze) {
-    this.put(DynamicPropertiesStore.ALLOW_TVM_FREEZE,
+    this.put(ProposalSettingStore.ALLOW_TVM_FREEZE,
         new BytesCapsule(ByteArray.fromLong(allowTvmFreeze)));
     this.cacheValues.put(new String(ALLOW_TVM_FREEZE), allowTvmFreeze);
   }
@@ -2626,7 +1899,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public void saveAllowTvmVote(long allowTvmVote) {
-    this.put(DynamicPropertiesStore.ALLOW_TVM_VOTE,
+    this.put(ProposalSettingStore.ALLOW_TVM_VOTE,
         new BytesCapsule(ByteArray.fromLong(allowTvmVote)));
     this.cacheValues.put(new String(ALLOW_TVM_VOTE), allowTvmVote);
   }
@@ -2648,7 +1921,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public void saveAllowTvmLondon(long allowTvmLondon) {
-    this.put(DynamicPropertiesStore.ALLOW_TVM_LONDON,
+    this.put(ProposalSettingStore.ALLOW_TVM_LONDON,
         new BytesCapsule(ByteArray.fromLong(allowTvmLondon)));
     this.cacheValues.put(new String(ALLOW_TVM_LONDON), allowTvmLondon);
   }
@@ -2670,7 +1943,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public void saveAllowTvmCompatibleEvm(long allowTvmCompatibleEvm) {
-    this.put(DynamicPropertiesStore.ALLOW_TVM_COMPATIBLE_EVM,
+    this.put(ProposalSettingStore.ALLOW_TVM_COMPATIBLE_EVM,
         new BytesCapsule(ByteArray.fromLong(allowTvmCompatibleEvm)));
     this.cacheValues.put(new String(ALLOW_TVM_COMPATIBLE_EVM), allowTvmCompatibleEvm);
   }
@@ -3033,7 +2306,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public void saveAllowTvmShangHai(long allowTvmShangHai) {
-    this.put(DynamicPropertiesStore.ALLOW_TVM_SHANGHAI,
+    this.put(ProposalSettingStore.ALLOW_TVM_SHANGHAI,
         new BytesCapsule(ByteArray.fromLong(allowTvmShangHai)));
   }
 
