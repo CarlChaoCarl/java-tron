@@ -192,8 +192,10 @@ public class SnapshotManager implements RevokingDatabase {
           db.setHead(db.getHead().retreat());
           if (db.getHead().isProposalOptimized() && db.getHead() instanceof SnapshotImpl) {
             SnapshotImpl snapshot =(SnapshotImpl) db.getHead();
-            if (!snapshot.getDb().isEmpty()) {
-              ChainBaseManager.getChainBaseManager().getProposalSettingStore().resetCache();
+            if (!snapshot.getDb().isEmpty()
+                && snapshot.getDb().get(Key.of("PROPOSAL_SET".getBytes())) !=null
+            ) {
+              ChainBaseManager.getChainBaseManager().getDynamicPropertiesStore().resetCache();
             }
           }
         }

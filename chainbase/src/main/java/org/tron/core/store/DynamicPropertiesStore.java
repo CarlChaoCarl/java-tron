@@ -2,6 +2,8 @@ package org.tron.core.store;
 
 import com.google.protobuf.ByteString;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
 import lombok.Getter;
@@ -215,6 +217,13 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   private static final byte[] ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE =
       "ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE".getBytes();
+
+  private  Map<String,Long> cacheValues = new HashMap<String, Long>();
+  private static final byte[] PROPOSAL_SET = "PROPOSAL_SET".getBytes();
+
+  public void resetCache() {
+    this.cacheValues.clear();
+  }
 
   @Autowired
   private DynamicPropertiesStore(@Value("properties") String dbName) {
@@ -1111,96 +1120,111 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     logger.debug("MAINTENANCE_TIME_INTERVAL:" + timeInterval);
     this.put(MAINTENANCE_TIME_INTERVAL,
         new BytesCapsule(ByteArray.fromLong(timeInterval)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMaintenanceTimeInterval(timeInterval);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
+    this.cacheValues.put(new String(MAINTENANCE_TIME_INTERVAL), timeInterval);
   }
 
   public long getMaintenanceTimeInterval() {
-    long maintenanceTimeInterval = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getMaintenanceTimeInterval();
-    if (maintenanceTimeInterval > 0) {
-      return maintenanceTimeInterval;
+    Long cacheValue = this.cacheValues.get(new String(MAINTENANCE_TIME_INTERVAL));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(MAINTENANCE_TIME_INTERVAL))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found MAINTENANCE_TIME_INTERVAL"));
+      this.cacheValues.put(new String(MAINTENANCE_TIME_INTERVAL), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(MAINTENANCE_TIME_INTERVAL))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found MAINTENANCE_TIME_INTERVAL"));
   }
 
   public void saveAccountUpgradeCost(long accountUpgradeCost) {
     logger.debug("ACCOUNT_UPGRADE_COST:" + accountUpgradeCost);
     this.put(ACCOUNT_UPGRADE_COST,
         new BytesCapsule(ByteArray.fromLong(accountUpgradeCost)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAccountUpgradeCost(accountUpgradeCost);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
+    this.cacheValues.put(new String(ACCOUNT_UPGRADE_COST), accountUpgradeCost);
   }
 
   public long getAccountUpgradeCost() {
-    long accountUpgradeCost = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAccountUpgradeCost();
-    if (accountUpgradeCost > 0) {
-      return accountUpgradeCost;
+    Long cacheValue = this.cacheValues.get(new String(ACCOUNT_UPGRADE_COST));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ACCOUNT_UPGRADE_COST))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ACCOUNT_UPGRADE_COST"));
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ACCOUNT_UPGRADE_COST))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ACCOUNT_UPGRADE_COST"));
   }
 
   public void saveWitnessPayPerBlock(long pay) {
     logger.debug("WITNESS_PAY_PER_BLOCK:" + pay);
     this.put(WITNESS_PAY_PER_BLOCK,
         new BytesCapsule(ByteArray.fromLong(pay)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveWitnessPayPerBlock(pay);
+    this.cacheValues.put(new String(WITNESS_PAY_PER_BLOCK), pay);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getWitnessPayPerBlock() {
-    long witnessPayPerBlock = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getWitnessPayPerBlock();
-    if (witnessPayPerBlock > 0) {
-      return witnessPayPerBlock;
+    Long cacheValue = this.cacheValues.get(new String());
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(WITNESS_PAY_PER_BLOCK))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found WITNESS_PAY_PER_BLOCK"));
+      return value;
+    } else {
+      return cacheValue;
     }
-
-    return Optional.ofNullable(getUnchecked(WITNESS_PAY_PER_BLOCK))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found WITNESS_PAY_PER_BLOCK"));
   }
 
   public void saveWitness127PayPerBlock(long pay) {
     logger.debug("WITNESS_127_PAY_PER_BLOCK:" + pay);
     this.put(WITNESS_127_PAY_PER_BLOCK,
         new BytesCapsule(ByteArray.fromLong(pay)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveWitness127PayPerBlock(pay);
+    this.cacheValues.put(new String(WITNESS_127_PAY_PER_BLOCK), pay);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getWitness127PayPerBlock() {
-    long witness127PayPerBlock = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getWitness127PayPerBlock();
-    if (witness127PayPerBlock > 0) {
-      return witness127PayPerBlock;
+    Long cacheValue = this.cacheValues.get(new String(WITNESS_127_PAY_PER_BLOCK));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(WITNESS_127_PAY_PER_BLOCK))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElse(16000000L);
+      this.cacheValues.put(new String(WITNESS_127_PAY_PER_BLOCK), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(WITNESS_127_PAY_PER_BLOCK))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElse(16000000L);
   }
 
   public void saveWitnessStandbyAllowance(long allowance) {
     logger.debug("WITNESS_STANDBY_ALLOWANCE:" + allowance);
     this.put(WITNESS_STANDBY_ALLOWANCE,
         new BytesCapsule(ByteArray.fromLong(allowance)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveWitnessStandbyAllowance(allowance);
+    this.cacheValues.put(new String(WITNESS_STANDBY_ALLOWANCE), allowance);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getWitnessStandbyAllowance() {
-    long witnessStandbyAllowance = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getWitnessStandbyAllowance();
-    if (witnessStandbyAllowance > 0) {
-      return witnessStandbyAllowance;
+    Long cacheValue = this.cacheValues.get(new String(WITNESS_STANDBY_ALLOWANCE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(WITNESS_STANDBY_ALLOWANCE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found WITNESS_STANDBY_ALLOWANCE"));
+      return value;
+    } else {
+      return cacheValue;
     }
-
-    return Optional.ofNullable(getUnchecked(WITNESS_STANDBY_ALLOWANCE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found WITNESS_STANDBY_ALLOWANCE"));
   }
 
   public void saveOneDayNetLimit(long oneDayNetLimit) {
@@ -1258,19 +1282,23 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveFreeNetLimit(long freeNetLimit) {
     this.put(DynamicResourceProperties.FREE_NET_LIMIT,
         new BytesCapsule(ByteArray.fromLong(freeNetLimit)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveFreeNetLimit(freeNetLimit);
+    this.cacheValues.put(new String(DynamicResourceProperties.FREE_NET_LIMIT), freeNetLimit);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getFreeNetLimit() {
-    long freeNetLimit = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getFreeNetLimit();
-    if (freeNetLimit > 0) {
-      return freeNetLimit;
+    Long cacheValue = this.cacheValues.get(new String(DynamicResourceProperties.FREE_NET_LIMIT));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(DynamicResourceProperties.FREE_NET_LIMIT))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found FREE_NET_LIMIT"));
+      this.cacheValues.put(new String(DynamicResourceProperties.FREE_NET_LIMIT), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(DynamicResourceProperties.FREE_NET_LIMIT))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found FREE_NET_LIMIT"));
   }
 
   public void saveTotalNetWeight(long totalNetWeight) {
@@ -1315,19 +1343,23 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveTotalNetLimit(long totalNetLimit) {
     this.put(DynamicResourceProperties.TOTAL_NET_LIMIT,
         new BytesCapsule(ByteArray.fromLong(totalNetLimit)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveTotalNetLimit(totalNetLimit);
+    this.cacheValues.put(new String(DynamicResourceProperties.TOTAL_NET_LIMIT), totalNetLimit);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getTotalNetLimit() {
-    long totalNetLimit = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getTotalNetLimit();
-    if (totalNetLimit > 0) {
-      return totalNetLimit;
+    Long cacheValue = this.cacheValues.get(new String(DynamicResourceProperties.TOTAL_NET_LIMIT));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_NET_LIMIT))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found TOTAL_NET_LIMIT"));
+      this.cacheValues.put(new String(DynamicResourceProperties.TOTAL_NET_LIMIT), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_NET_LIMIT))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found TOTAL_NET_LIMIT"));
   }
 
   @Deprecated
@@ -1342,7 +1374,8 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveTotalEnergyLimit2(long totalEnergyLimit) {
     this.put(DynamicResourceProperties.TOTAL_ENERGY_LIMIT,
         new BytesCapsule(ByteArray.fromLong(totalEnergyLimit)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveTotalEnergyLimit2(totalEnergyLimit);
+    this.cacheValues.put(new String(DynamicResourceProperties.TOTAL_ENERGY_LIMIT), totalEnergyLimit);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
 
     long ratio = getAdaptiveResourceLimitTargetRatio();
     saveTotalEnergyTargetLimit(totalEnergyLimit / ratio);
@@ -1352,47 +1385,60 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getTotalEnergyLimit() {
-    return Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_ENERGY_LIMIT))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found TOTAL_ENERGY_LIMIT"));
+    Long cacheValue = this.cacheValues.get(new String(DynamicResourceProperties.TOTAL_ENERGY_LIMIT));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_ENERGY_LIMIT))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found TOTAL_ENERGY_LIMIT"));
+      return value;
+    } else {
+      return cacheValue;
+    }
   }
 
   public void saveTotalEnergyCurrentLimit(long totalEnergyCurrentLimit) {
     this.put(DynamicResourceProperties.TOTAL_ENERGY_CURRENT_LIMIT,
         new BytesCapsule(ByteArray.fromLong(totalEnergyCurrentLimit)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveTotalEnergyCurrentLimit(totalEnergyCurrentLimit);
+    this.cacheValues.put(new String(DynamicResourceProperties.TOTAL_ENERGY_CURRENT_LIMIT)
+        , totalEnergyCurrentLimit);
+
   }
 
   public long getTotalEnergyCurrentLimit() {
-    long totalEnergyCurrentLimit = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getTotalEnergyCurrentLimit();
-    if (totalEnergyCurrentLimit > 0) {
-      return totalEnergyCurrentLimit;
+    Long cacheValue = this.cacheValues.get(new String(DynamicResourceProperties.TOTAL_ENERGY_CURRENT_LIMIT));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_ENERGY_CURRENT_LIMIT))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found TOTAL_ENERGY_CURRENT_LIMIT"));
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_ENERGY_CURRENT_LIMIT))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found TOTAL_ENERGY_CURRENT_LIMIT"));
   }
 
   public void saveTotalEnergyTargetLimit(long targetTotalEnergyLimit) {
     this.put(DynamicResourceProperties.TOTAL_ENERGY_TARGET_LIMIT,
         new BytesCapsule(ByteArray.fromLong(targetTotalEnergyLimit)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveTotalEnergyTargetLimit(targetTotalEnergyLimit);
+    this.cacheValues.put(new String(DynamicResourceProperties.TOTAL_ENERGY_TARGET_LIMIT), targetTotalEnergyLimit);
   }
 
   public long getTotalEnergyTargetLimit() {
-    long totalEnergyTargetLimit = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getTotalEnergyTargetLimit();
-    if (totalEnergyTargetLimit > 0) {
-      return totalEnergyTargetLimit;
+    Long cacheValue = this.cacheValues.get(new String(DynamicResourceProperties.TOTAL_ENERGY_TARGET_LIMIT));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_ENERGY_TARGET_LIMIT))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found TOTAL_ENERGY_TARGET_LIMIT"));
+      this.cacheValues.put(new String(DynamicResourceProperties.TOTAL_ENERGY_TARGET_LIMIT), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(DynamicResourceProperties.TOTAL_ENERGY_TARGET_LIMIT))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found TOTAL_ENERGY_TARGET_LIMIT"));
   }
 
   public void saveTotalEnergyAverageUsage(long totalEnergyAverageUsage) {
@@ -1411,43 +1457,48 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAdaptiveResourceLimitMultiplier(long adaptiveResourceLimitMultiplier) {
     this.put(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_MULTIPLIER,
         new BytesCapsule(ByteArray.fromLong(adaptiveResourceLimitMultiplier)));
-    ChainBaseManager.getChainBaseManager()
-        .getProposalSettingStore().saveAdaptiveResourceLimitMultiplier(adaptiveResourceLimitMultiplier);
+    this.cacheValues.put(new String(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_MULTIPLIER)
+        , adaptiveResourceLimitMultiplier);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAdaptiveResourceLimitMultiplier() {
-    long adaptiveResourceLimitMultiplier = ChainBaseManager.getChainBaseManager()
-        .getProposalSettingStore().getAdaptiveResourceLimitMultiplier();
-    if (adaptiveResourceLimitMultiplier > 0) {
-      return adaptiveResourceLimitMultiplier;
+    Long cacheValue = this.cacheValues.get(new String(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_MULTIPLIER));
+    if (cacheValue == null) {
+      Long value = Optional
+          .ofNullable(getUnchecked(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_MULTIPLIER))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ADAPTIVE_RESOURCE_LIMIT_MULTIPLIER"));
+      this.cacheValues.put(new String(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_MULTIPLIER), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional
-        .ofNullable(getUnchecked(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_MULTIPLIER))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ADAPTIVE_RESOURCE_LIMIT_MULTIPLIER"));
   }
 
   public void saveAdaptiveResourceLimitTargetRatio(long adaptiveResourceLimitTargetRatio) {
     this.put(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO,
         new BytesCapsule(ByteArray.fromLong(adaptiveResourceLimitTargetRatio)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore()
-        .saveAdaptiveResourceLimitTargetRatio(adaptiveResourceLimitTargetRatio);
+    this.cacheValues.put(new String(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO)
+        , adaptiveResourceLimitTargetRatio);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAdaptiveResourceLimitTargetRatio() {
-    long adaptiveResourceLimitTargetRatio = ChainBaseManager.getChainBaseManager()
-        .getProposalSettingStore().getAdaptiveResourceLimitTargetRatio();
-    if (adaptiveResourceLimitTargetRatio > 0) {
-      return adaptiveResourceLimitTargetRatio;
+    Long cacheValue = this.cacheValues.get(new String(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO));
+    if (cacheValue == null) {
+      Long value = Optional
+          .ofNullable(getUnchecked(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO"));
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional
-        .ofNullable(getUnchecked(DynamicResourceProperties.ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO"));
   }
 
   public void saveTotalEnergyAverageTime(long totalEnergyAverageTime) {
@@ -1479,53 +1530,65 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveEnergyFee(long totalEnergyFee) {
     this.put(ENERGY_FEE,
         new BytesCapsule(ByteArray.fromLong(totalEnergyFee)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveEnergyFee(totalEnergyFee);
+    this.cacheValues.put(new String(ENERGY_FEE), totalEnergyFee);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getEnergyFee() {
-    long energyFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getEnergyFee();
-    if (energyFee > 0) {
-      return energyFee;
+    Long cacheValue = this.cacheValues.get(new String(ENERGY_FEE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ENERGY_FEE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ENERGY_FEE"));
+      return value;
+    } else {
+      return cacheValue;
     }
-
-    return Optional.ofNullable(getUnchecked(ENERGY_FEE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ENERGY_FEE"));
   }
 
   public void saveMaxCpuTimeOfOneTx(long time) {
     this.put(MAX_CPU_TIME_OF_ONE_TX,
         new BytesCapsule(ByteArray.fromLong(time)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMaxCpuTimeOfOneTx(time);
+    this.cacheValues.put(new String(MAX_CPU_TIME_OF_ONE_TX), time);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getMaxCpuTimeOfOneTx() {
-    long maxCpuTimeOfOneTx = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getMaxCpuTimeOfOneTx();
-    if (maxCpuTimeOfOneTx > 0) {
-      return maxCpuTimeOfOneTx;
+    Long cacheValue = this.cacheValues.get(new String(MAX_CPU_TIME_OF_ONE_TX));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(MAX_CPU_TIME_OF_ONE_TX))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found MAX_CPU_TIME_OF_ONE_TX"));
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(MAX_CPU_TIME_OF_ONE_TX))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found MAX_CPU_TIME_OF_ONE_TX"));
   }
 
   public void saveCreateAccountFee(long fee) {
     this.put(CREATE_ACCOUNT_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveCreateAccountFee(fee);
+    this.cacheValues.put(new String(CREATE_ACCOUNT_FEE), fee);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getShieldedTransactionCreateAccountFee() {
-    return Optional.ofNullable(getUnchecked(SHIELDED_TRANSACTION_CREATE_ACCOUNT_FEE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException(
-                "not found SHIELDED_TRANSACTION_CREATE_ACCOUNT_FEE"));
+    Long cacheValue = this.cacheValues.get(new String(SHIELDED_TRANSACTION_CREATE_ACCOUNT_FEE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(SHIELDED_TRANSACTION_CREATE_ACCOUNT_FEE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException(
+                  "not found SHIELDED_TRANSACTION_CREATE_ACCOUNT_FEE"));
+      return value;
+    } else {
+      return cacheValue;
+    }
   }
 
   public void saveShieldedTransactionCreateAccountFee(long fee) {
@@ -1560,11 +1623,6 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getCreateAccountFee() {
-    long createAccountFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getCreateAccountFee();
-    if (createAccountFee > 0) {
-      return createAccountFee;
-    }
-
     return Optional.ofNullable(getUnchecked(CREATE_ACCOUNT_FEE))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
@@ -1575,132 +1633,152 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveCreateNewAccountFeeInSystemContract(long fee) {
     this.put(CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT,
         new BytesCapsule(ByteArray.fromLong(fee)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveCreateNewAccountFeeInSystemContract(fee);
+    this.cacheValues.put(new String(CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT), fee);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getCreateNewAccountFeeInSystemContract() {
-    long createNewAccountFeeInSystemContract = ChainBaseManager.getChainBaseManager()
-        .getProposalSettingStore().getCreateNewAccountFeeInSystemContract();
-    if (createNewAccountFeeInSystemContract > 0) {
-      return createNewAccountFeeInSystemContract;
+    Long cacheValue = this.cacheValues.get(new String(CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException(
+                  "not found CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT"));
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException(
-                "not found CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT"));
   }
 
   public void saveCreateNewAccountBandwidthRate(long rate) {
     this.put(CREATE_NEW_ACCOUNT_BANDWIDTH_RATE,
         new BytesCapsule(ByteArray.fromLong(rate)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveCreateNewAccountBandwidthRate(rate);
+    this.cacheValues.put(new String(CREATE_NEW_ACCOUNT_BANDWIDTH_RATE), rate);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getCreateNewAccountBandwidthRate() {
-    long createNewAccountBandwidthRate = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getCreateNewAccountBandwidthRate();
-    if (createNewAccountBandwidthRate > 0) {
-      return createNewAccountBandwidthRate;
+    Long cacheValue = this.cacheValues.get(new String(CREATE_NEW_ACCOUNT_BANDWIDTH_RATE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(CREATE_NEW_ACCOUNT_BANDWIDTH_RATE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException(
+                  "not found CREATE_NsEW_ACCOUNT_BANDWIDTH_RATE2"));
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(CREATE_NEW_ACCOUNT_BANDWIDTH_RATE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException(
-                "not found CREATE_NsEW_ACCOUNT_BANDWIDTH_RATE2"));
   }
 
   public void saveTransactionFee(long fee) {
     this.put(TRANSACTION_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveTransactionFee(fee);
+    this.cacheValues.put(new String(TRANSACTION_FEE), fee);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getTransactionFee() {
-    long transactionFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getTransactionFee();
-    if (transactionFee > 0) {
-      return transactionFee;
+    Long cacheValue = this.cacheValues.get(new String(TRANSACTION_FEE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(TRANSACTION_FEE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found TRANSACTION_FEE"));
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(TRANSACTION_FEE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found TRANSACTION_FEE"));
   }
 
   public void saveAssetIssueFee(long fee) {
     this.put(ASSET_ISSUE_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAssetIssueFee(fee);
+    this.cacheValues.put(new String(ASSET_ISSUE_FEE), fee);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public void saveUpdateAccountPermissionFee(long fee) {
     this.put(UPDATE_ACCOUNT_PERMISSION_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveUpdateAccountPermissionFee(fee);
+    this.cacheValues.put(new String(UPDATE_ACCOUNT_PERMISSION_FEE), fee);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public void saveMultiSignFee(long fee) {
     this.put(MULTI_SIGN_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMultiSignFee(fee);
+    this.cacheValues.put(new String(MULTI_SIGN_FEE), fee);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAssetIssueFee() {
-    long assetIssueFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAssetIssueFee();
-    if (assetIssueFee > 0) {
-      return assetIssueFee;
+    Long cacheValue = this.cacheValues.get(new String(ASSET_ISSUE_FEE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ASSET_ISSUE_FEE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ASSET_ISSUE_FEE"));
+      return value;
+    } else {
+      return cacheValue;
     }
-
-    return Optional.ofNullable(getUnchecked(ASSET_ISSUE_FEE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ASSET_ISSUE_FEE"));
   }
 
   public long getUpdateAccountPermissionFee() {
-    long updateAccountPermissionFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getUpdateAccountPermissionFee();
-    if (updateAccountPermissionFee > 0) {
-      return updateAccountPermissionFee;
+    Long cacheValue = this.cacheValues.get(new String(UPDATE_ACCOUNT_PERMISSION_FEE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(UPDATE_ACCOUNT_PERMISSION_FEE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found UPDATE_ACCOUNT_PERMISSION_FEE"));
+      this.cacheValues.put(new String(UPDATE_ACCOUNT_PERMISSION_FEE), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(UPDATE_ACCOUNT_PERMISSION_FEE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found UPDATE_ACCOUNT_PERMISSION_FEE"));
   }
 
   public long getMultiSignFee() {
-    long multiSignFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getMultiSignFee();
-    if (multiSignFee > 0) {
-      return multiSignFee;
+    Long cacheValue = this.cacheValues.get(new String(MULTI_SIGN_FEE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(MULTI_SIGN_FEE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found MULTI_SIGN_FEE"));
+      this.cacheValues.put(new String(MULTI_SIGN_FEE), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(MULTI_SIGN_FEE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found MULTI_SIGN_FEE"));
   }
 
   public void saveExchangeCreateFee(long fee) {
     this.put(EXCHANGE_CREATE_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveExchangeCreateFee(fee);
+    this.cacheValues.put(new String(EXCHANGE_CREATE_FEE), fee);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getExchangeCreateFee() {
-    long exchangeCreateFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getExchangeCreateFee();
-    if (exchangeCreateFee > 0) {
-      return exchangeCreateFee;
+    Long cacheValue = this.cacheValues.get(new String(EXCHANGE_CREATE_FEE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(EXCHANGE_CREATE_FEE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found EXCHANGE_CREATE_FEE"));
+      return value;
+    } else {
+      return cacheValue;
     }
-
-    return Optional.ofNullable(getUnchecked(EXCHANGE_CREATE_FEE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found EXCHANGE_CREATE_FEE"));
   }
 
   public void saveExchangeBalanceLimit(long limit) {
@@ -1717,21 +1795,25 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public void saveAllowMarketTransaction(long allowMarketTransaction) {
-    this.put(DynamicPropertiesStore.ALLOW_MARKET_TRANSACTION,
+    this.put(ALLOW_MARKET_TRANSACTION,
         new BytesCapsule(ByteArray.fromLong(allowMarketTransaction)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowMarketTransaction(allowMarketTransaction);
+    this.cacheValues.put(new String(ALLOW_MARKET_TRANSACTION), allowMarketTransaction);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowMarketTransaction() {
-    long allowMarketTransaction = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowMarketTransaction();
-    if (allowMarketTransaction > 0) {
-      return allowMarketTransaction;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_MARKET_TRANSACTION));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_MARKET_TRANSACTION))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_MARKET_TRANSACTION"));
+      this.cacheValues.put(new String(ALLOW_MARKET_TRANSACTION), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_MARKET_TRANSACTION))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_MARKET_TRANSACTION"));
   }
 
   public boolean supportAllowMarketTransaction() {
@@ -1741,37 +1823,45 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveMarketSellFee(long fee) {
     this.put(MARKET_SELL_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMarketSellFee(fee);
+    this.cacheValues.put(new String(MARKET_SELL_FEE), fee);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getMarketSellFee() {
-    long marketSellFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getMarketSellFee();
-    if (marketSellFee > 0) {
-      return marketSellFee;
+    Long cacheValue = this.cacheValues.get(new String(MARKET_SELL_FEE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(MARKET_SELL_FEE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found MARKET_SELL_FEE"));
+      this.cacheValues.put(new String(MARKET_SELL_FEE), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(MARKET_SELL_FEE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found MARKET_SELL_FEE"));
   }
 
   public void saveMarketCancelFee(long fee) {
     this.put(MARKET_CANCEL_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMarketCancelFee(fee);
+    this.cacheValues.put(new String(MARKET_CANCEL_FEE), fee);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getMarketCancelFee() {
-    long marketCancelFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getMarketCancelFee();
-    if (marketCancelFee > 0) {
-      return marketCancelFee;
+    Long cacheValue = this.cacheValues.get(new String(MARKET_CANCEL_FEE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(MARKET_CANCEL_FEE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found MARKET_CANCEL_FEE"));
+      this.cacheValues.put(new String(MARKET_CANCEL_FEE), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(MARKET_CANCEL_FEE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found MARKET_CANCEL_FEE"));
   }
 
   public void saveMarketQuantityLimit(long limit) {
@@ -1795,19 +1885,23 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowTransactionFeePool(long value) {
     this.put(ALLOW_TRANSACTION_FEE_POOL,
         new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTransactionFeePool(value);
+    this.cacheValues.put(new String(ALLOW_TRANSACTION_FEE_POOL), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowTransactionFeePool() {
-    long allowTransactionFeePool = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTransactionFeePool();
-    if (allowTransactionFeePool > 0) {
-      return allowTransactionFeePool;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_TRANSACTION_FEE_POOL));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_TRANSACTION_FEE_POOL))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_TRANSACTION_FEE_POOL"));
+      this.cacheValues.put(new String(ALLOW_TRANSACTION_FEE_POOL), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_TRANSACTION_FEE_POOL))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_TRANSACTION_FEE_POOL"));
   }
 
   public void addTransactionFeePool(long amount) {
@@ -1925,125 +2019,150 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveRemoveThePowerOfTheGr(long rate) {
     this.put(REMOVE_THE_POWER_OF_THE_GR,
         new BytesCapsule(ByteArray.fromLong(rate)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveRemoveThePowerOfTheGr(rate);
+    this.cacheValues.put(new String(REMOVE_THE_POWER_OF_THE_GR), rate);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getRemoveThePowerOfTheGr() {
-    long removeThePowerOfTheGr = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getRemoveThePowerOfTheGr();
-    if (removeThePowerOfTheGr > 0) {
-      return removeThePowerOfTheGr;
+    Long cacheValue = this.cacheValues.get(new String(REMOVE_THE_POWER_OF_THE_GR));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(REMOVE_THE_POWER_OF_THE_GR))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found REMOVE_THE_POWER_OF_THE_GR"));
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(REMOVE_THE_POWER_OF_THE_GR))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found REMOVE_THE_POWER_OF_THE_GR"));
   }
 
   public void saveAllowDelegateResource(long value) {
     this.put(ALLOW_DELEGATE_RESOURCE,
         new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowDelegateResource(value);
+    this.cacheValues.put(new String(ALLOW_DELEGATE_RESOURCE), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowDelegateResource() {
-    long allowDelegateResource = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowDelegateResource();
-    if (allowDelegateResource > 0) {
-      return allowDelegateResource;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_DELEGATE_RESOURCE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_DELEGATE_RESOURCE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_DELEGATE_RESOURCE"));
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_DELEGATE_RESOURCE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_DELEGATE_RESOURCE"));
   }
 
   public void saveAllowAdaptiveEnergy(long value) {
     this.put(ALLOW_ADAPTIVE_ENERGY,
         new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowAdaptiveEnergy(value);
+    this.cacheValues.put(new String(ALLOW_ADAPTIVE_ENERGY), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowAdaptiveEnergy() {
-    long allowAdaptiveEnergy = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowAdaptiveEnergy();
-    if (allowAdaptiveEnergy > 0) {
-      return allowAdaptiveEnergy;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_ADAPTIVE_ENERGY));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_ADAPTIVE_ENERGY))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_ADAPTIVE_ENERGY"));
+      this.cacheValues.put(new String(ALLOW_ADAPTIVE_ENERGY), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_ADAPTIVE_ENERGY))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_ADAPTIVE_ENERGY"));
   }
 
   public void saveAllowTvmTransferTrc10(long value) {
     this.put(ALLOW_TVM_TRANSFER_TRC10,
         new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmTransferTrc10(value);
+    this.cacheValues.put(new String(ALLOW_TVM_TRANSFER_TRC10), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowTvmTransferTrc10() {
-    long allowTvmTransferTrc10 = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmTransferTrc10();
-    if (allowTvmTransferTrc10 > 0) {
-      return allowTvmTransferTrc10;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_TVM_TRANSFER_TRC10));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_TVM_TRANSFER_TRC10))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_TVM_TRANSFER_TRC10"));
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_TRANSFER_TRC10))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_TVM_TRANSFER_TRC10"));
   }
 
   public void saveAllowTvmConstantinople(long value) {
     this.put(ALLOW_TVM_CONSTANTINOPLE,
         new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmConstantinople(value);
+    this.cacheValues.put(new String(ALLOW_TVM_CONSTANTINOPLE), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowTvmConstantinople() {
-    long allowTvmConstantinople = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmConstantinople();
-    if (allowTvmConstantinople > 0) {
-      return allowTvmConstantinople;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_TVM_CONSTANTINOPLE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_TVM_CONSTANTINOPLE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_TVM_CONSTANTINOPLE"));
+      this.cacheValues.put(new String(ALLOW_TVM_CONSTANTINOPLE), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_CONSTANTINOPLE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_TVM_CONSTANTINOPLE"));
   }
 
   public void saveAllowTvmSolidity059(long value) {
     this.put(ALLOW_TVM_SOLIDITY_059,
         new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmSolidity059(value);
+    this.cacheValues.put(new String(ALLOW_TVM_SOLIDITY_059), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowTvmSolidity059() {
-    long allowTvmSolidity059 = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmSolidity059();
-    if (allowTvmSolidity059 > 0) {
-      return allowTvmSolidity059;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_TVM_SOLIDITY_059));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_TVM_SOLIDITY_059))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(() -> new IllegalArgumentException("not found ALLOW_TVM_SOLIDITY_059"));
+      this.cacheValues.put(new String(ALLOW_TVM_SOLIDITY_059), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_SOLIDITY_059))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(() -> new IllegalArgumentException("not found ALLOW_TVM_SOLIDITY_059"));
   }
 
   public void saveForbidTransferToContract(long value) {
     this.put(FORBID_TRANSFER_TO_CONTRACT,
         new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveForbidTransferToContract(value);
+    this.cacheValues.put(new String(FORBID_TRANSFER_TO_CONTRACT), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getForbidTransferToContract() {
-    long forbidTransferToContract = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getForbidTransferToContract();
-    if (forbidTransferToContract > 0) {
-      return forbidTransferToContract;
+    Long cacheValue = this.cacheValues.get(new String(FORBID_TRANSFER_TO_CONTRACT));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(FORBID_TRANSFER_TO_CONTRACT))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(() -> new IllegalArgumentException("not found FORBID_TRANSFER_TO_CONTRACT"));
+      this.cacheValues.put(new String(FORBID_TRANSFER_TO_CONTRACT), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(FORBID_TRANSFER_TO_CONTRACT))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(() -> new IllegalArgumentException("not found FORBID_TRANSFER_TO_CONTRACT"));
   }
 
   public void saveAvailableContractType(byte[] value) {
@@ -2096,44 +2215,50 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowUpdateAccountName(long rate) {
     this.put(ALLOW_UPDATE_ACCOUNT_NAME,
         new BytesCapsule(ByteArray.fromLong(rate)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowUpdateAccountName(rate);
+    this.cacheValues.put(new String(ALLOW_UPDATE_ACCOUNT_NAME), rate);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowUpdateAccountName() {
-    long allowUpdateAccountName = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowUpdateAccountName();
-    if (allowUpdateAccountName > 0) {
-      return allowUpdateAccountName;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_UPDATE_ACCOUNT_NAME));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_UPDATE_ACCOUNT_NAME))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_UPDATE_ACCOUNT_NAME"));
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_UPDATE_ACCOUNT_NAME))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_UPDATE_ACCOUNT_NAME"));
   }
 
   public void saveAllowSameTokenName(long rate) {
     this.put(ALLOW_SAME_TOKEN_NAME,
         new BytesCapsule(ByteArray.fromLong(rate)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowSameTokenName(rate);
+    this.cacheValues.put(new String(ALLOW_SAME_TOKEN_NAME), rate);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowSameTokenName() {
-    long allowSameTokenName = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowSameTokenName();
-    if (allowSameTokenName > 0) {
-      return allowSameTokenName;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_SAME_TOKEN_NAME));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_SAME_TOKEN_NAME))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_SAME_TOKEN_NAME"));
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_SAME_TOKEN_NAME))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_SAME_TOKEN_NAME"));
   }
 
   public void saveAllowCreationOfContracts(long allowCreationOfContracts) {
     this.put(ALLOW_CREATION_OF_CONTRACTS,
         new BytesCapsule(ByteArray.fromLong(allowCreationOfContracts)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore()
-        .saveAllowCreationOfContracts(allowCreationOfContracts);
+    this.cacheValues.put(new String(ALLOW_CREATION_OF_CONTRACTS), allowCreationOfContracts);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public void saveTotalSignNum(int num) {
@@ -2152,32 +2277,37 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowMultiSign(long allowMultiSing) {
     this.put(ALLOW_MULTI_SIGN,
         new BytesCapsule(ByteArray.fromLong(allowMultiSing)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowMultiSign(allowMultiSing);
+    this.cacheValues.put(new String(ALLOW_MULTI_SIGN), allowMultiSing);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowMultiSign() {
-    long allowMultiSign = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowMultiSign();
-    if (allowMultiSign > 0) {
-      return allowMultiSign;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_MULTI_SIGN));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_MULTI_SIGN))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_MULTI_SIGN"));
+      this.cacheValues.put(new String(ALLOW_MULTI_SIGN), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_MULTI_SIGN))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_MULTI_SIGN"));
   }
 
   public long getAllowCreationOfContracts() {
-    long allowCreationOfContracts = ChainBaseManager.getChainBaseManager()
-        .getProposalSettingStore().getAllowCreationOfContracts();
-    if (allowCreationOfContracts > 0) {
-      return allowCreationOfContracts;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_CREATION_OF_CONTRACTS));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_CREATION_OF_CONTRACTS))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_CREATION_OF_CONTRACTS"));
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_CREATION_OF_CONTRACTS))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_CREATION_OF_CONTRACTS"));
   }
 
   public boolean supportVM() {
@@ -2199,43 +2329,49 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public void saveAllowShieldedTRC20Transaction(long allowShieldedTRC20Transaction) {
-    this.put(DynamicPropertiesStore.ALLOW_SHIELDED_TRC20_TRANSACTION,
+    this.put(ALLOW_SHIELDED_TRC20_TRANSACTION,
         new BytesCapsule(ByteArray.fromLong(allowShieldedTRC20Transaction)));
-    ChainBaseManager.getChainBaseManager()
-        .getProposalSettingStore().saveAllowShieldedTRC20Transaction(allowShieldedTRC20Transaction);
+    this.cacheValues.put(new String(ALLOW_SHIELDED_TRC20_TRANSACTION), allowShieldedTRC20Transaction);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowShieldedTRC20Transaction() {
-    long allowShieldedTRC20Transaction = ChainBaseManager.getChainBaseManager()
-        .getProposalSettingStore().getAllowShieldedTRC20Transaction();
-    if (allowShieldedTRC20Transaction > 0) {
-      return allowShieldedTRC20Transaction;
-    }
     String msg = "not found ALLOW_SHIELDED_TRC20_TRANSACTION";
-    return Optional.ofNullable(getUnchecked(ALLOW_SHIELDED_TRC20_TRANSACTION))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException(msg));
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_SHIELDED_TRC20_TRANSACTION));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_SHIELDED_TRC20_TRANSACTION))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException(msg));
+      this.cacheValues.put(new String(ALLOW_SHIELDED_TRC20_TRANSACTION), value);
+      return value;
+    } else {
+      return cacheValue;
+    }
   }
 
   public void saveAllowTvmIstanbul(long allowTVMIstanbul) {
-    this.put(DynamicPropertiesStore.ALLOW_TVM_ISTANBUL,
+    this.put(ALLOW_TVM_ISTANBUL,
         new BytesCapsule(ByteArray.fromLong(allowTVMIstanbul)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmIstanbul(allowTVMIstanbul);
+    this.cacheValues.put(new String(ALLOW_TVM_ISTANBUL), allowTVMIstanbul);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowTvmIstanbul() {
-    long allowTvmIstanbul = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmIstanbul();
-    if (allowTvmIstanbul > 0) {
-      return allowTvmIstanbul;
-    }
     String msg = "not found ALLOW_TVM_ISTANBUL";
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_ISTANBUL))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException(msg));
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_TVM_ISTANBUL));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_TVM_ISTANBUL))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException(msg));
+      this.cacheValues.put(new String(ALLOW_TVM_ISTANBUL), value);
+      return value;
+    } else {
+      return cacheValue;
+    }
   }
 
   public boolean supportShieldedTransaction() {
@@ -2509,14 +2645,17 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
    * get allow protobuf number.
    */
   public long getAllowProtoFilterNum() {
-    long allowProtoFilterNum = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowProtoFilterNum();
-    if (allowProtoFilterNum > 0) {
-      return allowProtoFilterNum;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_PROTO_FILTER_NUM));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_PROTO_FILTER_NUM))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(() -> new IllegalArgumentException("not found allow protobuf number"));
+      this.cacheValues.put(new String(ALLOW_PROTO_FILTER_NUM), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_PROTO_FILTER_NUM))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(() -> new IllegalArgumentException("not found allow protobuf number"));
   }
 
   /**
@@ -2525,25 +2664,30 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowProtoFilterNum(long num) {
     logger.info("Update allow protobuf number = {}.", num);
     this.put(ALLOW_PROTO_FILTER_NUM, new BytesCapsule(ByteArray.fromLong(num)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowProtoFilterNum(num);
+    this.cacheValues.put(new String(ALLOW_PROTO_FILTER_NUM), num);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public void saveAllowAccountStateRoot(long allowAccountStateRoot) {
     this.put(ALLOW_ACCOUNT_STATE_ROOT,
         new BytesCapsule(ByteArray.fromLong(allowAccountStateRoot)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowAccountStateRoot(allowAccountStateRoot);
+    this.cacheValues.put(new String(ALLOW_ACCOUNT_STATE_ROOT), allowAccountStateRoot);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowAccountStateRoot() {
-    long allowAccountStateRoot = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowAccountStateRoot();
-    if (allowAccountStateRoot > 0) {
-      return allowAccountStateRoot;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_ACCOUNT_STATE_ROOT));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_ACCOUNT_STATE_ROOT))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_ACCOUNT_STATE_ROOT"));
+      this.cacheValues.put(new String(ALLOW_ACCOUNT_STATE_ROOT), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_ACCOUNT_STATE_ROOT))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_ACCOUNT_STATE_ROOT"));
   }
 
   public boolean allowAccountStateRoot() {
@@ -2564,18 +2708,22 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveChangeDelegation(long number) {
     this.put(CHANGE_DELEGATION,
         new BytesCapsule(ByteArray.fromLong(number)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveChangeDelegation(number);
+    this.cacheValues.put(new String(CHANGE_DELEGATION), number);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getChangeDelegation() {
-    long changeDelegation = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getChangeDelegation();
-    if (changeDelegation > 0) {
-      return changeDelegation;
+    Long cacheValue = this.cacheValues.get(new String(CHANGE_DELEGATION));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(CHANGE_DELEGATION))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(() -> new IllegalArgumentException("not found CHANGE_DELEGATION"));
+      this.cacheValues.put(new String(CHANGE_DELEGATION), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(CHANGE_DELEGATION))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(() -> new IllegalArgumentException("not found CHANGE_DELEGATION"));
   }
 
   public boolean allowChangeDelegation() {
@@ -2585,19 +2733,22 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowPBFT(long number) {
     this.put(ALLOW_PBFT,
         new BytesCapsule(ByteArray.fromLong(number)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowPBFT(number);
+    this.cacheValues.put(new String(ALLOW_PBFT), number);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowPBFT() {
-    long allowPBFT = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowPBFT();
-    if (allowPBFT > 0) {
-      return allowPBFT;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_PBFT));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_PBFT))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(() -> new IllegalArgumentException("not found ALLOW_PBFT"));
+      this.cacheValues.put(new String(ALLOW_PBFT), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-
-    return Optional.ofNullable(getUnchecked(ALLOW_PBFT))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(() -> new IllegalArgumentException("not found ALLOW_PBFT"));
   }
 
   public boolean allowPBFT() {
@@ -2605,21 +2756,25 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getMaxFeeLimit() {
-    long maxFeeLimit = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getMaxFeeLimit();
-    if (maxFeeLimit > 0) {
-      return maxFeeLimit;
+    Long cacheValue = this.cacheValues.get(new String(MAX_FEE_LIMIT));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(MAX_FEE_LIMIT))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found MAX_FEE_LIMIT"));
+      this.cacheValues.put(new String(MAX_FEE_LIMIT), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(MAX_FEE_LIMIT))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found MAX_FEE_LIMIT"));
   }
 
   public void saveMaxFeeLimit(long maxFeeLimit) {
     this.put(MAX_FEE_LIMIT,
         new BytesCapsule(ByteArray.fromLong(maxFeeLimit)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMaxFeeLimit(maxFeeLimit);
+    this.cacheValues.put(new String(MAX_FEE_LIMIT), maxFeeLimit);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getBurnTrxAmount() {
@@ -2647,19 +2802,23 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveAllowBlackHoleOptimization(long value) {
     this.put(ALLOW_BLACKHOLE_OPTIMIZATION, new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowBlackHoleOptimization(value);
+    this.cacheValues.put(new String(ALLOW_BLACKHOLE_OPTIMIZATION), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowBlackHoleOptimization() {
-    long allowBlackHoleOptimization = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowBlackHoleOptimization();
-    if (allowBlackHoleOptimization > 0) {
-      return allowBlackHoleOptimization;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_BLACKHOLE_OPTIMIZATION));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_BLACKHOLE_OPTIMIZATION))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_BLACKHOLE_OPTIMIZATION"));
+      this.cacheValues.put(new String(ALLOW_BLACKHOLE_OPTIMIZATION), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_BLACKHOLE_OPTIMIZATION))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_BLACKHOLE_OPTIMIZATION"));
   }
 
   public boolean supportAllowNewResourceModel() {
@@ -2676,95 +2835,115 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveAllowNewResourceModel(long value) {
     this.put(ALLOW_NEW_RESOURCE_MODEL, new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowNewResourceModel(value);
+    this.cacheValues.put(new String(ALLOW_NEW_RESOURCE_MODEL), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowNewResourceModel() {
-    long allowNewResourceModel = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowNewResourceModel();
-    if (allowNewResourceModel > 0) {
-      return allowNewResourceModel;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_NEW_RESOURCE_MODEL));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_NEW_RESOURCE_MODEL))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_NEW_RESOURCE_MODEL"));
+      this.cacheValues.put(new String(ALLOW_NEW_RESOURCE_MODEL), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_NEW_RESOURCE_MODEL))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_NEW_RESOURCE_MODEL"));
   }
 
   public void saveAllowTvmFreeze(long allowTvmFreeze) {
-    this.put(DynamicPropertiesStore.ALLOW_TVM_FREEZE,
+    this.put(ALLOW_TVM_FREEZE,
         new BytesCapsule(ByteArray.fromLong(allowTvmFreeze)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmFreeze(allowTvmFreeze);
+    this.cacheValues.put(new String(ALLOW_TVM_FREEZE), allowTvmFreeze);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowTvmFreeze() {
-    long allowTvmFreeze = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmFreeze();
-    if (allowTvmFreeze > 0) {
-      return allowTvmFreeze;
-    }
     String msg = "not found ALLOW_TVM_FREEZE";
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_FREEZE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException(msg));
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_TVM_FREEZE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_TVM_FREEZE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException(msg));
+      this.cacheValues.put(new String(ALLOW_TVM_FREEZE), value);
+      return value;
+    } else {
+      return cacheValue;
+    }
   }
 
   public void saveAllowTvmVote(long allowTvmVote) {
-    this.put(DynamicPropertiesStore.ALLOW_TVM_VOTE,
+    this.put(ALLOW_TVM_VOTE,
         new BytesCapsule(ByteArray.fromLong(allowTvmVote)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmVote(allowTvmVote);
+    this.cacheValues.put(new String(ALLOW_TVM_VOTE), allowTvmVote);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowTvmVote() {
-    long allowTvmVote = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmVote();
-    if (allowTvmVote > 0) {
-      return allowTvmVote;
-    }
     String msg = "not found ALLOW_TVM_VOTE";
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_VOTE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException(msg));
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_TVM_VOTE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_TVM_VOTE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException(msg));
+      this.cacheValues.put(new String(ALLOW_TVM_VOTE), value);
+      return value;
+    } else {
+      return cacheValue;
+    }
   }
 
   public void saveAllowTvmLondon(long allowTvmLondon) {
-    this.put(DynamicPropertiesStore.ALLOW_TVM_LONDON,
+    this.put(ALLOW_TVM_LONDON,
         new BytesCapsule(ByteArray.fromLong(allowTvmLondon)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmLondon(allowTvmLondon);
+    this.cacheValues.put(new String(ALLOW_TVM_LONDON), allowTvmLondon);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowTvmLondon() {
-    long allowTvmLondon = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmLondon();
-    if (allowTvmLondon > 0) {
-      return allowTvmLondon;
-    }
     String msg = "not found ALLOW_TVM_LONDON";
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_LONDON))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException(msg));
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_TVM_LONDON));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_TVM_LONDON))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException(msg));
+      this.cacheValues.put(new String(ALLOW_TVM_LONDON), value);
+      return value;
+    } else {
+      return cacheValue;
+    }
   }
 
   public void saveAllowTvmCompatibleEvm(long allowTvmCompatibleEvm) {
-    this.put(DynamicPropertiesStore.ALLOW_TVM_COMPATIBLE_EVM,
+    this.put(ALLOW_TVM_COMPATIBLE_EVM,
         new BytesCapsule(ByteArray.fromLong(allowTvmCompatibleEvm)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmCompatibleEvm(allowTvmCompatibleEvm);
+    this.cacheValues.put(new String(ALLOW_TVM_COMPATIBLE_EVM), allowTvmCompatibleEvm);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowTvmCompatibleEvm() {
-    long allowTvmCompatibleEvm = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmCompatibleEvm();
-    if (allowTvmCompatibleEvm > 0) {
-      return allowTvmCompatibleEvm;
-    }
     String msg = "not found ALLOW_TVM_COMPATIBLE_EVM";
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_COMPATIBLE_EVM))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException(msg));
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_TVM_COMPATIBLE_EVM));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_TVM_COMPATIBLE_EVM))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException(msg));
+      this.cacheValues.put(new String(ALLOW_TVM_COMPATIBLE_EVM), value);
+      return value;
+    } else {
+      return cacheValue;
+    }
   }
 
   public boolean useNewRewardAlgorithm() {
@@ -2802,38 +2981,46 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   // 1: enable
   public long getAllowAccountAssetOptimization() {
-    long allowAccountAssetOptimization = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowAccountAssetOptimization();
-    if (allowAccountAssetOptimization > 0) {
-      return allowAccountAssetOptimization;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_ACCOUNT_ASSET_OPTIMIZATION));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_ACCOUNT_ASSET_OPTIMIZATION))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_ACCOUNT_ASSET_OPTIMIZATION"));
+      this.cacheValues.put(new String(ALLOW_ACCOUNT_ASSET_OPTIMIZATION), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_ACCOUNT_ASSET_OPTIMIZATION))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_ACCOUNT_ASSET_OPTIMIZATION"));
   }
 
   public void setAllowAccountAssetOptimization(long value) {
     this.put(ALLOW_ACCOUNT_ASSET_OPTIMIZATION, new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().setAllowAccountAssetOptimization(value);
+    this.cacheValues.put(new String(ALLOW_ACCOUNT_ASSET_OPTIMIZATION), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   // 1: enable
   public long getAllowAssetOptimization() {
-    long allowAssetOptimization = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowAssetOptimization();
-    if (allowAssetOptimization > 0) {
-      return allowAssetOptimization;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_ASSET_OPTIMIZATION));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_ASSET_OPTIMIZATION))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_ASSET_OPTIMIZATION"));
+      this.cacheValues.put(new String(ALLOW_ASSET_OPTIMIZATION), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_ASSET_OPTIMIZATION))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_ASSET_OPTIMIZATION"));
   }
 
   public void setAllowAssetOptimization(long value) {
     this.put(ALLOW_ASSET_OPTIMIZATION, new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().setAllowAssetOptimization(value);
+    this.cacheValues.put(new String(ALLOW_ASSET_OPTIMIZATION), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   // for energy price history
@@ -2901,37 +3088,44 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   public void saveAllowHigherLimitForMaxCpuTimeOfOneTx(long value) {
     this.put(ALLOW_HIGHER_LIMIT_FOR_MAX_CPU_TIME_OF_ONE_TX,
         new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowHigherLimitForMaxCpuTimeOfOneTx(value);
+    this.cacheValues.put(new String(ALLOW_HIGHER_LIMIT_FOR_MAX_CPU_TIME_OF_ONE_TX), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowHigherLimitForMaxCpuTimeOfOneTx() {
-    long allowHigherLimitForMaxCpuTimeOfOneTx = ChainBaseManager.getChainBaseManager()
-        .getProposalSettingStore().getAllowHigherLimitForMaxCpuTimeOfOneTx();
-    if (allowHigherLimitForMaxCpuTimeOfOneTx > 0) {
-      return allowHigherLimitForMaxCpuTimeOfOneTx;
-    }
     String msg = "not found ALLOW_HIGHER_LIMIT_FOR_MAX_CPU_TIME_OF_ONE_TX";
-    return Optional.ofNullable(getUnchecked(ALLOW_HIGHER_LIMIT_FOR_MAX_CPU_TIME_OF_ONE_TX))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException(msg));
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_HIGHER_LIMIT_FOR_MAX_CPU_TIME_OF_ONE_TX));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_HIGHER_LIMIT_FOR_MAX_CPU_TIME_OF_ONE_TX))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException(msg));
+      this.cacheValues.put(new String(ALLOW_HIGHER_LIMIT_FOR_MAX_CPU_TIME_OF_ONE_TX), value);
+      return value;
+    } else {
+      return cacheValue;
+    }
   }
 
   public long getMemoFee() {
-    long memoFee = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getMemoFee();
-    if (memoFee > 0) {
-      return memoFee;
+    Long cacheValue = this.cacheValues.get(new String(MEMO_FEE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(MEMO_FEE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(() -> new IllegalArgumentException("not found MEMO_FEE"));
+      this.cacheValues.put(new String(MEMO_FEE), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(MEMO_FEE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(() -> new IllegalArgumentException("not found MEMO_FEE"));
   }
 
   public void saveMemoFee(long value) {
     this.put(MEMO_FEE, new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveMemoFee(value);
+    this.cacheValues.put(new String(MEMO_FEE), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public String getMemoFeeHistory() {
@@ -2946,31 +3140,38 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getAllowNewReward() {
-    long allowNewReward = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowNewReward();
-    if (allowNewReward > 0) {
-      return allowNewReward;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_NEW_REWARD));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_NEW_REWARD))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(() -> new IllegalArgumentException("not found AllowNewReward"));
+      this.cacheValues.put(new String(ALLOW_NEW_REWARD), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_NEW_REWARD))
-            .map(BytesCapsule::getData)
-            .map(ByteArray::toLong)
-            .orElseThrow(() -> new IllegalArgumentException("not found AllowNewReward"));
   }
 
   public void saveAllowNewReward(long newReward) {
     this.put(ALLOW_NEW_REWARD, new BytesCapsule(ByteArray.fromLong(newReward)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowNewReward(newReward);
+    this.cacheValues.put(new String(ALLOW_NEW_REWARD), newReward);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowDelegateOptimization() {
-    long allowDelegateOptimization = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowDelegateOptimization();
-    if (allowDelegateOptimization > 0) {
-      return allowDelegateOptimization;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_DELEGATE_OPTIMIZATION));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_DELEGATE_OPTIMIZATION))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_DELEGATE_OPTIMIZATION"));
+      this.cacheValues.put(new String(ALLOW_DELEGATE_OPTIMIZATION), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_DELEGATE_OPTIMIZATION))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_DELEGATE_OPTIMIZATION"));
   }
 
   public boolean supportAllowDelegateOptimization() {
@@ -2979,19 +3180,23 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveAllowDelegateOptimization(long value) {
     this.put(ALLOW_DELEGATE_OPTIMIZATION, new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowDelegateOptimization(value);
+    this.cacheValues.put(new String(ALLOW_DELEGATE_OPTIMIZATION), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowDynamicEnergy() {
-    long allowDynamicEnergy = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowDynamicEnergy();
-    if (allowDynamicEnergy > 0) {
-      return allowDynamicEnergy;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_DYNAMIC_ENERGY));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_DYNAMIC_ENERGY))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found ALLOW_DYNAMIC_ENERGY"));
+      this.cacheValues.put(new String(ALLOW_DYNAMIC_ENERGY), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_DYNAMIC_ENERGY))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found ALLOW_DYNAMIC_ENERGY"));
   }
 
   public boolean supportAllowDynamicEnergy() {
@@ -3000,59 +3205,71 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveAllowDynamicEnergy(long value) {
     this.put(ALLOW_DYNAMIC_ENERGY, new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowDynamicEnergy(value);
+    this.cacheValues.put(new String(ALLOW_DYNAMIC_ENERGY), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getDynamicEnergyThreshold() {
-    long dynamicEnergyThreshold = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getDynamicEnergyThreshold();
-    if (dynamicEnergyThreshold > 0) {
-      return dynamicEnergyThreshold;
+    Long cacheValue = this.cacheValues.get(new String(DYNAMIC_ENERGY_THRESHOLD));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_THRESHOLD))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found DYNAMIC_ENERGY_THRESHOLD"));
+      this.cacheValues.put(new String(DYNAMIC_ENERGY_THRESHOLD), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_THRESHOLD))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found DYNAMIC_ENERGY_THRESHOLD"));
   }
 
   public void saveDynamicEnergyThreshold(long value) {
     this.put(DYNAMIC_ENERGY_THRESHOLD, new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveDynamicEnergyThreshold(value);
+    this.cacheValues.put(new String(DYNAMIC_ENERGY_THRESHOLD), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getDynamicEnergyIncreaseFactor() {
-    long dynamicEnergyIncreaseFactor = ChainBaseManager.getChainBaseManager()
-        .getProposalSettingStore().getDynamicEnergyIncreaseFactor();
-    if (dynamicEnergyIncreaseFactor > 0) {
-      return dynamicEnergyIncreaseFactor;
+    Long cacheValue = this.cacheValues.get(new String(DYNAMIC_ENERGY_INCREASE_FACTOR));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_INCREASE_FACTOR))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found DYNAMIC_ENERGY_INCREASE_FACTOR"));
+      this.cacheValues.put(new String(DYNAMIC_ENERGY_INCREASE_FACTOR), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_INCREASE_FACTOR))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found DYNAMIC_ENERGY_INCREASE_FACTOR"));
   }
 
   public void saveDynamicEnergyIncreaseFactor(long value) {
     this.put(DYNAMIC_ENERGY_INCREASE_FACTOR, new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveDynamicEnergyIncreaseFactor(value);
+    this.cacheValues.put(new String(DYNAMIC_ENERGY_INCREASE_FACTOR), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getDynamicEnergyMaxFactor() {
-    long dynamicEnergyMaxFactor = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getDynamicEnergyMaxFactor();
-    if (dynamicEnergyMaxFactor > 0) {
-      return dynamicEnergyMaxFactor;
+    Long cacheValue = this.cacheValues.get(new String(DYNAMIC_ENERGY_MAX_FACTOR));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_MAX_FACTOR))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException("not found DYNAMIC_ENERGY_MAX_FACTOR"));
+      this.cacheValues.put(new String(DYNAMIC_ENERGY_MAX_FACTOR), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(DYNAMIC_ENERGY_MAX_FACTOR))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException("not found DYNAMIC_ENERGY_MAX_FACTOR"));
   }
 
   public void saveDynamicEnergyMaxFactor(long value) {
     this.put(DYNAMIC_ENERGY_MAX_FACTOR, new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveDynamicEnergyMaxFactor(value);
+    this.cacheValues.put(new String(DYNAMIC_ENERGY_MAX_FACTOR), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public boolean allowNewReward() {
@@ -3060,14 +3277,17 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public long getUnfreezeDelayDays() {
-    long unfreezeDelayDays = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getUnfreezeDelayDays();
-    if (unfreezeDelayDays > 0) {
-      return unfreezeDelayDays;
+    Long cacheValue = this.cacheValues.get(new String(UNFREEZE_DELAY_DAYS));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(UNFREEZE_DELAY_DAYS))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(() -> new IllegalArgumentException("not found UNFREEZE_DELAY_DAYS"));
+      this.cacheValues.put(new String(UNFREEZE_DELAY_DAYS), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(UNFREEZE_DELAY_DAYS))
-            .map(BytesCapsule::getData)
-            .map(ByteArray::toLong)
-            .orElseThrow(() -> new IllegalArgumentException("not found UNFREEZE_DELAY_DAYS"));
   }
 
   public boolean supportUnfreezeDelay() {
@@ -3076,61 +3296,73 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   public void saveUnfreezeDelayDays(long value) {
     this.put(UNFREEZE_DELAY_DAYS, new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveUnfreezeDelayDays(value);
+    this.cacheValues.put(new String(UNFREEZE_DELAY_DAYS), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public void saveAllowOptimizedReturnValueOfChainId(long value) {
     this.put(ALLOW_OPTIMIZED_RETURN_VALUE_OF_CHAIN_ID,
         new BytesCapsule(ByteArray.fromLong(value)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowOptimizedReturnValueOfChainId(value);
+    this.cacheValues.put(new String(ALLOW_OPTIMIZED_RETURN_VALUE_OF_CHAIN_ID), value);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowOptimizedReturnValueOfChainId() {
-    long allowOptimizedReturnValueOfChainId = ChainBaseManager.getChainBaseManager()
-        .getProposalSettingStore().getAllowOptimizedReturnValueOfChainId();
-    if (allowOptimizedReturnValueOfChainId > 0) {
-      return allowOptimizedReturnValueOfChainId;
-    }
     String msg = "not found ALLOW_OPTIMIZED_RETURN_VALUE_OF_CHAIN_ID";
-    return Optional.ofNullable(getUnchecked(ALLOW_OPTIMIZED_RETURN_VALUE_OF_CHAIN_ID))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElseThrow(
-            () -> new IllegalArgumentException(msg));
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_OPTIMIZED_RETURN_VALUE_OF_CHAIN_ID));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_OPTIMIZED_RETURN_VALUE_OF_CHAIN_ID))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElseThrow(
+              () -> new IllegalArgumentException(msg));
+      this.cacheValues.put(new String(ALLOW_OPTIMIZED_RETURN_VALUE_OF_CHAIN_ID), value);
+      return value;
+    } else {
+      return cacheValue;
+    }
   }
 
   public void saveAllowTvmShangHai(long allowTvmShangHai) {
-    this.put(DynamicPropertiesStore.ALLOW_TVM_SHANGHAI,
+    this.put(ALLOW_TVM_SHANGHAI,
         new BytesCapsule(ByteArray.fromLong(allowTvmShangHai)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowTvmShangHai(allowTvmShangHai);
+    this.cacheValues.put(new String(ALLOW_TVM_SHANGHAI), allowTvmShangHai);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowTvmShangHai() {
-    long allowTvmShangHai = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowTvmShangHai();
-    if (allowTvmShangHai > 0) {
-      return allowTvmShangHai;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_TVM_SHANGHAI));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_TVM_SHANGHAI))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElse(CommonParameter.getInstance().getAllowTvmShangHai());
+      this.cacheValues.put(new String(ALLOW_TVM_SHANGHAI), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_TVM_SHANGHAI))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElse(CommonParameter.getInstance().getAllowTvmShangHai());
   }
 
   public void saveAllowCancelUnfreezeV2(long allowCancelUnfreezeV2) {
-    this.put(DynamicPropertiesStore.ALLOW_CANCEL_UNFREEZE_V2,
+    this.put(ALLOW_CANCEL_UNFREEZE_V2,
         new BytesCapsule(ByteArray.fromLong(allowCancelUnfreezeV2)));
-    ChainBaseManager.getChainBaseManager().getProposalSettingStore().saveAllowCancelUnfreezeV2(allowCancelUnfreezeV2);
+    this.cacheValues.put(new String(ALLOW_CANCEL_UNFREEZE_V2), allowCancelUnfreezeV2);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowCancelUnfreezeV2() {
-    long allowCancelUnfreezeV2 = ChainBaseManager.getChainBaseManager().getProposalSettingStore().getAllowCancelUnfreezeV2();
-    if (allowCancelUnfreezeV2 > 0) {
-      return allowCancelUnfreezeV2;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_CANCEL_UNFREEZE_V2));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_CANCEL_UNFREEZE_V2))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElse(CommonParameter.getInstance().getAllowCancelUnfreezeV2());
+      this.cacheValues.put(new String(ALLOW_CANCEL_UNFREEZE_V2), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_CANCEL_UNFREEZE_V2))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElse(CommonParameter.getInstance().getAllowCancelUnfreezeV2());
   }
 
   public boolean supportAllowCancelUnfreezeV2() {
@@ -3138,22 +3370,24 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   }
 
   public void saveAllowOptimizeLockDelegateResource(long allowOptimizeLockDelegateResource) {
-    this.put(DynamicPropertiesStore.ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE,
+    this.put(ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE,
         new BytesCapsule(ByteArray.fromLong(allowOptimizeLockDelegateResource)));
-    ChainBaseManager.getChainBaseManager()
-        .getProposalSettingStore().saveAllowOptimizeLockDelegateResource(allowOptimizeLockDelegateResource);
+    this.cacheValues.put(new String(ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE), allowOptimizeLockDelegateResource);
+    this.put(PROPOSAL_SET, new BytesCapsule(PROPOSAL_SET));
   }
 
   public long getAllowOptimizeLockDelegateResource() {
-    long allowOptimizeLockDelegateResource = ChainBaseManager.getChainBaseManager()
-        .getProposalSettingStore().getAllowOptimizeLockDelegateResource();
-    if (allowOptimizeLockDelegateResource > 0) {
-      return allowOptimizeLockDelegateResource;
+    Long cacheValue = this.cacheValues.get(new String(ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE));
+    if (cacheValue == null) {
+      Long value = Optional.ofNullable(getUnchecked(ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE))
+          .map(BytesCapsule::getData)
+          .map(ByteArray::toLong)
+          .orElse(CommonParameter.getInstance().getAllowOptimizeLockDelegateResource());
+      this.cacheValues.put(new String(ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE), value);
+      return value;
+    } else {
+      return cacheValue;
     }
-    return Optional.ofNullable(getUnchecked(ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE))
-        .map(BytesCapsule::getData)
-        .map(ByteArray::toLong)
-        .orElse(CommonParameter.getInstance().getAllowOptimizeLockDelegateResource());
   }
 
   public boolean supportAllowOptimizeLockDelegateResource() {
