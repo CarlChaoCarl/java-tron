@@ -1,11 +1,5 @@
 package org.tron.core.vm.nativecontract;
 
-import static org.tron.core.actuator.ActuatorConstant.ACCOUNT_EXCEPTION_STR;
-import static org.tron.core.actuator.ActuatorConstant.STORE_NOT_EXIST;
-import static org.tron.core.config.Parameter.ChainConstant.TRX_PRECISION;
-import static org.tron.protos.contract.Common.ResourceCode.BANDWIDTH;
-import static org.tron.protos.contract.Common.ResourceCode.ENERGY;
-
 import lombok.extern.slf4j.Slf4j;
 import org.tron.common.utils.DecodeUtil;
 import org.tron.common.utils.StringUtil;
@@ -14,6 +8,12 @@ import org.tron.core.exception.ContractValidateException;
 import org.tron.core.store.DynamicPropertiesStore;
 import org.tron.core.vm.nativecontract.param.FreezeBalanceV2Param;
 import org.tron.core.vm.repository.Repository;
+
+import static org.tron.core.actuator.ActuatorConstant.ACCOUNT_EXCEPTION_STR;
+import static org.tron.core.actuator.ActuatorConstant.STORE_NOT_EXIST;
+import static org.tron.core.config.Parameter.ChainConstant.TRX_PRECISION;
+import static org.tron.protos.contract.Common.ResourceCode.BANDWIDTH;
+import static org.tron.protos.contract.Common.ResourceCode.ENERGY;
 
 @Slf4j(topic = "VMProcessor")
 public class FreezeBalanceV2Processor {
@@ -37,10 +37,9 @@ public class FreezeBalanceV2Processor {
     if (frozenBalance <= 0) {
       throw new ContractValidateException("FrozenBalance must be positive");
     } else if (frozenBalance < TRX_PRECISION) {
-      throw new ContractValidateException("FrozenBalance must be greater than or equal to 1 TRX");
+      throw new ContractValidateException("FrozenBalance must be more than 1TRX");
     } else if (frozenBalance > ownerCapsule.getBalance()) {
-      throw new ContractValidateException(
-          "FrozenBalance must be less than or equal to accountBalance");
+      throw new ContractValidateException("FrozenBalance must be less than accountBalance");
     }
 
     // validate arg @resourceType
@@ -51,16 +50,16 @@ public class FreezeBalanceV2Processor {
       case TRON_POWER:
         if (!repo.getDynamicPropertiesStore().supportAllowNewResourceModel()) {
           throw new ContractValidateException(
-              "Unknown ResourceCode, valid ResourceCode[BANDWIDTH、ENERGY]");
+              "ResourceCode error, valid ResourceCode[BANDWIDTH、ENERGY]");
         }
         break;
       default:
         if (repo.getDynamicPropertiesStore().supportAllowNewResourceModel()) {
           throw new ContractValidateException(
-              "Unknown ResourceCode, valid ResourceCode[BANDWIDTH、ENERGY、TRON_POWER]");
+              "ResourceCode error, valid ResourceCode[BANDWIDTH、ENERGY、TRON_POWER]");
         } else {
           throw new ContractValidateException(
-              "Unknown ResourceCode, valid ResourceCode[BANDWIDTH、ENERGY]");
+              "ResourceCode error, valid ResourceCode[BANDWIDTH、ENERGY]");
         }
     }
   }

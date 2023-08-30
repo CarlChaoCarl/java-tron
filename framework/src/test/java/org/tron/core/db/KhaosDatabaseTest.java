@@ -1,22 +1,25 @@
 package org.tron.core.db;
 
-import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
+import java.io.File;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.List;
-import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.tron.common.BaseTest;
+import org.testng.collections.Lists;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.parameter.CommonParameter;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.FileUtil;
 import org.tron.common.utils.Pair;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.core.Constant;
 import org.tron.core.capsule.BlockCapsule;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
 import org.tron.core.exception.BadNumberBlockException;
 import org.tron.core.exception.NonCommonBlockException;
@@ -26,19 +29,28 @@ import org.tron.protos.Protocol.BlockHeader;
 import org.tron.protos.Protocol.BlockHeader.raw;
 
 @Slf4j
-public class KhaosDatabaseTest extends BaseTest {
+public class KhaosDatabaseTest {
 
-  @Resource
-  private KhaosDatabase khaosDatabase;
+  private static final String dbPath = "output-khaosDatabase-test";
+  private static KhaosDatabase khaosDatabase;
+  private static TronApplicationContext context;
 
   static {
-    dbPath = "output-khaosDatabase-test";
     Args.setParam(new String[]{"--output-directory", dbPath}, Constant.TEST_CONF);
+    context = new TronApplicationContext(DefaultConfig.class);
   }
 
   @BeforeClass
   public static void init() {
     Args.setParam(new String[]{"-d", dbPath}, Constant.TEST_CONF);
+    khaosDatabase = context.getBean(KhaosDatabase.class);
+  }
+
+  @AfterClass
+  public static void destroy() {
+    Args.clearParam();
+    context.destroy();
+    FileUtil.deleteDir(new File(dbPath));
   }
 
   @Test

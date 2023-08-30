@@ -1,14 +1,21 @@
 package org.tron.common.runtime;
 
+import java.io.File;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
-import org.junit.Assert;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.tron.common.BaseTest;
+import org.testng.Assert;
+import org.tron.common.application.Application;
+import org.tron.common.application.ApplicationFactory;
+import org.tron.common.application.TronApplicationContext;
+import org.tron.common.utils.FileUtil;
 import org.tron.core.Constant;
 import org.tron.core.Wallet;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
+import org.tron.core.db.Manager;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.core.exception.ReceiptCheckErrException;
@@ -18,36 +25,54 @@ import org.tron.core.vm.repository.RepositoryImpl;
 import org.tron.protos.Protocol.AccountType;
 
 @Slf4j
-public class InheritanceTest extends BaseTest {
+public class InheritanceTest {
 
+  private static final String dbPath = "output_InheritanceTest";
   private static final String OWNER_ADDRESS;
-  private RepositoryImpl repository;
-  private static boolean init;
+  private static Runtime runtime;
+  private static Manager dbManager;
+  private static TronApplicationContext context;
+  private static Application appT;
+  private static RepositoryImpl repository;
 
   static {
-    dbPath = "output_InheritanceTest";
     Args.setParam(new String[]{"--output-directory", dbPath, "--debug"}, Constant.TEST_CONF);
+    context = new TronApplicationContext(DefaultConfig.class);
+    appT = ApplicationFactory.create(context);
     OWNER_ADDRESS = Wallet.getAddressPreFixString() + "abd4b9367799eaa3197fecb144eb71de1e049abc";
   }
 
   /**
    * Init data.
    */
-  @Before
-  public void init() {
-    if (init) {
-      return;
-    }
+  @BeforeClass
+  public static void init() {
+    dbManager = context.getBean(Manager.class);
     repository = RepositoryImpl.createRoot(StoreFactory.getInstance());
     repository.createAccount(Hex.decode(OWNER_ADDRESS), AccountType.Normal);
     repository.addBalance(Hex.decode(OWNER_ADDRESS), 100000000);
-    init = true;
+  }
+
+  /**
+   * Release resources.
+   */
+  @AfterClass
+  public static void destroy() {
+    Args.clearParam();
+    context.destroy();
+    if (FileUtil.deleteDir(new File(dbPath))) {
+      logger.info("Release resources successful.");
+    } else {
+      logger.info("Release resources failure.");
+    }
   }
 
   /**
    * pragma solidity ^0.4.19;
+   *
    * contract foo { uint256 public id=10; function getNumber()  returns (uint256){return 100;}
    * function getName()  returns (string){ return "foo"; } }
+   *
    * contract bar is foo { function getName()  returns (string) { return "bar"; } function getId()
    * returns(uint256){return id;} }
    */
@@ -94,7 +119,7 @@ public class InheritanceTest extends BaseTest {
 
     /* ========================== CALL getName() return child value ============================= */
     byte[] triggerData1 = TvmTestUtils.parseAbi("getName()", "");
-    Runtime runtime = TvmTestUtils
+    runtime = TvmTestUtils
         .triggerContractWholeProcessReturnContractAddress(callerAddress, contractAddress,
             triggerData1, 0, 1000000, repository, null);
 

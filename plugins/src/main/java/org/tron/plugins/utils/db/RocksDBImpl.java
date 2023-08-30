@@ -1,6 +1,8 @@
 package org.tron.plugins.utils.db;
 
 import java.io.IOException;
+
+import org.iq80.leveldb.DBException;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
 
@@ -61,4 +63,23 @@ public class RocksDBImpl implements DBInterface {
   public void close() throws IOException {
     rocksDB.close();
   }
+
+  @Override
+  public void compactRange(byte[] begin, byte[] end) throws DBException {
+    try {
+      rocksDB.compactRange(begin, end);
+    } catch (RocksDBException e) {
+      throw new DBException(e);
+    }
+  }
+
+  @Override
+  public void compactRange() throws DBException {
+    try {
+      rocksDB.compactRange();
+    } catch (RocksDBException e) {
+      throw new DBException(e);
+    }
+  }
+
 }

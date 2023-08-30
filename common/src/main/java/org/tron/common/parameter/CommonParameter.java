@@ -6,6 +6,7 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
 import lombok.Getter;
 import lombok.Setter;
 import org.quartz.CronExpression;
@@ -164,9 +165,6 @@ public class CommonParameter {
   public int maxConnectionsWithSameIp;
   @Getter
   @Setter
-  public int maxTps;
-  @Getter
-  @Setter
   public int minParticipationRate;
   @Getter
   @Setter
@@ -179,7 +177,19 @@ public class CommonParameter {
   public String nodeExternalIp;
   @Getter
   @Setter
+  public boolean nodeDiscoveryPublicHomeNode;
+  @Getter
+  @Setter
+  public long nodeDiscoveryPingTimeout;
+  @Getter
+  @Setter
+  public long nodeP2pPingInterval;
+  @Getter
+  @Setter
   public int nodeP2pVersion;
+  @Getter
+  @Setter
+  public String p2pNodeId;
   @Getter
   @Setter
   public boolean nodeEnableIpv6 = false;
@@ -189,9 +199,6 @@ public class CommonParameter {
   @Getter
   @Setter
   public PublishConfig dnsPublishConfig;
-  @Getter
-  @Setter
-  public long syncFetchBatchNum;
 
   //If you are running a solidity node for java tron, this flag is set to true
   @Getter
@@ -634,14 +641,6 @@ public class CommonParameter {
   @Getter
   @Setter
   public long dynamicConfigCheckInterval;
-
-  @Getter
-  @Setter
-  public long allowTvmShangHai;
-
-  @Getter
-  @Setter
-  public long allowCancelAllUnfreezeV2;
 
   private static double calcMaxTimeRatio() {
     //return max(2.0, min(5.0, 5 * 4.0 / max(Runtime.getRuntime().availableProcessors(), 1)));

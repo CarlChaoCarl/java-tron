@@ -2,7 +2,6 @@ package org.tron.core.services.ratelimiter;
 
 import io.grpc.Grpc;
 import io.grpc.ServerCall;
-import java.net.InetSocketAddress;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,9 +16,7 @@ public class RuntimeData {
       address = ((HttpServletRequest) o).getRemoteAddr();
     } else if (o instanceof ServerCall) {
       try {
-        InetSocketAddress s = (InetSocketAddress)
-                ((ServerCall) o).getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
-        address = s.getAddress().getHostAddress();
+        address = ((ServerCall) o).getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR).toString();
       } catch (Exception npe) {
         logger.warn("the address get from the runtime data is a null value unexpected.");
       }

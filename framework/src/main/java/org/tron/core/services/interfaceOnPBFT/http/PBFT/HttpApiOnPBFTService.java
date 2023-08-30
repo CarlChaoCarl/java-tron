@@ -22,7 +22,6 @@ import org.tron.core.services.interfaceOnPBFT.http.GetAssetIssueByNameOnPBFTServ
 import org.tron.core.services.interfaceOnPBFT.http.GetAssetIssueListByNameOnPBFTServlet;
 import org.tron.core.services.interfaceOnPBFT.http.GetAssetIssueListOnPBFTServlet;
 import org.tron.core.services.interfaceOnPBFT.http.GetAvailableUnfreezeCountOnPBFTServlet;
-import org.tron.core.services.interfaceOnPBFT.http.GetBandwidthPricesOnPBFTServlet;
 import org.tron.core.services.interfaceOnPBFT.http.GetBlockByIdOnPBFTServlet;
 import org.tron.core.services.interfaceOnPBFT.http.GetBlockByLatestNumOnPBFTServlet;
 import org.tron.core.services.interfaceOnPBFT.http.GetBlockByLimitNextOnPBFTServlet;
@@ -157,8 +156,6 @@ public class HttpApiOnPBFTService implements Service {
   @Autowired
   private GetBurnTrxOnPBFTServlet getBurnTrxOnPBFTServlet;
   @Autowired
-  private GetBandwidthPricesOnPBFTServlet getBandwidthPricesOnPBFTServlet;
-  @Autowired
   private GetEnergyPricesOnPBFTServlet getEnergyPricesOnPBFTServlet;
 
   @Autowired
@@ -261,8 +258,6 @@ public class HttpApiOnPBFTService implements Service {
           "/isshieldedtrc20contractnotespent");
       context.addServlet(new ServletHolder(getBurnTrxOnPBFTServlet),
           "/getburntrx");
-      context.addServlet(new ServletHolder(getBandwidthPricesOnPBFTServlet),
-          "/getbandwidthprices");
       context.addServlet(new ServletHolder(getEnergyPricesOnPBFTServlet),
           "/getenergyprices");
       context.addServlet(new ServletHolder(getBlockOnPBFTServlet),

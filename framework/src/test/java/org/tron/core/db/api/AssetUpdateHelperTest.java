@@ -3,40 +3,51 @@ package org.tron.core.db.api;
 import static org.tron.core.config.Parameter.ChainSymbol.TRX_SYMBOL_BYTES;
 
 import com.google.protobuf.ByteString;
-import java.util.Objects;
+import java.io.File;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.tron.common.BaseTest;
+import org.tron.common.application.Application;
+import org.tron.common.application.ApplicationFactory;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.FileUtil;
 import org.tron.common.utils.Sha256Hash;
+import org.tron.core.ChainBaseManager;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.AssetIssueCapsule;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.ExchangeCapsule;
 import org.tron.core.capsule.TransactionCapsule;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
 import org.tron.protos.Protocol.Account;
 import org.tron.protos.Protocol.Exchange;
 import org.tron.protos.Protocol.Transaction.Contract.ContractType;
 import org.tron.protos.contract.AssetIssueContractOuterClass.AssetIssueContract;
 
-public class AssetUpdateHelperTest extends BaseTest {
+public class AssetUpdateHelperTest {
 
-  private static final ByteString assetName = ByteString.copyFrom("assetIssueName".getBytes());
-  private static boolean init;
+  private static ChainBaseManager chainBaseManager;
+  private static TronApplicationContext context;
+  private static String dbPath = "output_AssetUpdateHelperTest_test";
+  private static Application AppT;
+
+  private static ByteString assetName = ByteString.copyFrom("assetIssueName".getBytes());
 
   static {
-    dbPath = "output_AssetUpdateHelperTest_test";
     Args.setParam(new String[]{"-d", dbPath, "-w"}, "config-test-index.conf");
     Args.getInstance().setSolidityNode(true);
+    context = new TronApplicationContext(DefaultConfig.class);
+    AppT = ApplicationFactory.create(context);
   }
 
-  @Before
-  public void init() {
-    if (init) {
-      return;
-    }
+  @BeforeClass
+  public static void init() {
+
+    chainBaseManager = context.getBean(ChainBaseManager.class);
+
     AssetIssueContract contract =
         AssetIssueContract.newBuilder().setName(assetName).setNum(12581).setPrecision(5).build();
     AssetIssueCapsule assetIssueCapsule = new AssetIssueCapsule(contract);
@@ -73,7 +84,13 @@ public class AssetUpdateHelperTest extends BaseTest {
                 .build());
     chainBaseManager.getAccountStore().put(ByteArray.fromHexString("121212abc"),
         accountCapsule);
-    init = true;
+  }
+
+  @AfterClass
+  public static void removeDb() {
+    Args.clearParam();
+    context.destroy();
+    FileUtil.deleteDir(new File(dbPath));
   }
 
   @Test
@@ -95,7 +112,7 @@ public class AssetUpdateHelperTest extends BaseTest {
       Assert.assertEquals(5L, assetIssueCapsule.getPrecision());
 
       AssetIssueCapsule assetIssueCapsule2 =
-          chainBaseManager.getAssetIssueV2Store().get(ByteArray.fromString(idNum));
+          chainBaseManager.getAssetIssueV2Store().get(ByteArray.fromString(String.valueOf(idNum)));
 
       Assert.assertEquals(idNum, assetIssueCapsule2.getId());
       Assert.assertEquals(assetName, assetIssueCapsule2.getName());
@@ -122,8 +139,7 @@ public class AssetUpdateHelperTest extends BaseTest {
           chainBaseManager.getAccountStore().get(ByteArray.fromHexString("121212abc"));
 
       Assert.assertEquals(
-          ByteString.copyFrom(Objects.requireNonNull(ByteArray.fromString("1000001"))),
-          accountCapsule.getAssetIssuedID());
+          ByteString.copyFrom(ByteArray.fromString("1000001")), accountCapsule.getAssetIssuedID());
 
       Assert.assertEquals(1, accountCapsule.getAssetV2MapForTest().size());
 

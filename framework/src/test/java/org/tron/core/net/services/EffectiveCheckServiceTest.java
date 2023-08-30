@@ -1,7 +1,6 @@
 package org.tron.core.net.services;
 
 import java.io.File;
-import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import org.junit.After;
 import org.junit.Assert;
@@ -34,20 +33,7 @@ public class EffectiveCheckServiceTest {
   @After
   public void destroy() {
     Args.clearParam();
-    context.destroy();
     FileUtil.deleteDir(new File(dbPath));
-  }
-
-  @Test
-  public void testNoIpv4() throws Exception {
-    TronNetService tronNetService = context.getBean(TronNetService.class);
-    Method privateMethod = tronNetService.getClass()
-        .getDeclaredMethod("updateConfig", P2pConfig.class);
-    privateMethod.setAccessible(true);
-    P2pConfig config = new P2pConfig();
-    config.setIp(null);
-    P2pConfig newConfig = (P2pConfig) privateMethod.invoke(tronNetService, config);
-    Assert.assertNotNull(newConfig.getIp());
   }
 
   @Test

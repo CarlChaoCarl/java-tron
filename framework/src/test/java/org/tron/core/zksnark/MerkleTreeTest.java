@@ -2,36 +2,44 @@ package org.tron.core.zksnark;
 
 import com.alibaba.fastjson.JSONArray;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.protobuf.ByteString;
 import java.io.File;
 import java.util.List;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.tron.common.BaseTest;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.testng.collections.Lists;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.ByteUtil;
+import org.tron.common.utils.FileUtil;
 import org.tron.common.zksnark.IncrementalMerkleTreeContainer;
 import org.tron.common.zksnark.IncrementalMerkleTreeContainer.EmptyMerkleRoots;
 import org.tron.common.zksnark.IncrementalMerkleVoucherContainer;
 import org.tron.common.zksnark.MerklePath;
+import org.tron.core.Wallet;
 import org.tron.core.capsule.IncrementalMerkleTreeCapsule;
 import org.tron.core.capsule.IncrementalMerkleVoucherCapsule;
 import org.tron.core.capsule.PedersenHashCapsule;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
+import org.tron.core.db.Manager;
 import org.tron.protos.contract.ShieldContract.PedersenHash;
 
-public class MerkleTreeTest extends BaseTest {
+public class MerkleTreeTest {
 
   public static final long totalBalance = 1000_0000_000_000L;
-  private static final String dbDirectory = "db_ShieldedTransaction_test";
-  private static final String indexDirectory = "index_ShieldedTransaction_test";
-  private static boolean init;
+  private static String dbPath = "output_ShieldedTransaction_test";
+  private static String dbDirectory = "db_ShieldedTransaction_test";
+  private static String indexDirectory = "index_ShieldedTransaction_test";
+  private static AnnotationConfigApplicationContext context;
+  private static Manager dbManager;
+  private static Wallet wallet;
 
   static {
-    dbPath = "output_ShieldedTransaction_test";
     Args.setParam(
         new String[]{
             "--output-directory", dbPath,
@@ -42,21 +50,28 @@ public class MerkleTreeTest extends BaseTest {
         },
         "config-test-mainnet.conf"
     );
+    context = new TronApplicationContext(DefaultConfig.class);
   }
 
   /**
    * Init data.
    */
-  @Before
-  public void init() {
-    if (init) {
-      return;
-    }
+  @BeforeClass
+  public static void init() {
+    dbManager = context.getBean(Manager.class);
+    wallet = context.getBean(Wallet.class);
     //init energy
     dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderTimestamp(1526647838000L);
     dbManager.getDynamicPropertiesStore().saveTotalEnergyWeight(100_000L);
+
     dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderTimestamp(0);
-    init = true;
+  }
+
+  @AfterClass
+  public static void removeDb() {
+    Args.clearParam();
+    context.destroy();
+    FileUtil.deleteDir(new File(dbPath));
   }
 
   private JSONArray readFile(String fileName) throws Exception {
@@ -65,8 +80,10 @@ public class MerkleTreeTest extends BaseTest {
     List<String> readLines = Files.readLines(new File(file1),
         Charsets.UTF_8);
 
-    return JSONArray
+    JSONArray array = JSONArray
         .parseArray(readLines.stream().reduce((s, s2) -> s + s2).get());
+
+    return array;
   }
 
   private String PedersenHash2String(PedersenHash hash) {

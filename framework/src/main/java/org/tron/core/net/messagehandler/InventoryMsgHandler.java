@@ -26,6 +26,8 @@ public class InventoryMsgHandler implements TronMsgHandler {
   @Autowired
   private TransactionsMsgHandler transactionsMsgHandler;
 
+  private int maxCountIn10s = 10_000;
+
   @Override
   public void processMessage(PeerConnection peer, TronMessage msg) {
     InventoryMessage inventoryMessage = (InventoryMessage) msg;
@@ -52,13 +54,25 @@ public class InventoryMsgHandler implements TronMsgHandler {
       return false;
     }
 
-    if (type.equals(InventoryType.TRX) && transactionsMsgHandler.isBusy()) {
-      logger.warn("Drop inv: {} size: {} from Peer {}, transactionsMsgHandler is busy",
-              type, size, peer.getInetAddress());
-      if (Args.getInstance().isOpenPrintLog()) {
-        logger.warn("[isBusy]Drop tx list is: {}", inventoryMessage.getHashList());
+    if (type.equals(InventoryType.TRX)) {
+      int count = peer.getPeerStatistics().messageStatistics.tronInTrxInventoryElement.getCount(10);
+      if (count > maxCountIn10s) {
+        logger.warn("Drop inv: {} size: {} from Peer {}, Inv count: {} is overload",
+            type, size, peer.getInetAddress(), count);
+        if (Args.getInstance().isOpenPrintLog()) {
+          logger.warn("[overload]Drop tx list is: {}", inventoryMessage.getHashList());
+        }
+        return false;
       }
-      return false;
+
+      if (transactionsMsgHandler.isBusy()) {
+        logger.warn("Drop inv: {} size: {} from Peer {}, transactionsMsgHandler is busy",
+            type, size, peer.getInetAddress());
+        if (Args.getInstance().isOpenPrintLog()) {
+          logger.warn("[isBusy]Drop tx list is: {}", inventoryMessage.getHashList());
+        }
+        return false;
+      }
     }
 
     return true;

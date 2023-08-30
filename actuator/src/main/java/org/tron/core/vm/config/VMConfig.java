@@ -47,8 +47,6 @@ public class VMConfig {
 
   private static long DYNAMIC_ENERGY_MAX_FACTOR = 0L;
 
-  private static boolean ALLOW_TVM_SHANGHAI = false;
-
   private VMConfig() {
   }
 
@@ -132,10 +130,6 @@ public class VMConfig {
     DYNAMIC_ENERGY_MAX_FACTOR = maxFactor;
   }
 
-  public static void initAllowTvmShangHai(long allow) {
-    ALLOW_TVM_SHANGHAI = allow == 1;
-  }
-
   public static boolean getEnergyLimitHardFork() {
     return CommonParameter.ENERGY_LIMIT_HARD_FORK;
   }
@@ -206,9 +200,5 @@ public class VMConfig {
 
   public static long getDynamicEnergyMaxFactor() {
     return DYNAMIC_ENERGY_MAX_FACTOR;
-  }
-
-  public static boolean allowTvmShanghai() {
-    return ALLOW_TVM_SHANGHAI;
   }
 }

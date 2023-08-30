@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import org.tron.core.capsule.BlockCapsule.BlockId;
 import org.tron.core.config.Parameter.ChainConstant;
 import org.tron.core.config.Parameter.NetConstants;
-import org.tron.core.config.args.Args;
 import org.tron.core.exception.P2pException;
 import org.tron.core.exception.P2pException.TypeEnum;
 import org.tron.core.net.TronNetDelegate;
@@ -32,8 +31,6 @@ public class ChainInventoryMsgHandler implements TronMsgHandler {
 
   @Autowired
   private SyncService syncService;
-
-  private final long syncFetchBatchNum = Args.getInstance().getSyncFetchBatchNum();
 
   @Override
   public void processMessage(PeerConnection peer, TronMessage msg) throws P2pException {
@@ -91,7 +88,7 @@ public class ChainInventoryMsgHandler implements TronMsgHandler {
     peer.setFetchAble(true);
     if ((chainInventoryMessage.getRemainNum() == 0 && !peer.getSyncBlockToFetch().isEmpty())
         || (chainInventoryMessage.getRemainNum() != 0
-        && peer.getSyncBlockToFetch().size() > syncFetchBatchNum)) {
+        && peer.getSyncBlockToFetch().size() > NetConstants.SYNC_FETCH_BATCH_NUM)) {
       syncService.setFetchFlag(true);
     } else {
       syncService.syncNext(peer);

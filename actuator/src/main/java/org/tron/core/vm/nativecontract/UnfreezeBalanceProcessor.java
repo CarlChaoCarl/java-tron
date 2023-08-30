@@ -65,8 +65,8 @@ public class UnfreezeBalanceProcessor {
           }
           break;
         default:
-          throw new ContractValidateException("Unknown ResourceCode, "
-              + "valid ResourceCode[BANDWIDTH、ENERGY]");
+          throw new ContractValidateException("ResourceCode error."
+              + "valid ResourceCode[BANDWIDTH、Energy]");
       }
     } else {
       switch (param.getResourceType()) {
@@ -95,8 +95,8 @@ public class UnfreezeBalanceProcessor {
           }
           break;
         default:
-          throw new ContractValidateException("Unknown ResourceCode, "
-              + "valid ResourceCode[BANDWIDTH、ENERGY]");
+          throw new ContractValidateException("ResourceCode error."
+              + "valid ResourceCode[BANDWIDTH、Energy]");
       }
     }
   }

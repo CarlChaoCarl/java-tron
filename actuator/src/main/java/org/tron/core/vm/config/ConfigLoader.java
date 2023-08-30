@@ -38,7 +38,6 @@ public class ConfigLoader {
         VMConfig.initDynamicEnergyThreshold(ds.getDynamicEnergyThreshold());
         VMConfig.initDynamicEnergyIncreaseFactor(ds.getDynamicEnergyIncreaseFactor());
         VMConfig.initDynamicEnergyMaxFactor(ds.getDynamicEnergyMaxFactor());
-        VMConfig.initAllowTvmShangHai(ds.getAllowTvmShangHai());
       }
     }
   }

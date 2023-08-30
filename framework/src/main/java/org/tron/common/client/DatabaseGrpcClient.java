@@ -15,14 +15,12 @@ public class DatabaseGrpcClient {
 
   public DatabaseGrpcClient(String host, int port) {
     channel = ManagedChannelBuilder.forAddress(host, port)
-        .usePlaintext()
         .build();
     databaseBlockingStub = DatabaseGrpc.newBlockingStub(channel);
   }
 
   public DatabaseGrpcClient(String host) {
     channel = ManagedChannelBuilder.forTarget(host)
-        .usePlaintext()
         .build();
     databaseBlockingStub = DatabaseGrpc.newBlockingStub(channel);
   }

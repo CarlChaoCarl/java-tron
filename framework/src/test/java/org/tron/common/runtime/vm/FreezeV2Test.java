@@ -30,7 +30,6 @@ import org.tron.common.utils.FastByteComparisons;
 import org.tron.common.utils.FileUtil;
 import org.tron.common.utils.StringUtil;
 import org.tron.common.utils.WalletUtil;
-import org.tron.common.utils.client.utils.AbiUtil;
 import org.tron.core.ChainBaseManager;
 import org.tron.core.Constant;
 import org.tron.core.Wallet;
@@ -56,6 +55,7 @@ import org.tron.core.vm.repository.RepositoryImpl;
 import org.tron.protos.Protocol;
 import org.tron.protos.Protocol.Transaction.Result.contractResult;
 import org.tron.protos.contract.Common;
+import stest.tron.wallet.common.client.utils.AbiUtil;
 
 @Slf4j
 public class FreezeV2Test {
@@ -842,20 +842,20 @@ public class FreezeV2Test {
       acquiredBalance = res == 0 ? oldReceiver.getAcquiredDelegatedFrozenV2BalanceForBandwidth() :
           oldReceiver.getAcquiredDelegatedFrozenV2BalanceForEnergy();
 
-      long unDelegateMaxUsage;
       if (res == 0) {
-        unDelegateMaxUsage = (long) (amount / TRX_PRECISION
+        long unDelegateMaxUsage = (long) (amount / TRX_PRECISION
             * ((double) (dynamicStore.getTotalNetLimit()) / dynamicStore.getTotalNetWeight()));
         transferUsage = (long) (oldReceiver.getNetUsage()
             * ((double) (amount) / oldReceiver.getAllFrozenBalanceForBandwidth()));
+        transferUsage = Math.min(unDelegateMaxUsage, transferUsage);
       } else {
-        unDelegateMaxUsage = (long) (amount / TRX_PRECISION
+        long unDelegateMaxUsage = (long) (amount / TRX_PRECISION
             * ((double) (dynamicStore.getTotalEnergyCurrentLimit())
             / dynamicStore.getTotalEnergyWeight()));
         transferUsage = (long) (oldReceiver.getEnergyUsage()
             * ((double) (amount) / oldReceiver.getAllFrozenBalanceForEnergy()));
+        transferUsage = Math.min(unDelegateMaxUsage, transferUsage);
       }
-      transferUsage = Math.min(unDelegateMaxUsage, transferUsage);
     }
 
     DelegatedResourceStore delegatedResourceStore = manager.getDelegatedResourceStore();
@@ -1002,18 +1002,28 @@ public class FreezeV2Test {
         newInheritor.getFrozenBalance() - oldInheritorFrozenBalance);
     if (oldInheritor != null) {
       if (oldContract.getNetUsage() > 0) {
-        bandwidthProcessor.unDelegateIncrease(oldInheritor, oldContract, oldContract.getNetUsage(),
-            Common.ResourceCode.BANDWIDTH, now);
+        long expectedNewNetUsage =
+            bandwidthProcessor.unDelegateIncrease(
+                oldInheritor,
+                oldContract,
+                oldContract.getNetUsage(),
+                Common.ResourceCode.BANDWIDTH,
+                now);
         Assert.assertEquals(
-            oldInheritor.getNetUsage(), newInheritor.getNetUsage() - oldInheritorBandwidthUsage);
+            expectedNewNetUsage, newInheritor.getNetUsage() - oldInheritorBandwidthUsage);
         Assert.assertEquals(
             ChainBaseManager.getInstance().getHeadSlot(), newInheritor.getLatestConsumeTime());
       }
       if (oldContract.getEnergyUsage() > 0) {
-        energyProcessor.unDelegateIncrease(oldInheritor, oldContract,
-            oldContract.getEnergyUsage(), Common.ResourceCode.ENERGY, now);
+        long expectedNewEnergyUsage =
+            energyProcessor.unDelegateIncrease(
+                oldInheritor,
+                oldContract,
+                oldContract.getEnergyUsage(),
+                Common.ResourceCode.ENERGY,
+                now);
         Assert.assertEquals(
-            oldInheritor.getEnergyUsage(), newInheritor.getEnergyUsage() - oldInheritorEnergyUsage);
+            expectedNewEnergyUsage, newInheritor.getEnergyUsage() - oldInheritorEnergyUsage);
         Assert.assertEquals(
             ChainBaseManager.getInstance().getHeadSlot(),
             newInheritor.getLatestConsumeTimeForEnergy());

@@ -67,7 +67,6 @@ public class BlockMsgHandler implements TronMsgHandler {
 
     if (peer.getSyncBlockRequested().containsKey(blockId)) {
       peer.getSyncBlockRequested().remove(blockId);
-      peer.getSyncBlockInProcess().add(blockId);
       syncService.processBlock(peer, blockMessage);
     } else {
       Item item = new Item(blockId, InventoryType.BLOCK);

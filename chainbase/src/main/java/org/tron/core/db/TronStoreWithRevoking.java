@@ -51,8 +51,7 @@ public abstract class TronStoreWithRevoking<T extends ProtoCapsule> implements I
   @Autowired
   private DbStatService dbStatService;
 
-  @Getter
-  private final DB<byte[], byte[]> db;
+  private DB<byte[], byte[]> db;
 
   protected TronStoreWithRevoking(String dbName) {
     String dbEngine = CommonParameter.getInstance().getStorage().getDbEngine();
@@ -182,14 +181,7 @@ public abstract class TronStoreWithRevoking<T extends ProtoCapsule> implements I
 
   @Override
   public void close() {
-    logger.info("******** Begin to close {}. ********", getName());
-    try {
-      revokingDB.close();
-    } catch (Exception e) {
-      logger.warn("Failed to close {}.", getName(), e);
-    } finally {
-      logger.info("******** End to close {}. ********", getName());
-    }
+    revokingDB.close();
   }
 
   @Override

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
 import io.netty.util.internal.StringUtil;
 import java.io.IOException;
+import java.security.InvalidParameterException;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,10 +27,24 @@ import org.tron.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 @Slf4j(topic = "API")
 public class TriggerConstantContractServlet extends RateLimiterServlet {
 
+  private final String functionSelector = "function_selector";
+
   @Autowired
   private Wallet wallet;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+  }
+
+  protected void validateParameter(String contract) {
+    JSONObject jsonObject = JSONObject.parseObject(contract);
+    if (!jsonObject.containsKey("owner_address")
+        || StringUtil.isNullOrEmpty(jsonObject.getString("owner_address"))) {
+      throw new InvalidParameterException("owner_address isn't set.");
+    }
+    if (!jsonObject.containsKey("contract_address")
+        || StringUtil.isNullOrEmpty(jsonObject.getString("contract_address"))) {
+      throw new InvalidParameterException("contract_address isn't set.");
+    }
   }
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -43,19 +58,21 @@ public class TriggerConstantContractServlet extends RateLimiterServlet {
           .collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       visible = Util.getVisiblePost(contract);
-      Util.validateParameter(contract);
+      validateParameter(contract);
       JsonFormat.merge(contract, build, visible);
       JSONObject jsonObject = JSONObject.parseObject(contract);
 
-      boolean isFunctionSelectorSet =
-          !StringUtil.isNullOrEmpty(jsonObject.getString(Util.FUNCTION_SELECTOR));
+      boolean isFunctionSelectorSet = jsonObject.containsKey(functionSelector)
+          && !StringUtil.isNullOrEmpty(jsonObject.getString(functionSelector));
+      String data;
       if (isFunctionSelectorSet) {
-        String selector = jsonObject.getString(Util.FUNCTION_SELECTOR);
-        String parameter = jsonObject.getString(Util.FUNCTION_PARAMETER);
-        String data = Util.parseMethod(selector, parameter);
+        String selector = jsonObject.getString(functionSelector);
+        String parameter = jsonObject.getString("parameter");
+        data = Util.parseMethod(selector, parameter);
         build.setData(ByteString.copyFrom(ByteArray.fromHexString(data)));
+      } else {
+        build.setData(ByteString.copyFrom(new byte[0]));
       }
-
       TransactionCapsule trxCap = wallet
           .createTransactionCapsule(build.build(), ContractType.TriggerSmartContract);
 

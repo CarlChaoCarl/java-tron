@@ -8,14 +8,20 @@ import static org.tron.core.utils.ProposalUtil.ProposalType.MAX_FEE_LIMIT;
 import static org.tron.core.utils.ProposalUtil.ProposalType.TRANSACTION_FEE;
 import static org.tron.core.utils.ProposalUtil.ProposalType.WITNESS_127_PAY_PER_BLOCK;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.tron.common.BaseTest;
+import org.tron.common.application.TronApplicationContext;
+import org.tron.common.utils.FileUtil;
+import org.tron.core.ChainBaseManager;
 import org.tron.core.Constant;
 import org.tron.core.capsule.ProposalCapsule;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.api.EnergyPriceHistoryLoader;
 import org.tron.core.store.ProposalStore;
@@ -24,8 +30,11 @@ import org.tron.protos.Protocol.Proposal.State;
 
 
 @Slf4j
-public class EnergyPriceHistoryLoaderTest extends BaseTest {
+public class EnergyPriceHistoryLoaderTest {
 
+  private static ChainBaseManager chainBaseManager;
+  private static TronApplicationContext context;
+  private static String dbPath = "output-EnergyPriceHistoryLoaderTest-test";
   private static long t1 = 1542607200000L;
   private static long price1 = 20;
   private static long t3 = 1544724000000L;
@@ -36,8 +45,24 @@ public class EnergyPriceHistoryLoaderTest extends BaseTest {
   private static long price5 = 140L;
 
   static {
-    dbPath = "output-EnergyPriceHistoryLoaderTest-test";
     Args.setParam(new String[] {"--output-directory", dbPath}, Constant.TEST_CONF);
+    context = new TronApplicationContext(DefaultConfig.class);
+  }
+
+  @BeforeClass
+  public static void init() {
+    chainBaseManager = context.getBean(ChainBaseManager.class);
+  }
+
+  @AfterClass
+  public static void destroy() {
+    Args.clearParam();
+    context.destroy();
+    if (FileUtil.deleteDir(new File(dbPath))) {
+      logger.info("Release resources successful.");
+    } else {
+      logger.info("Release resources failure.");
+    }
   }
 
   public void initDB() {
@@ -77,7 +102,7 @@ public class EnergyPriceHistoryLoaderTest extends BaseTest {
     initProposal(parameters, 1572609600000L, State.CANCELED);
   }
 
-  private void initProposal(long code, long timestamp, long price, State state) {
+  private static void initProposal(long code, long timestamp, long price, State state) {
     long id = chainBaseManager.getDynamicPropertiesStore().getLatestProposalNum() + 1;
 
     Proposal proposal = Proposal.newBuilder().putParameters(code, price)
@@ -91,7 +116,7 @@ public class EnergyPriceHistoryLoaderTest extends BaseTest {
     chainBaseManager.getDynamicPropertiesStore().saveLatestProposalNum(id);
   }
 
-  private void initProposal(Map<Long, Long> parameters, long timestamp, State state) {
+  private static void initProposal(Map<Long, Long> parameters, long timestamp, State state) {
     long id = chainBaseManager.getDynamicPropertiesStore().getLatestProposalNum() + 1;
 
     Proposal proposal = Proposal.newBuilder().putAllParameters(parameters)
@@ -107,6 +132,9 @@ public class EnergyPriceHistoryLoaderTest extends BaseTest {
 
   @Test
   public void testLoader() {
+    if (chainBaseManager == null) {
+      init();
+    }
     EnergyPriceHistoryLoader loader = new EnergyPriceHistoryLoader(chainBaseManager);
 
     initDB();
@@ -126,6 +154,10 @@ public class EnergyPriceHistoryLoaderTest extends BaseTest {
 
   @Test
   public void testProposalEmpty() {
+    if (chainBaseManager == null) {
+      init();
+    }
+
     // clean DB firstly
     ProposalStore proposalStore = chainBaseManager.getProposalStore();
     proposalStore.forEach(

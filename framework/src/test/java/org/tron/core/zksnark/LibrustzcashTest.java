@@ -1,9 +1,5 @@
 package org.tron.core.zksnark;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
 import static org.tron.common.zksnark.JLibrustzcash.librustzcashCheckDiversifier;
 import static org.tron.common.zksnark.JLibrustzcash.librustzcashComputeCm;
 import static org.tron.common.zksnark.JLibrustzcash.librustzcashIvkToPkd;
@@ -15,20 +11,23 @@ import static org.tron.common.zksnark.JLibrustzcash.librustzcashSaplingSpendSig;
 import static org.tron.common.zksnark.JLibsodium.CRYPTO_AEAD_CHACHA20POLY1305_IETF_NPUBBYTES;
 
 import com.google.protobuf.ByteString;
-import java.util.Arrays;
+import java.io.File;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.stream.LongStream;
-import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.tron.common.BaseTest;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.ByteUtil;
+import org.tron.common.utils.FileUtil;
 import org.tron.common.zksnark.IncrementalMerkleTreeContainer;
 import org.tron.common.zksnark.IncrementalMerkleVoucherContainer;
 import org.tron.common.zksnark.JLibrustzcash;
@@ -47,6 +46,7 @@ import org.tron.core.Wallet;
 import org.tron.core.capsule.IncrementalMerkleTreeCapsule;
 import org.tron.core.capsule.PedersenHashCapsule;
 import org.tron.core.capsule.SpendDescriptionCapsule;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
 import org.tron.core.exception.BadItemException;
 import org.tron.core.exception.ZksnarkException;
@@ -65,15 +65,15 @@ import org.tron.core.zen.note.NoteEncryption;
 import org.tron.protos.contract.ShieldContract.PedersenHash;
 
 @Slf4j
-public class LibrustzcashTest extends BaseTest {
-  private static final String dbDirectory = "db_Librustzcash_test";
-  private static final String indexDirectory = "index_Librustzcash_test";
-  @Resource
-  private Wallet wallet;
+public class LibrustzcashTest {
 
-  @BeforeClass
-  public static void init() {
-    dbPath = "output_Librustzcash_test";
+  private static String dbPath = "output_Librustzcash_test";
+  private static String dbDirectory = "db_Librustzcash_test";
+  private static String indexDirectory = "index_Librustzcash_test";
+  private static AnnotationConfigApplicationContext context;
+  private static Wallet wallet;
+
+  static {
     Args.setParam(
         new String[]{
             "--output-directory", dbPath,
@@ -84,7 +84,21 @@ public class LibrustzcashTest extends BaseTest {
         },
         "config-test-mainnet.conf"
     );
+
+    context = new TronApplicationContext(DefaultConfig.class);
+  }
+
+  @BeforeClass
+  public static void init() {
+    wallet = context.getBean(Wallet.class);
     Args.setFullNodeAllowShieldedTransaction(true);
+  }
+
+  @AfterClass
+  public static void removeDb() {
+    Args.clearParam();
+    context.destroy();
+    FileUtil.deleteDir(new File(dbPath));
   }
 
   private static int randomInt(int minInt, int maxInt) {
@@ -103,19 +117,21 @@ public class LibrustzcashTest extends BaseTest {
     byte[] personalization = new byte[16];
     byte[] aa = "Zcash_Derive_ock".getBytes();
     System.arraycopy(aa, 0, personalization, 0, aa.length);
-    assertEquals(0, JLibsodium.cryptoGenerichashBlack2bSaltPersonal(
-        new Black2bSaltPersonalParams(K, 32, block, 128, null, 0, // No key.
-            null,    // No salt.
-            personalization)));
+    Assert.assertTrue(
+        JLibsodium.cryptoGenerichashBlack2bSaltPersonal(
+            new Black2bSaltPersonalParams(K, 32, block, 128, null, 0, // No key.
+                null,    // No salt.
+                personalization)) == 0);
 
     byte[] cipher_nonce = new byte[CRYPTO_AEAD_CHACHA20POLY1305_IETF_NPUBBYTES];
-    assertNotEquals(0, JLibsodium
+    Assert.assertTrue(JLibsodium
         .cryptoAeadChacha20poly1305IetfDecrypt(new Chacha20poly1305IetfDecryptParams(
             new byte[1024], null, null, new byte[1024], 1024,
-            null, 0, cipher_nonce, K)));
+            null, 0, cipher_nonce, K)) != 0);
   }
 
   public static void librustzcashInitZksnarkParams() {
+
     FullNodeHttpApiService.librustzcashInitZksnarkParams();
   }
 
@@ -132,6 +148,8 @@ public class LibrustzcashTest extends BaseTest {
   @Test
   public void testZcashParam() throws ZksnarkException {
     byte[] d = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    //byte[] d ={};
+    //byte[] pkD = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
     byte[] ivk = {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8,
         9, 10, 11, 12, 13, 14, 15};
@@ -143,7 +161,7 @@ public class LibrustzcashTest extends BaseTest {
         (byte) 0xb4, 0x7d, 0x0e};
     byte[] cm = new byte[32];
     boolean check_d = librustzcashCheckDiversifier(d);
-    assertTrue(check_d);
+    Assert.assertTrue(check_d);
 
     //Most significant five bits of ivk must be 0.
     ivk[31] = (byte) 0x07;
@@ -155,10 +173,10 @@ public class LibrustzcashTest extends BaseTest {
         System.out.printf("\n");
       }
     }
-    assertTrue(check_pkd);
+    Assert.assertTrue(check_pkd);
 
     boolean res = librustzcashComputeCm(new ComputeCmParams(d, pkD, value, r, cm));
-    assertFalse(res);
+    Assert.assertFalse(res);
 
     //check range of alpha
     byte[] ask = {(byte) 0xb7, 0x2c, (byte) 0xf7, (byte) 0xd6, 0x5e, 0x0e, (byte) 0x97, (byte) 0xd0,
@@ -178,14 +196,14 @@ public class LibrustzcashTest extends BaseTest {
 
     boolean boolSigRes = librustzcashSaplingSpendSig(
         new SpendSigParams(ask, alpha, sighash, sigRes));
-    assertFalse(boolSigRes);
+    Assert.assertFalse(boolSigRes);
 
     byte[] nsk = {(byte) 0xb6, 0x2c, (byte) 0xf7, (byte) 0xd6, 0x5e, 0x0e, (byte) 0x97, (byte) 0xd0,
         (byte) 0x82, 0x10, (byte) 0xc8, (byte) 0xcc, (byte) 0x93, 0x20, 0x68, (byte) 0xa6, 0x00,
         0x3b, 0x34, 0x01, 0x01, 0x3b, 0x67, 0x06, (byte) 0xa9, (byte) 0xaf, 0x33, 0x65, (byte) 0xea,
         (byte) 0xb4, 0x7d, 0x0e};
 
-    byte[] nk;
+    byte[] nk = new byte[32];
     nk = librustzcashNskToNk(nsk);
 
     for (int j = 0; j < 32; j++) {
@@ -199,7 +217,7 @@ public class LibrustzcashTest extends BaseTest {
     byte[] resbindSig = new byte[64];
     boolean boolBindSig = librustzcashSaplingBindingSig(
         new BindingSigParams(ctx, value, sighash, resbindSig));
-    assertFalse(boolBindSig);
+    Assert.assertFalse(boolBindSig);
     JLibrustzcash.librustzcashSaplingProvingCtxFree(ctx);
   }
 
@@ -266,14 +284,15 @@ public class LibrustzcashTest extends BaseTest {
         zkproof));
 
     JLibrustzcash.librustzcashSaplingProvingCtxFree(ctx);
+    Assert.assertTrue(ret);
+
     long time = (System.currentTimeMillis() - start);
+
     System.out.println("--- time is: " + time + ", result is " + ret);
-    assertTrue(ret);
     return time;
   }
 
-  @Ignore
-  @Test
+  // @Test
   public void calBenchmarkSpendConcurrent() throws Exception {
     librustzcashInitZksnarkParams();
     System.out.println("--- load ok ---");
@@ -288,17 +307,24 @@ public class LibrustzcashTest extends BaseTest {
     ExecutorService generatePool =
         Executors.newFixedThreadPool(
             availableProcessors,
-            r -> new Thread(r, "generate-transaction"));
+            new ThreadFactory() {
+              @Override
+              public Thread newThread(Runnable r) {
+                return new Thread(r, "generate-transaction");
+              }
+            });
 
     long startGenerate = System.currentTimeMillis();
-    LongStream.range(0L, count).forEach(l -> generatePool.execute(() -> {
-      try {
-        benchmarkCreateSpend();
-      } catch (Exception ex) {
-        ex.printStackTrace();
-        logger.error("", ex);
-      }
-    }));
+    LongStream.range(0L, count).forEach(l -> {
+      generatePool.execute(() -> {
+        try {
+          benchmarkCreateSpend();
+        } catch (Exception ex) {
+          ex.printStackTrace();
+          logger.error("", ex);
+        }
+      });
+    });
 
     countDownLatch.await();
 
@@ -440,7 +466,7 @@ public class LibrustzcashTest extends BaseTest {
 
     JLibrustzcash.librustzcashSaplingProvingCtxFree(ctx);
 
-    assertTrue(result);
+    Assert.assertTrue(result);
 
     long endTime = System.currentTimeMillis();
     long time = endTime - startTime;
@@ -500,7 +526,7 @@ public class LibrustzcashTest extends BaseTest {
 
     JLibrustzcash.librustzcashSaplingProvingCtxFree(ctx);
 
-    assertFalse(result);
+    Assert.assertFalse(result);
   }
 
   @Test
@@ -524,20 +550,19 @@ public class LibrustzcashTest extends BaseTest {
       try {
         Optional<PaymentAddress> op = incomingViewingKey.address(diversifierT);
         // PaymentAddress op = spendingKey.defaultAddress();
-        if (op.isPresent()) {
-          Note note = new Note(op.get(), 100);
-          note.setRcm(ByteArray
-              .fromHexString(
-                  "bf4b2042e3e8c4a0b390e407a79a0b46e36eff4f7bb54b2349dbb0046ee21e02"));
 
-          byte[] cm = note.cm();
-          if (cm != null) {
-            success++;
-          } else {
-            fail++;
-          }
-          System.out.println("note is " + Arrays.toString(cm));
+        Note note = new Note(op.get(), 100);
+        note.setRcm(ByteArray
+            .fromHexString(
+                "bf4b2042e3e8c4a0b390e407a79a0b46e36eff4f7bb54b2349dbb0046ee21e02"));
+
+        byte[] cm = note.cm();
+        if (cm != null) {
+          success++;
+        } else {
+          fail++;
         }
+        System.out.println("note is " + note.cm());
       } catch (ZksnarkException e) {
         System.out.println("failed: " + e.getMessage());
         fail++;
@@ -548,7 +573,7 @@ public class LibrustzcashTest extends BaseTest {
     System.out.println("success is: " + success);
     System.out.println("fail is: " + fail);
 
-    assertEquals(0, fail);
+    Assert.assertEquals(0, fail);
   }
 
   @Test
@@ -590,7 +615,7 @@ public class LibrustzcashTest extends BaseTest {
     System.out.println("success is: " + success);
     System.out.println("fail is: " + fail);
 
-    assertEquals(0, fail);
+    Assert.assertEquals(0, fail);
   }
 
   @Test
@@ -610,14 +635,13 @@ public class LibrustzcashTest extends BaseTest {
     try {
       Optional<PaymentAddress> op = incomingViewingKey.address(diversifierT);
       // PaymentAddress op = spendingKey.defaultAddress();
-      if (op.isPresent()) {
-        Note note = new Note(op.get(), randomInt(100, 100000));
-        note.setRcm(ByteArray
-            .fromHexString("bf4b2042e3e8c4a0b390e407a79a0b46e36eff4f7bb54b2349dbb0046ee21e02"));
 
-        byte[] cm = note.cm();
-        System.out.println("note is " + Arrays.toString(cm));
-      }
+      Note note = new Note(op.get(), randomInt(100, 100000));
+      note.setRcm(ByteArray
+          .fromHexString("bf4b2042e3e8c4a0b390e407a79a0b46e36eff4f7bb54b2349dbb0046ee21e02"));
+
+      byte[] cm = note.cm();
+      System.out.println("note is " + note.cm());
     } catch (ZksnarkException e) {
       System.out.println("failed: " + e.getMessage());
     }
@@ -635,7 +659,7 @@ public class LibrustzcashTest extends BaseTest {
     byte[] res = new byte[32];
     JLibrustzcash.librustzcashMerkleHash(new MerkleHashParams(25, a, b, res));
 
-    assertEquals("61a50a5540b4944da27cbd9b3d6ec39234ba229d2c461f4d719bc136573bf45b",
+    Assert.assertEquals("61a50a5540b4944da27cbd9b3d6ec39234ba229d2c461f4d719bc136573bf45b",
         ByteArray.toHexString(res));
   }
 }

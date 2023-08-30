@@ -1,7 +1,8 @@
 apply plugin: 'com.google.protobuf'
 
+def grpcVersion = '1.14.0' // CURRENT_GRPC_VERSION
 def protobufVersion = '3.21.12'
-def grpcVersion = '1.52.1'
+def protocVersion = protobufVersion
 
 dependencies {
     compile group: 'com.google.protobuf', name: 'protobuf-java', version: protobufVersion
@@ -15,7 +16,7 @@ dependencies {
     compile group: 'io.grpc', name: 'grpc-stub', version: grpcVersion
     // end google grpc
 
-    compile group: 'com.google.api.grpc', name: 'proto-google-common-protos', version: '2.15.0'
+    compile group: 'com.google.api.grpc', name: 'googleapis-common-protos', version: '0.0.3'
 }
 
 tasks.matching { it instanceof Test }.all {
@@ -38,7 +39,7 @@ sourceSets {
 protobuf {
     generatedFilesBaseDir = "$projectDir/src/"
     protoc {
-        artifact = "com.google.protobuf:protoc:${protobufVersion}"
+        artifact = "com.google.protobuf:protoc:${protocVersion}"
     }
 
     plugins {
@@ -63,4 +64,3 @@ protobuf {
 clean.doFirst {
     delete "src/main/java"
 }
-

@@ -18,15 +18,10 @@ public class GetCanDelegatedMaxSizeServlet extends RateLimiterServlet {
   @Autowired
   private Wallet wallet;
 
-  @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
       boolean visible = Util.getVisible(request);
-      int type = 0;
-      String typeStr = request.getParameter("type");
-      if (typeStr != null) {
-        type = Integer.parseInt(typeStr);
-      }
+      int type = Integer.parseInt(request.getParameter("type"));
       String ownerAddress = request.getParameter("owner_address");
       if (visible) {
         ownerAddress = Util.getHexAddress(ownerAddress);
@@ -39,7 +34,6 @@ public class GetCanDelegatedMaxSizeServlet extends RateLimiterServlet {
     }
   }
 
-  @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
       PostParams params = PostParams.getPostParams(request);

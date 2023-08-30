@@ -1,7 +1,6 @@
 package org.tron.common;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import java.util.Comparator;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -9,6 +8,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
+import org.testng.collections.Lists;
 
 
 @Slf4j

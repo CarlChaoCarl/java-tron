@@ -1,15 +1,8 @@
 package org.tron.core.vm.nativecontract;
 
-import static org.tron.core.actuator.ActuatorConstant.ACCOUNT_EXCEPTION_STR;
-import static org.tron.core.actuator.ActuatorConstant.STORE_NOT_EXIST;
-import static org.tron.core.config.Parameter.ChainConstant.TRX_PRECISION;
-import static org.tron.protos.contract.Common.ResourceCode.BANDWIDTH;
-import static org.tron.protos.contract.Common.ResourceCode.ENERGY;
-
 import com.google.common.primitives.Bytes;
-import java.util.Arrays;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.tron.common.utils.DecodeUtil;
 import org.tron.common.utils.StringUtil;
 import org.tron.core.ChainBaseManager;
@@ -23,6 +16,15 @@ import org.tron.core.store.DelegatedResourceAccountIndexStore;
 import org.tron.core.store.DynamicPropertiesStore;
 import org.tron.core.vm.nativecontract.param.UnDelegateResourceParam;
 import org.tron.core.vm.repository.Repository;
+
+import java.util.Arrays;
+import java.util.Objects;
+
+import static org.tron.core.actuator.ActuatorConstant.ACCOUNT_EXCEPTION_STR;
+import static org.tron.core.actuator.ActuatorConstant.STORE_NOT_EXIST;
+import static org.tron.core.config.Parameter.ChainConstant.TRX_PRECISION;
+import static org.tron.protos.contract.Common.ResourceCode.BANDWIDTH;
+import static org.tron.protos.contract.Common.ResourceCode.ENERGY;
 
 @Slf4j(topic = "VMProcessor")
 public class UnDelegateResourceProcessor {
@@ -48,7 +50,7 @@ public class UnDelegateResourceProcessor {
     }
 
     byte[] receiverAddress = param.getReceiverAddress();
-    if (!DecodeUtil.addressValid(receiverAddress)) {
+    if (ArrayUtils.isEmpty(receiverAddress) || !DecodeUtil.addressValid(receiverAddress)) {
       throw new ContractValidateException("Invalid receiverAddress");
     }
     if (Arrays.equals(receiverAddress, ownerAddress)) {
@@ -82,7 +84,7 @@ public class UnDelegateResourceProcessor {
         break;
       default:
         throw new ContractValidateException(
-            "Unknown ResourceCode, valid ResourceCode[BANDWIDTH、ENERGY]");
+            "ResourceCode error.valid ResourceCode[BANDWIDTH、ENERGY]");
     }
   }
 
@@ -102,9 +104,7 @@ public class UnDelegateResourceProcessor {
         case BANDWIDTH:
           BandwidthProcessor bandwidthProcessor = new BandwidthProcessor(ChainBaseManager.getInstance());
           bandwidthProcessor.updateUsageForDelegated(receiverCapsule);
-          /* For example, in a scenario where a regular account can be upgraded to a contract
-          account through an interface, the account information will be cleared after the
-          contract suicide, and this account will be converted to a regular account in the future */
+
           if (receiverCapsule.getAcquiredDelegatedFrozenV2BalanceForBandwidth()
               < unDelegateBalance) {
             // A TVM contract suicide, re-create will produce this situation
@@ -167,8 +167,9 @@ public class UnDelegateResourceProcessor {
 
         BandwidthProcessor processor = new BandwidthProcessor(ChainBaseManager.getInstance());
         if (Objects.nonNull(receiverCapsule) && transferUsage > 0) {
-          processor.unDelegateIncrease(ownerCapsule, receiverCapsule,
-              transferUsage, BANDWIDTH, now);
+          ownerCapsule.setNetUsage(processor.unDelegateIncrease(ownerCapsule, receiverCapsule,
+              transferUsage, BANDWIDTH, now));
+          ownerCapsule.setLatestConsumeTime(now);
         }
       }
       break;
@@ -181,7 +182,9 @@ public class UnDelegateResourceProcessor {
         EnergyProcessor processor =
             new EnergyProcessor(dynamicStore, ChainBaseManager.getInstance().getAccountStore());
         if (Objects.nonNull(receiverCapsule) && transferUsage > 0) {
-          processor.unDelegateIncrease(ownerCapsule, receiverCapsule, transferUsage, ENERGY, now);
+          ownerCapsule.setEnergyUsage(processor.unDelegateIncrease(ownerCapsule, receiverCapsule,
+              transferUsage, ENERGY, now));
+          ownerCapsule.setLatestConsumeTimeForEnergy(now);
         }
       }
       break;

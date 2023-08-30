@@ -2,14 +2,19 @@ package org.tron.core.zksnark;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
-import javax.annotation.Resource;
+import java.io.File;
+import java.util.Arrays;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.tron.common.BaseTest;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.parameter.CommonParameter;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.FileUtil;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.common.zksnark.IncrementalMerkleVoucherContainer;
+import org.tron.common.zksnark.MerkleContainer;
 import org.tron.core.Constant;
 import org.tron.core.Wallet;
 import org.tron.core.capsule.BlockCapsule;
@@ -18,7 +23,9 @@ import org.tron.core.capsule.IncrementalMerkleTreeCapsule;
 import org.tron.core.capsule.IncrementalMerkleVoucherCapsule;
 import org.tron.core.capsule.PedersenHashCapsule;
 import org.tron.core.capsule.TransactionCapsule;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
+import org.tron.core.db.Manager;
 import org.tron.core.exception.ZksnarkException;
 import org.tron.protos.Protocol.Block;
 import org.tron.protos.Protocol.Transaction;
@@ -30,29 +37,38 @@ import org.tron.protos.contract.ShieldContract.PedersenHash;
 import org.tron.protos.contract.ShieldContract.ReceiveDescription;
 import org.tron.protos.contract.ShieldContract.ShieldedTransferContract;
 
-public class MerkleContainerTest extends BaseTest {
+public class MerkleContainerTest {
 
-  @Resource
-  private Wallet wallet;
-  //  private static MerkleContainer merkleContainer;
+  private static Manager dbManager = new Manager();
+  private static TronApplicationContext context;
+  private static String dbPath = "MerkleContainerTest";
+  private static MerkleContainer merkleContainer;
 
 
   static {
-    dbPath = "MerkleContainerTest";
     Args.setParam(new String[]{"-d", dbPath}, Constant.TEST_CONF);
+    context = new TronApplicationContext(DefaultConfig.class);
   }
 
-  /*@Before
-  public void init() {
+  @BeforeClass
+  public static void init() {
+    dbManager = context.getBean(Manager.class);
     merkleContainer = MerkleContainer
         .createInstance(dbManager.getMerkleTreeStore(), dbManager.getChainBaseManager()
             .getMerkleTreeIndexStore());
-  }*/
+  }
 
-  /*@Test
+  @AfterClass
+  public static void removeDb() {
+    Args.clearParam();
+    context.destroy();
+    FileUtil.deleteDir(new File(dbPath));
+  }
+
+  @Test
   public void test() {
     //add
-      IncrementalMerkleTreeContainer tree = new IncrementalMerkleTreeContainer(
+    /*IncrementalMerkleTreeContainer tree = new IncrementalMerkleTreeContainer(
         new IncrementalMerkleTreeCapsule());
     String s1 = "2ec45f5ae2d1bc7a80df02abfb2814a1239f956c6fb3ac0e112c008ba2c1ab91";
     PedersenHashCapsule compressCapsule1 = new PedersenHashCapsule();
@@ -148,9 +164,9 @@ public class MerkleContainerTest extends BaseTest {
         .putMerkleVoucherIntoStore(witness.getMerkleVoucherKey(), witness.getVoucherCapsule());
 
     IncrementalMerkleTreeContainer bestMerkleRoot = merkleContainer.getBestMerkle();
-    Assert.assertEquals(1, bestMerkleRoot.size());
+    Assert.assertEquals(1, bestMerkleRoot.size());*/
 
-    }*/
+  }
 
   private Transaction createTransaction(String strCm1, String strCm2) {
     ByteString cm1 = ByteString.copyFrom(ByteArray.fromHexString(strCm1));
@@ -166,8 +182,9 @@ public class MerkleContainerTest extends BaseTest {
         Transaction.Contract.newBuilder().setType(ContractType.ShieldedTransferContract)
             .setParameter(
                 Any.pack(contract)).build());
-    return Transaction.newBuilder().setRawData(transactionBuilder.build())
+    Transaction transaction = Transaction.newBuilder().setRawData(transactionBuilder.build())
         .build();
+    return transaction;
   }
 
   private void initMerkleTreeWitnessInfo() throws ZksnarkException {
@@ -344,6 +361,7 @@ public class MerkleContainerTest extends BaseTest {
     OutputPointInfo outputPointInfo = OutputPointInfo.newBuilder().addOutPoints(outputPoint1)
         .addOutPoints(outputPoint2).setBlockNum(number).build();
     //  Args.getInstance().setAllowShieldedTransaction(1);
+    Wallet wallet = context.getBean(Wallet.class);
     IncrementalMerkleVoucherInfo merkleTreeWitnessInfo = wallet
         .getMerkleTreeVoucherInfo(outputPointInfo);
 
@@ -408,7 +426,7 @@ public class MerkleContainerTest extends BaseTest {
       byte[] roota = witnessa.root().getContent().toByteArray();
       byte[] rootb = witnessb.root().getContent().toByteArray();
 
-      Assert.assertArrayEquals(roota, rootb);
+      Assert.assertTrue(Arrays.equals(roota, rootb));
     }
   }
 

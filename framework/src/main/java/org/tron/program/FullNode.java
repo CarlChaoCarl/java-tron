@@ -81,7 +81,7 @@ public class FullNode {
     context.register(DefaultConfig.class);
     context.refresh();
     Application appT = ApplicationFactory.create(context);
-    context.registerShutdownHook();
+    shutdown(appT);
 
     // grpc api server
     RpcApiService rpcApiService = context.getBean(RpcApiService.class);
@@ -137,5 +137,10 @@ public class FullNode {
     appT.startup();
 
     rpcApiService.blockUntilShutdown();
+  }
+
+  public static void shutdown(final Application app) {
+    logger.info("********register application shutdown hook********");
+    Runtime.getRuntime().addShutdownHook(new Thread(app::shutdown));
   }
 }

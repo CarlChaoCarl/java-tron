@@ -1,7 +1,6 @@
 package org.tron.core.db;
 
 import static org.tron.common.utils.Commons.adjustBalance;
-import static org.tron.core.exception.BadBlockException.TypeEnum.CALC_MERKLE_ROOT_FAILED;
 import static org.tron.protos.Protocol.Transaction.Contract.ContractType.TransferContract;
 import static org.tron.protos.Protocol.Transaction.Result.contractResult.SUCCESS;
 
@@ -49,7 +48,6 @@ import org.springframework.stereotype.Component;
 import org.tron.api.GrpcAPI.TransactionInfoList;
 import org.tron.common.args.GenesisBlock;
 import org.tron.common.bloom.Bloom;
-import org.tron.common.es.ExecutorServiceManager;
 import org.tron.common.logsfilter.EventPluginLoader;
 import org.tron.common.logsfilter.FilterQuery;
 import org.tron.common.logsfilter.capsule.BlockFilterCapsule;
@@ -105,6 +103,7 @@ import org.tron.core.db.api.EnergyPriceHistoryLoader;
 import org.tron.core.db.api.MoveAbiHelper;
 import org.tron.core.db2.ISession;
 import org.tron.core.db2.core.Chainbase;
+import org.tron.core.db2.core.ITronChainBase;
 import org.tron.core.db2.core.SnapshotManager;
 import org.tron.core.exception.AccountResourceInsufficientException;
 import org.tron.core.exception.BadBlockException;
@@ -193,8 +192,7 @@ public class Manager {
   @Getter
   @Setter
   private boolean isSyncMode;
-  @Getter
-  private Object forkLock = new Object();
+
   // map<Long, IncrementalMerkleTree>
   @Getter
   @Setter
@@ -252,13 +250,6 @@ public class Manager {
 
   private AtomicInteger blockWaitLock = new AtomicInteger(0);
   private Object transactionLock = new Object();
-
-  private ExecutorService rePushEs;
-  private static final String rePushEsName = "repush";
-  private ExecutorService triggerEs;
-  private static final String triggerEsName = "event-trigger";
-  private ExecutorService filterEs;
-  private static final String filterEsName = "filter";
 
   /**
    * Cycle thread to rePush Transactions
@@ -436,21 +427,14 @@ public class Manager {
 
   public void stopRePushThread() {
     isRunRePushThread = false;
-    ExecutorServiceManager.shutdownAndAwaitTermination(rePushEs, rePushEsName);
   }
 
   public void stopRePushTriggerThread() {
     isRunTriggerCapsuleProcessThread = false;
-    ExecutorServiceManager.shutdownAndAwaitTermination(triggerEs, triggerEsName);
   }
 
   public void stopFilterProcessThread() {
     isRunFilterProcessThread = false;
-    ExecutorServiceManager.shutdownAndAwaitTermination(filterEs, filterEsName);
-  }
-
-  public void stopValidateSignThread() {
-    ExecutorServiceManager.shutdownAndAwaitTermination(validateSignService, "validate-sign");
   }
 
   @PostConstruct
@@ -464,7 +448,6 @@ public class Manager {
     trieService.setChainBaseManager(chainBaseManager);
     revokingStore.disable();
     revokingStore.check();
-    transactionCache.initCache();
     this.setProposalController(ProposalController.createInstance(this));
     this.setMerkleContainer(
         merkleContainer.createInstance(chainBaseManager.getMerkleTreeStore(),
@@ -538,19 +521,21 @@ public class Manager {
     revokingStore.enable();
     validateSignService = Executors
         .newFixedThreadPool(Args.getInstance().getValidateSignThreadNum());
-    rePushEs = ExecutorServiceManager.newSingleThreadExecutor(rePushEsName, true);
-    rePushEs.submit(rePushLoop);
+    Thread rePushThread = new Thread(rePushLoop);
+    rePushThread.setDaemon(true);
+    rePushThread.start();
     // add contract event listener for subscribing
     if (Args.getInstance().isEventSubscribe()) {
       startEventSubscribing();
-      triggerEs = ExecutorServiceManager.newSingleThreadExecutor(triggerEsName, true);
-      triggerEs.submit(triggerCapsuleProcessLoop);
+      Thread triggerCapsuleProcessThread = new Thread(triggerCapsuleProcessLoop);
+      triggerCapsuleProcessThread.setDaemon(true);
+      triggerCapsuleProcessThread.start();
     }
 
     // start json rpc filter process
     if (CommonParameter.getInstance().isJsonRpcFilterEnabled()) {
-      filterEs = ExecutorServiceManager.newSingleThreadExecutor(filterEsName);
-      filterEs.submit(filterProcessLoop);
+      Thread filterProcessThread = new Thread(filterProcessLoop);
+      filterProcessThread.start();
     }
 
     //initStoreFactory
@@ -1228,8 +1213,8 @@ public class Manager {
             if (!block.calcMerkleRoot().equals(block.getMerkleRoot())) {
               logger.warn("Num: {}, the merkle root doesn't match, expect is {} , actual is {}.",
                   block.getNum(), block.getMerkleRoot(), block.calcMerkleRoot());
-              throw new BadBlockException(CALC_MERKLE_ROOT_FAILED,
-                      String.format("The merkle hash is not validated for %d", block.getNum()));
+              throw new BadBlockException(String.format("The merkle hash is not validated for %d",
+                  block.getNum()));
             }
             consensus.receiveBlock(block);
           }
@@ -1283,9 +1268,8 @@ public class Manager {
                   chainBaseManager.getDynamicPropertiesStore().getLatestBlockHeaderTimestamp(),
                   khaosDb.getHead(), khaosDb.getMiniStore().size(),
                   khaosDb.getMiniUnlinkedStore().size());
-              synchronized (forkLock) {
-                switchFork(newBlock);
-              }
+
+              switchFork(newBlock);
               logger.info(SAVE_BLOCK, newBlock);
 
               logger.warn(
@@ -1625,7 +1609,7 @@ public class Manager {
         toBePacked.add(trx);
         currentSize += trxPackSize;
       } catch (Exception e) {
-        logger.warn("Process trx {} failed when generating block {}, {}.", trx.getTransactionId(),
+        logger.error("Process trx {} failed when generating block {}, {}.", trx.getTransactionId(),
             blockCapsule.getNum(), e.getMessage());
       }
     }
@@ -1759,18 +1743,14 @@ public class Manager {
 
     payReward(block);
 
-    boolean flag = chainBaseManager.getDynamicPropertiesStore().getNextMaintenanceTime()
-        <= block.getTimeStamp();
-    if (flag) {
+    if (chainBaseManager.getDynamicPropertiesStore().getNextMaintenanceTime()
+        <= block.getTimeStamp()) {
       proposalController.processProposals();
+      chainBaseManager.getForkController().reset();
     }
 
     if (!consensus.applyBlock(block)) {
       throw new BadBlockException("consensus apply block failed");
-    }
-
-    if (flag) {
-      chainBaseManager.getForkController().reset();
     }
 
     updateTransHashCache(block);
@@ -1927,6 +1907,23 @@ public class Manager {
 
   public NullifierStore getNullifierStore() {
     return chainBaseManager.getNullifierStore();
+  }
+
+  public void closeAllStore() {
+    logger.info("******** Begin to close db. ********");
+    chainBaseManager.closeAllStore();
+    logger.info("******** End to close db. ********");
+  }
+
+  public void closeOneStore(ITronChainBase database) {
+    logger.info("******** Begin to close {}. ********", database.getName());
+    try {
+      database.close();
+    } catch (Exception e) {
+      logger.info("Failed to close {}.", database.getName(), e);
+    } finally {
+      logger.info("******** End to close {}. ********", database.getName());
+    }
   }
 
   public boolean isTooManyPending() {

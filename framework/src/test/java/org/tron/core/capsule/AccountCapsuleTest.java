@@ -1,25 +1,34 @@
 package org.tron.core.capsule;
 
 import com.google.protobuf.ByteString;
+import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.tron.common.BaseTest;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.FileUtil;
 import org.tron.core.Constant;
 import org.tron.core.Wallet;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
+import org.tron.core.db.Manager;
 import org.tron.protos.Protocol.AccountType;
 import org.tron.protos.Protocol.Key;
 import org.tron.protos.Protocol.Permission;
 import org.tron.protos.Protocol.Vote;
 import org.tron.protos.contract.AssetIssueContractOuterClass.AssetIssueContract;
 
-public class AccountCapsuleTest extends BaseTest {
+public class AccountCapsuleTest {
 
+  private static final String dbPath = "output_accountCapsule_test";
+  private static final Manager dbManager;
+  private static final TronApplicationContext context;
   private static final String OWNER_ADDRESS;
   private static final String ASSET_NAME = "trx";
   private static final long TOTAL_SUPPLY = 10000L;
@@ -36,8 +45,10 @@ public class AccountCapsuleTest extends BaseTest {
   static AccountCapsule accountCapsule;
 
   static {
-    dbPath = "output_accountCapsule_test";
     Args.setParam(new String[]{"-d", dbPath, "-w"}, Constant.TEST_CONF);
+    context = new TronApplicationContext(DefaultConfig.class);
+    dbManager = context.getBean(Manager.class);
+
     OWNER_ADDRESS = Wallet.getAddressPreFixString() + "a06a17a49648a8ad32055c06f60fa14ae46df91234";
   }
 
@@ -51,6 +62,13 @@ public class AccountCapsuleTest extends BaseTest {
     byte[] accountByte = accountCapsuleTest.getData();
     accountCapsule = new AccountCapsule(accountByte);
     accountCapsuleTest.setBalance(1111L);
+  }
+
+  @AfterClass
+  public static void removeDb() {
+    Args.clearParam();
+    context.destroy();
+    FileUtil.deleteDir(new File(dbPath));
   }
 
   public static byte[] randomBytes(int length) {
@@ -111,8 +129,9 @@ public class AccountCapsuleTest extends BaseTest {
       Assert.assertEquals(nameAdd, entry.getKey());
       Assert.assertEquals(amountAdd - amountReduce, entry.getValue().longValue());
     }
+    String key = nameAdd;
     long value = 11L;
-    boolean addAsssetBoolean = accountCapsuleTest.addAsset(nameAdd.getBytes(), value);
+    boolean addAsssetBoolean = accountCapsuleTest.addAsset(key.getBytes(), value);
     Assert.assertFalse(addAsssetBoolean);
 
     String keyName = "TokenTest";
@@ -174,9 +193,9 @@ public class AccountCapsuleTest extends BaseTest {
     dbManager.getAccountStore().put(accountCapsule.getAddress().toByteArray(), accountCapsule);
 
     accountCapsule.addAssetV2(ByteArray.fromString(String.valueOf(id)), 1000L);
-    Assert.assertEquals(1000L, accountCapsule.getAssetMapForTest().get(ASSET_NAME).longValue());
-    Assert.assertEquals(1000L,
-        accountCapsule.getAssetV2MapForTest().get(String.valueOf(id)).longValue());
+    Assert.assertEquals(accountCapsule.getAssetMapForTest().get(ASSET_NAME).longValue(), 1000L);
+    Assert.assertEquals(accountCapsule.getAssetV2MapForTest().get(String.valueOf(id)).longValue(),
+        1000L);
 
     //assetBalanceEnoughV2
     Assert.assertTrue(accountCapsule.assetBalanceEnoughV2(ByteArray.fromString(ASSET_NAME),
@@ -198,11 +217,10 @@ public class AccountCapsuleTest extends BaseTest {
     Assert.assertTrue(accountCapsule.addAssetAmountV2(ByteArray.fromString(ASSET_NAME),
         500, dbManager.getDynamicPropertiesStore(), dbManager.getAssetIssueStore()));
     // 1000-999 +500
-    Assert.assertEquals(501L, accountCapsule.getAssetMapForTest().get(ASSET_NAME).longValue());
+    Assert.assertEquals(accountCapsule.getAssetMapForTest().get(ASSET_NAME).longValue(), 501L);
     Assert.assertTrue(accountCapsule.addAssetAmountV2(ByteArray.fromString("abc"),
         500, dbManager.getDynamicPropertiesStore(), dbManager.getAssetIssueStore()));
-    Assert.assertEquals(500L,
-        accountCapsule.getAssetMapForTest().get("abc").longValue());
+    Assert.assertEquals(accountCapsule.getAssetMapForTest().get("abc").longValue(), 500L);
   }
 
   /**
@@ -256,8 +274,8 @@ public class AccountCapsuleTest extends BaseTest {
             10000);
     accountCapsule.addAssetV2(ByteArray.fromString(String.valueOf(id)), 1000L);
     dbManager.getAccountStore().put(accountCapsule.getAddress().toByteArray(), accountCapsule);
-    Assert.assertEquals(1000L,
-        accountCapsule.getAssetV2MapForTest().get(String.valueOf(id)).longValue());
+    Assert.assertEquals(accountCapsule.getAssetV2MapForTest().get(String.valueOf(id)).longValue(),
+        1000L);
 
     //assetBalanceEnoughV2
     Assert.assertTrue(accountCapsule.assetBalanceEnoughV2(ByteArray.fromString(String.valueOf(id)),
@@ -282,14 +300,14 @@ public class AccountCapsuleTest extends BaseTest {
     Assert.assertTrue(accountCapsule.addAssetAmountV2(ByteArray.fromString(String.valueOf(id)),
         500, dbManager.getDynamicPropertiesStore(), dbManager.getAssetIssueStore()));
     // 1000-999 +500
-    Assert.assertEquals(501L,
-        accountCapsule.getAssetV2MapForTest().get(String.valueOf(id)).longValue());
+    Assert.assertEquals(accountCapsule.getAssetV2MapForTest().get(String.valueOf(id)).longValue(),
+        501L);
     //abc
     Assert.assertTrue(accountCapsule.addAssetAmountV2(ByteArray.fromString(String.valueOf(id + 1)),
         500, dbManager.getDynamicPropertiesStore(), dbManager.getAssetIssueStore()));
     Assert
-        .assertEquals(500L,
-            accountCapsule.getAssetV2MapForTest().get(String.valueOf(id + 1)).longValue());
+        .assertEquals(accountCapsule.getAssetV2MapForTest().get(String.valueOf(id + 1)).longValue(),
+            500L);
   }
 
   @Test
@@ -301,8 +319,9 @@ public class AccountCapsuleTest extends BaseTest {
             AccountType.Normal,
             10000);
 
-    Assert.assertArrayEquals(ByteArray.fromHexString(OWNER_ADDRESS),
-        accountCapsule.getWitnessPermissionAddress());
+    Assert.assertTrue(
+        Arrays.equals(ByteArray.fromHexString(OWNER_ADDRESS),
+            accountCapsule.getWitnessPermissionAddress()));
 
     String witnessPermissionAddress =
         Wallet.getAddressPreFixString() + "cc6a17a49648a8ad32055c06f60fa14ae46df912cc";
@@ -311,7 +330,8 @@ public class AccountCapsuleTest extends BaseTest {
             .setAddress(ByteString.copyFrom(ByteArray.fromHexString(witnessPermissionAddress)))
             .build()).build()).build());
 
-    Assert.assertArrayEquals(ByteArray.fromHexString(witnessPermissionAddress),
-        accountCapsule.getWitnessPermissionAddress());
+    Assert.assertTrue(
+        Arrays.equals(ByteArray.fromHexString(witnessPermissionAddress),
+            accountCapsule.getWitnessPermissionAddress()));
   }
 }

@@ -643,11 +643,6 @@ public class OperationActions {
     program.step();
   }
 
-  public static void push0Action(Program program) {
-    program.stackPush(DataWord.ZERO());
-    program.step();
-  }
-
   public static void pushAction(Program program) {
     int n = program.getCurrentOpIntValue() - Op.PUSH1 + 1;
     program.step();

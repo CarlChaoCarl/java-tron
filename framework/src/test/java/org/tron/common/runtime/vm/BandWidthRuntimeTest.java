@@ -17,20 +17,26 @@ package org.tron.common.runtime.vm;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import java.io.File;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.tron.common.BaseTest;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.runtime.RuntimeImpl;
 import org.tron.common.runtime.TvmTestUtils;
 import org.tron.common.utils.Commons;
+import org.tron.common.utils.FileUtil;
+import org.tron.core.ChainBaseManager;
 import org.tron.core.Constant;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.ReceiptCapsule;
 import org.tron.core.capsule.TransactionCapsule;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
+import org.tron.core.db.Manager;
 import org.tron.core.db.TransactionTrace;
 import org.tron.core.exception.AccountResourceInsufficientException;
 import org.tron.core.exception.ContractExeException;
@@ -47,19 +53,21 @@ import org.tron.protos.Protocol.Transaction.raw;
 import org.tron.protos.contract.SmartContractOuterClass.CreateSmartContract;
 import org.tron.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 
-public class BandWidthRuntimeTest extends BaseTest {
+public class BandWidthRuntimeTest {
 
   public static final long totalBalance = 1000_0000_000_000L;
-  private static final String dbDirectory = "db_BandWidthRuntimeTest_test";
-  private static final String indexDirectory = "index_BandWidthRuntimeTest_test";
-  private static final String OwnerAddress = "TCWHANtDDdkZCTo2T2peyEq3Eg9c2XB7ut";
-  private static final String TriggerOwnerAddress = "TCSgeWapPJhCqgWRxXCKb6jJ5AgNWSGjPA";
-  private static final String TriggerOwnerTwoAddress = "TPMBUANrTwwQAPwShn7ZZjTJz1f3F8jknj";
-  private static boolean init;
+  private static String dbPath = "output_BandWidthRuntimeTest_test";
+  private static String dbDirectory = "db_BandWidthRuntimeTest_test";
+  private static String indexDirectory = "index_BandWidthRuntimeTest_test";
+  private static AnnotationConfigApplicationContext context;
+  private static Manager dbManager;
+  private static ChainBaseManager chainBaseManager;
 
-  @BeforeClass
-  public static void init() {
-    dbPath = "output_bandwidth_runtime_test";
+  private static String OwnerAddress = "TCWHANtDDdkZCTo2T2peyEq3Eg9c2XB7ut";
+  private static String TriggerOwnerAddress = "TCSgeWapPJhCqgWRxXCKb6jJ5AgNWSGjPA";
+  private static String TriggerOwnerTwoAddress = "TPMBUANrTwwQAPwShn7ZZjTJz1f3F8jknj";
+
+  static {
     Args.setParam(
         new String[]{
             "--output-directory", dbPath,
@@ -69,16 +77,16 @@ public class BandWidthRuntimeTest extends BaseTest {
         },
         "config-test-mainnet.conf"
     );
+    context = new TronApplicationContext(DefaultConfig.class);
   }
 
   /**
    * Init data.
    */
-  @Before
-  public void before() {
-    if (init) {
-      return;
-    }
+  @BeforeClass
+  public static void init() {
+    dbManager = context.getBean(Manager.class);
+    chainBaseManager = context.getBean(ChainBaseManager.class);
     //init energy
     dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderTimestamp(1526547838000L);
     dbManager.getDynamicPropertiesStore().saveTotalEnergyWeight(10_000_000L);
@@ -114,13 +122,25 @@ public class BandWidthRuntimeTest extends BaseTest {
 
     dbManager.getDynamicPropertiesStore()
         .saveLatestBlockHeaderTimestamp(System.currentTimeMillis() / 1000);
-    init = true;
+  }
+
+  /**
+   * destroy clear data of testing.
+   */
+  @AfterClass
+  public static void destroy() {
+    Args.clearParam();
+    context.destroy();
+    FileUtil.deleteDir(new File(dbPath));
   }
 
   @Test
   public void testSuccess() {
     try {
       byte[] contractAddress = createContract();
+      AccountCapsule triggerOwner = dbManager.getAccountStore()
+          .get(Commons.decodeFromBase58Check(TriggerOwnerAddress));
+      long energy = triggerOwner.getEnergyUsage();
       TriggerSmartContract triggerContract = TvmTestUtils.createTriggerContract(contractAddress,
           "setCoin(uint256)", "3", false,
           0, Commons.decodeFromBase58Check(TriggerOwnerAddress));
@@ -131,14 +151,15 @@ public class BandWidthRuntimeTest extends BaseTest {
       TransactionTrace trace = new TransactionTrace(trxCap, StoreFactory.getInstance(),
           new RuntimeImpl());
       dbManager.consumeBandwidth(trxCap, trace);
+      BlockCapsule blockCapsule = null;
 
-      trace.init(null);
+      trace.init(blockCapsule);
       trace.exec();
       trace.finalization();
 
-      AccountCapsule triggerOwner = dbManager.getAccountStore()
+      triggerOwner = dbManager.getAccountStore()
           .get(Commons.decodeFromBase58Check(TriggerOwnerAddress));
-      long energy = triggerOwner.getEnergyUsage();
+      energy = triggerOwner.getEnergyUsage();
       long balance = triggerOwner.getBalance();
       Assert.assertEquals(45706, trace.getReceipt().getEnergyUsageTotal());
       Assert.assertEquals(45706, energy);

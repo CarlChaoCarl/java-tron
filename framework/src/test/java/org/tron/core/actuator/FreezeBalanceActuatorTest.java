@@ -5,14 +5,18 @@ import static org.tron.core.config.Parameter.ChainConstant.TRANSFER_FEE;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import java.io.File;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.tron.common.BaseTest;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.FileUtil;
 import org.tron.common.utils.Utils;
 import org.tron.core.ChainBaseManager;
 import org.tron.core.Constant;
@@ -21,8 +25,10 @@ import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.DelegatedResourceAccountIndexCapsule;
 import org.tron.core.capsule.DelegatedResourceCapsule;
 import org.tron.core.capsule.TransactionResultCapsule;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.Parameter.ChainConstant;
 import org.tron.core.config.args.Args;
+import org.tron.core.db.Manager;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.protos.Protocol.AccountType;
@@ -32,21 +38,50 @@ import org.tron.protos.contract.BalanceContract.FreezeBalanceContract;
 import org.tron.protos.contract.Common.ResourceCode;
 
 @Slf4j
-public class FreezeBalanceActuatorTest extends BaseTest {
+public class FreezeBalanceActuatorTest {
 
+  private static final String dbPath = "output_freeze_balance_test";
   private static final String OWNER_ADDRESS;
   private static final String RECEIVER_ADDRESS;
   private static final String OWNER_ADDRESS_INVALID = "aaaa";
   private static final String OWNER_ACCOUNT_INVALID;
   private static final long initBalance = 10_000_000_000L;
+  private static Manager dbManager;
+  private static TronApplicationContext context;
 
   static {
-    dbPath = "output_freeze_balance_test";
     Args.setParam(new String[]{"--output-directory", dbPath}, Constant.TEST_CONF);
+    context = new TronApplicationContext(DefaultConfig.class);
     OWNER_ADDRESS = Wallet.getAddressPreFixString() + "548794500882809695a8a687866e76d4271a1abc";
     RECEIVER_ADDRESS = Wallet.getAddressPreFixString() + "abd4b9367799eaa3197fecb144eb71de1e049150";
     OWNER_ACCOUNT_INVALID =
         Wallet.getAddressPreFixString() + "548794500882809695a8a687866e76d4271a3456";
+  }
+
+  /**
+   * Init data.
+   */
+  @BeforeClass
+  public static void init() {
+    dbManager = context.getBean(Manager.class);
+    //    Args.setParam(new String[]{"--output-directory", dbPath},
+    //        "config-junit.conf");
+    //    dbManager = new Manager();
+    //    dbManager.init();
+  }
+
+  /**
+   * Release resources.
+   */
+  @AfterClass
+  public static void destroy() {
+    Args.clearParam();
+    context.destroy();
+    if (FileUtil.deleteDir(new File(dbPath))) {
+      logger.info("Release resources successful.");
+    } else {
+      logger.info("Release resources failure.");
+    }
   }
 
   /**
@@ -137,7 +172,7 @@ public class FreezeBalanceActuatorTest extends BaseTest {
     try {
       actuator.validate();
       actuator.execute(ret);
-      Assert.assertEquals(code.SUCESS, ret.getInstance().getRet());
+      Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
       AccountCapsule owner =
           dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
 
@@ -145,8 +180,10 @@ public class FreezeBalanceActuatorTest extends BaseTest {
           - TRANSFER_FEE);
       Assert.assertEquals(owner.getFrozenBalance(), frozenBalance);
       Assert.assertEquals(frozenBalance, owner.getTronPower());
-    } catch (ContractValidateException | ContractExeException e) {
-      Assert.fail();
+    } catch (ContractValidateException e) {
+      Assert.assertFalse(e instanceof ContractValidateException);
+    } catch (ContractExeException e) {
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -162,7 +199,7 @@ public class FreezeBalanceActuatorTest extends BaseTest {
     try {
       actuator.validate();
       actuator.execute(ret);
-      Assert.assertEquals(code.SUCESS, ret.getInstance().getRet());
+      Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
       AccountCapsule owner =
           dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
 
@@ -171,8 +208,10 @@ public class FreezeBalanceActuatorTest extends BaseTest {
       Assert.assertEquals(0L, owner.getFrozenBalance());
       Assert.assertEquals(frozenBalance, owner.getEnergyFrozenBalance());
       Assert.assertEquals(frozenBalance, owner.getTronPower());
-    } catch (ContractValidateException | ContractExeException e) {
-      Assert.fail();
+    } catch (ContractValidateException e) {
+      Assert.assertFalse(e instanceof ContractValidateException);
+    } catch (ContractExeException e) {
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -202,9 +241,9 @@ public class FreezeBalanceActuatorTest extends BaseTest {
       actuator.validate();
       actuator.execute(ret);
     } catch (ContractValidateException e) {
-      Assert.assertEquals("Do not allow delegate resources to contract addresses", e.getMessage());
+      Assert.assertEquals(e.getMessage(), "Do not allow delegate resources to contract addresses");
     } catch (ContractExeException e) {
-      Assert.fail();
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -223,7 +262,7 @@ public class FreezeBalanceActuatorTest extends BaseTest {
     try {
       actuator.validate();
       actuator.execute(ret);
-      Assert.assertEquals(code.SUCESS, ret.getInstance().getRet());
+      Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
       AccountCapsule owner =
           dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
 
@@ -254,8 +293,9 @@ public class FreezeBalanceActuatorTest extends BaseTest {
       Assert
           .assertEquals(0, delegatedResourceAccountIndexCapsuleOwner.getFromAccountsList().size());
       Assert.assertEquals(1, delegatedResourceAccountIndexCapsuleOwner.getToAccountsList().size());
-      Assert.assertTrue(delegatedResourceAccountIndexCapsuleOwner.getToAccountsList()
-          .contains(ByteString.copyFrom(ByteArray.fromHexString(RECEIVER_ADDRESS))));
+      Assert.assertEquals(true,
+          delegatedResourceAccountIndexCapsuleOwner.getToAccountsList()
+              .contains(ByteString.copyFrom(ByteArray.fromHexString(RECEIVER_ADDRESS))));
 
       DelegatedResourceAccountIndexCapsule delegatedResourceAccountIndexCapsuleReceiver = dbManager
           .getDelegatedResourceAccountIndexStore().get(ByteArray.fromHexString(RECEIVER_ADDRESS));
@@ -264,12 +304,15 @@ public class FreezeBalanceActuatorTest extends BaseTest {
       Assert
           .assertEquals(1,
               delegatedResourceAccountIndexCapsuleReceiver.getFromAccountsList().size());
-      Assert.assertTrue(delegatedResourceAccountIndexCapsuleReceiver.getFromAccountsList()
-          .contains(ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS))));
+      Assert.assertEquals(true,
+          delegatedResourceAccountIndexCapsuleReceiver.getFromAccountsList()
+              .contains(ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS))));
 
 
-    } catch (ContractValidateException | ContractExeException e) {
-      Assert.fail();
+    } catch (ContractValidateException e) {
+      Assert.assertFalse(e instanceof ContractValidateException);
+    } catch (ContractExeException e) {
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -351,7 +394,7 @@ public class FreezeBalanceActuatorTest extends BaseTest {
     try {
       actuator.validate();
       actuator.execute(ret);
-      Assert.assertEquals(code.SUCESS, ret.getInstance().getRet());
+      Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
       AccountCapsule owner =
           dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
 
@@ -386,8 +429,9 @@ public class FreezeBalanceActuatorTest extends BaseTest {
       Assert
           .assertEquals(0, delegatedResourceAccountIndexCapsuleOwner.getFromAccountsList().size());
       Assert.assertEquals(1, delegatedResourceAccountIndexCapsuleOwner.getToAccountsList().size());
-      Assert.assertTrue(delegatedResourceAccountIndexCapsuleOwner.getToAccountsList()
-          .contains(ByteString.copyFrom(ByteArray.fromHexString(RECEIVER_ADDRESS))));
+      Assert.assertEquals(true,
+          delegatedResourceAccountIndexCapsuleOwner.getToAccountsList()
+              .contains(ByteString.copyFrom(ByteArray.fromHexString(RECEIVER_ADDRESS))));
 
       DelegatedResourceAccountIndexCapsule delegatedResourceAccountIndexCapsuleReceiver = dbManager
           .getDelegatedResourceAccountIndexStore().get(ByteArray.fromHexString(RECEIVER_ADDRESS));
@@ -396,11 +440,14 @@ public class FreezeBalanceActuatorTest extends BaseTest {
       Assert
           .assertEquals(1,
               delegatedResourceAccountIndexCapsuleReceiver.getFromAccountsList().size());
-      Assert.assertTrue(delegatedResourceAccountIndexCapsuleReceiver.getFromAccountsList()
-          .contains(ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS))));
+      Assert.assertEquals(true,
+          delegatedResourceAccountIndexCapsuleReceiver.getFromAccountsList()
+              .contains(ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS))));
 
-    } catch (ContractValidateException | ContractExeException e) {
-      Assert.fail();
+    } catch (ContractValidateException e) {
+      Assert.assertFalse(e instanceof ContractValidateException);
+    } catch (ContractExeException e) {
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -418,7 +465,7 @@ public class FreezeBalanceActuatorTest extends BaseTest {
     try {
       actuator.validate();
       actuator.execute(ret);
-      Assert.assertEquals(code.SUCESS, ret.getInstance().getRet());
+      Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
       AccountCapsule owner = dbManager.getAccountStore()
           .get(ByteArray.fromHexString(OWNER_ADDRESS));
       Assert.assertEquals(owner.getBalance(), initBalance - frozenBalance
@@ -438,8 +485,10 @@ public class FreezeBalanceActuatorTest extends BaseTest {
       Assert.assertEquals(totalEnergyWeightBefore + frozenBalance / 1000_000L,
           totalEnergyWeightAfter);
 
-    } catch (ContractValidateException | ContractExeException e) {
-      Assert.fail();
+    } catch (ContractValidateException e) {
+      Assert.assertFalse(e instanceof ContractValidateException);
+    } catch (ContractExeException e) {
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -457,9 +506,10 @@ public class FreezeBalanceActuatorTest extends BaseTest {
       fail("cannot run here.");
 
     } catch (ContractValidateException e) {
+      Assert.assertTrue(e instanceof ContractValidateException);
       Assert.assertEquals("frozenBalance must be positive", e.getMessage());
     } catch (ContractExeException e) {
-      Assert.fail();
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -477,10 +527,10 @@ public class FreezeBalanceActuatorTest extends BaseTest {
       actuator.execute(ret);
       fail("cannot run here.");
     } catch (ContractValidateException e) {
-      Assert.assertEquals(
-          "frozenBalance must be less than or equal to accountBalance", e.getMessage());
+      Assert.assertTrue(e instanceof ContractValidateException);
+      Assert.assertEquals("frozenBalance must be less than accountBalance", e.getMessage());
     } catch (ContractExeException e) {
-      Assert.fail();
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -499,9 +549,12 @@ public class FreezeBalanceActuatorTest extends BaseTest {
       fail("cannot run here.");
 
     } catch (ContractValidateException e) {
+      Assert.assertTrue(e instanceof ContractValidateException);
+
       Assert.assertEquals("Invalid address", e.getMessage());
+
     } catch (ContractExeException e) {
-      Assert.fail();
+      Assert.assertTrue(e instanceof ContractExeException);
     }
 
   }
@@ -520,10 +573,11 @@ public class FreezeBalanceActuatorTest extends BaseTest {
       actuator.execute(ret);
       fail("cannot run here.");
     } catch (ContractValidateException e) {
+      Assert.assertTrue(e instanceof ContractValidateException);
       Assert.assertEquals("Account[" + OWNER_ACCOUNT_INVALID + "] not exists",
           e.getMessage());
     } catch (ContractExeException e) {
-      Assert.fail();
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -544,10 +598,11 @@ public class FreezeBalanceActuatorTest extends BaseTest {
     } catch (ContractValidateException e) {
       long minFrozenTime = dbManager.getDynamicPropertiesStore().getMinFrozenTime();
       long maxFrozenTime = dbManager.getDynamicPropertiesStore().getMaxFrozenTime();
+      Assert.assertTrue(e instanceof ContractValidateException);
       Assert.assertEquals("frozenDuration must be less than " + maxFrozenTime + " days "
           + "and more than " + minFrozenTime + " days", e.getMessage());
     } catch (ContractExeException e) {
-      Assert.fail();
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -567,10 +622,11 @@ public class FreezeBalanceActuatorTest extends BaseTest {
     } catch (ContractValidateException e) {
       long minFrozenTime = dbManager.getDynamicPropertiesStore().getMinFrozenTime();
       long maxFrozenTime = dbManager.getDynamicPropertiesStore().getMaxFrozenTime();
+      Assert.assertTrue(e instanceof ContractValidateException);
       Assert.assertEquals("frozenDuration must be less than " + maxFrozenTime + " days "
           + "and more than " + minFrozenTime + " days", e.getMessage());
     } catch (ContractExeException e) {
-      Assert.fail();
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -588,10 +644,10 @@ public class FreezeBalanceActuatorTest extends BaseTest {
       actuator.execute(ret);
       fail("cannot run here.");
     } catch (ContractValidateException e) {
-      Assert.assertEquals("frozenBalance must be greater than or equal to 1 TRX",
-          e.getMessage());
+      Assert.assertTrue(e instanceof ContractValidateException);
+      Assert.assertEquals("frozenBalance must be more than 1TRX", e.getMessage());
     } catch (ContractExeException e) {
-      Assert.fail();
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -615,9 +671,10 @@ public class FreezeBalanceActuatorTest extends BaseTest {
       actuator.execute(ret);
       fail("cannot run here.");
     } catch (ContractValidateException e) {
+      Assert.assertTrue(e instanceof ContractValidateException);
       Assert.assertEquals("frozenCount must be 0 or 1", e.getMessage());
     } catch (ContractExeException e) {
-      Assert.fail();
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -633,8 +690,10 @@ public class FreezeBalanceActuatorTest extends BaseTest {
     try {
       actuator.validate();
       actuator.execute(ret);
-    } catch (ContractValidateException | ContractExeException e) {
-      Assert.fail();
+    } catch (ContractValidateException e) {
+      Assert.assertFalse(e instanceof ContractValidateException);
+    } catch (ContractExeException e) {
+      Assert.assertFalse(e instanceof ContractExeException);
     }
     try {
       actuator.validate();
@@ -642,10 +701,11 @@ public class FreezeBalanceActuatorTest extends BaseTest {
       fail("cannot run here.");
     } catch (ContractValidateException e) {
       long maxFrozenNumber = ChainConstant.MAX_FROZEN_NUMBER;
+      Assert.assertTrue(e instanceof ContractValidateException);
       Assert.assertEquals("max frozen number is: " + maxFrozenNumber, e.getMessage());
 
     } catch (ContractExeException e) {
-      Assert.fail();
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -686,14 +746,16 @@ public class FreezeBalanceActuatorTest extends BaseTest {
     try {
       actuator.validate();
       actuator.execute(ret);
-      Assert.assertEquals(code.SUCESS, ret.getInstance().getRet());
+      Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
       AccountCapsule owner =
           dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
 
       Assert.assertEquals(-1L, owner.getInstance().getOldTronPower());
       Assert.assertEquals(0L, owner.getAllTronPower());
-    } catch (ContractValidateException | ContractExeException e) {
-      Assert.fail();
+    } catch (ContractValidateException e) {
+      Assert.assertFalse(e instanceof ContractValidateException);
+    } catch (ContractExeException e) {
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -717,14 +779,16 @@ public class FreezeBalanceActuatorTest extends BaseTest {
     try {
       actuator.validate();
       actuator.execute(ret);
-      Assert.assertEquals(code.SUCESS, ret.getInstance().getRet());
+      Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
       owner =
           dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
 
       Assert.assertEquals(100L, owner.getInstance().getOldTronPower());
       Assert.assertEquals(100L, owner.getAllTronPower());
-    } catch (ContractValidateException | ContractExeException e) {
-      Assert.fail();
+    } catch (ContractValidateException e) {
+      Assert.assertFalse(e instanceof ContractValidateException);
+    } catch (ContractExeException e) {
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
 
@@ -748,15 +812,18 @@ public class FreezeBalanceActuatorTest extends BaseTest {
     try {
       actuator.validate();
       actuator.execute(ret);
-      Assert.assertEquals(code.SUCESS, ret.getInstance().getRet());
+      Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
       owner =
           dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
 
       Assert.assertEquals(100L, owner.getInstance().getOldTronPower());
       Assert.assertEquals(frozenBalance + 100L, owner.getAllTronPower());
-    } catch (ContractValidateException | ContractExeException e) {
-      Assert.fail();
+    } catch (ContractValidateException e) {
+      Assert.assertFalse(e instanceof ContractValidateException);
+    } catch (ContractExeException e) {
+      Assert.assertFalse(e instanceof ContractExeException);
     }
   }
+
 
 }

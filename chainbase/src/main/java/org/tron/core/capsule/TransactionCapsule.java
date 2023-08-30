@@ -333,23 +333,19 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           Class<? extends GeneratedMessageV3> clazz = TransactionFactory
               .getContract(contract.getType());
           if (clazz == null) {
-            logger.warn("not exist {}", contract.getType());
+            logger.error("not exist {}", contract.getType());
             return new byte[0];
           }
           GeneratedMessageV3 generatedMessageV3 = contractParameter.unpack(clazz);
           owner = ReflectUtils.getFieldValue(generatedMessageV3, OWNER_ADDRESS);
           if (owner == null) {
-            logger.warn("not exist [{}] field,{}", OWNER_ADDRESS, clazz);
+            logger.error("not exist [{}] field,{}", OWNER_ADDRESS, clazz);
             return new byte[0];
           }
           break;
         }
       }
       return owner.toByteArray();
-    } catch (InvalidProtocolBufferException invalidProtocolBufferException) {
-      logger.warn("InvalidProtocolBufferException occurred because {}, please verify the interface "
-          + "input parameters", invalidProtocolBufferException.getMessage());
-      return new byte[0];
     } catch (Exception ex) {
       logger.error(ex.getMessage());
       return new byte[0];

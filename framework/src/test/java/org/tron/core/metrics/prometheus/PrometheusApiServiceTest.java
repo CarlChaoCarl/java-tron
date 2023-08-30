@@ -3,6 +3,7 @@ package org.tron.core.metrics.prometheus;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import io.prometheus.client.CollectorRegistry;
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -11,18 +12,18 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.tron.common.BaseTest;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.parameter.CommonParameter;
 import org.tron.common.prometheus.MetricLabels;
 import org.tron.common.prometheus.Metrics;
 import org.tron.common.utils.ByteArray;
-import org.tron.common.utils.PublicMethod;
+import org.tron.common.utils.FileUtil;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.common.utils.Utils;
 import org.tron.consensus.dpos.DposSlot;
@@ -31,38 +32,34 @@ import org.tron.core.Constant;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.WitnessCapsule;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
 import org.tron.core.consensus.ConsensusService;
+import org.tron.core.db.BlockGenerate;
+import org.tron.core.db.Manager;
 import org.tron.core.net.TronNetDelegate;
 import org.tron.protos.Protocol;
 
 @Slf4j(topic = "metric")
-public class PrometheusApiServiceTest extends BaseTest {
+public class PrometheusApiServiceTest extends BlockGenerate {
+
+
+  static ChainBaseManager chainManager;
   static LocalDateTime localDateTime = LocalDateTime.now();
-  @Resource
-  private DposSlot dposSlot;
+  private static DposSlot dposSlot;
   final int blocks = 512;
-  private final String key = PublicMethod.getRandomPrivateKey();
+  private final String key = "f31db24bfbd1a2ef19beddca0a0fa37632eded9ac666a05d3bd925f01dde1f62";
   private final byte[] privateKey = ByteArray.fromHexString(key);
-  private static final AtomicInteger port = new AtomicInteger(0);
+  private final AtomicInteger port = new AtomicInteger(0);
   private final long time = ZonedDateTime.of(localDateTime,
       ZoneId.systemDefault()).toInstant().toEpochMilli();
-  @Resource
+  protected String dbPath;
+  protected String dbEngine;
+  protected Manager dbManager;
   private TronNetDelegate tronNetDelegate;
-  @Resource
-  private ConsensusService consensusService;
-  @Resource
-  private ChainBaseManager chainManager;
+  private TronApplicationContext context;
 
-  static {
-    dbPath = "output-prometheus-metric";
-    Args.setParam(new String[] {"-d", dbPath, "-w"}, Constant.TEST_CONF);
-    Args.getInstance().setNodeListenPort(10000 + port.incrementAndGet());
-    initParameter(Args.getInstance());
-    Metrics.init();
-  }
-
-  protected static void initParameter(CommonParameter parameter) {
+  protected void initParameter(CommonParameter parameter) {
     parameter.setMetricsPrometheusEnable(true);
   }
 
@@ -86,30 +83,47 @@ public class PrometheusApiServiceTest extends BaseTest {
     Assert.assertNull(errorLogs);
   }
 
+  protected void initDb() {
+    dbPath = "output-prometheus-metric";
+    dbEngine = "LEVELDB";
+  }
+
+
   @Before
   public void init() throws Exception {
+
+    initDb();
+    FileUtil.deleteDir(new File(dbPath));
     logger.info("Full node running.");
+    Args.setParam(new String[] {"-d", dbPath, "-w"}, Constant.TEST_CONF);
+    Args.getInstance().setNodeListenPort(10000 + port.incrementAndGet());
+    initParameter(Args.getInstance());
+    Metrics.init();
+    context = new TronApplicationContext(DefaultConfig.class);
+
+    dbManager = context.getBean(Manager.class);
+    setManager(dbManager);
+    dposSlot = context.getBean(DposSlot.class);
+    ConsensusService consensusService = context.getBean(ConsensusService.class);
     consensusService.start();
-    chainBaseManager = dbManager.getChainBaseManager();
-    byte[] address = PublicMethod.getAddressByteByPrivateKey(key);
-    ByteString addressByte = ByteString.copyFrom(address);
-    WitnessCapsule witnessCapsule = new WitnessCapsule(addressByte);
-    chainBaseManager.getWitnessStore().put(addressByte.toByteArray(), witnessCapsule);
-    chainBaseManager.addWitness(addressByte);
+    chainManager = dbManager.getChainBaseManager();
+    tronNetDelegate = context.getBean(TronNetDelegate.class);
+  }
 
-    AccountCapsule accountCapsule =
-            new AccountCapsule(Protocol.Account.newBuilder().setAddress(addressByte).build());
-    chainBaseManager.getAccountStore().put(addressByte.toByteArray(), accountCapsule);
-
+  @After
+  public void destroy() {
+    Args.clearParam();
+    context.destroy();
+    FileUtil.deleteDir(new File(dbPath));
   }
 
   private void generateBlock(Map<ByteString, String> witnessAndAccount) throws Exception {
 
     BlockCapsule block =
         createTestBlockCapsule(
-            chainBaseManager.getDynamicPropertiesStore().getLatestBlockHeaderTimestamp() + 3000,
-            chainBaseManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() + 1,
-            chainBaseManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
+            chainManager.getDynamicPropertiesStore().getLatestBlockHeaderTimestamp() + 3000,
+            chainManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() + 1,
+            chainManager.getDynamicPropertiesStore().getLatestBlockHeaderHash().getByteString(),
             witnessAndAccount);
 
     tronNetDelegate.processBlock(block, false);
@@ -122,8 +136,8 @@ public class PrometheusApiServiceTest extends BaseTest {
     Assert.assertNotNull(ecKey);
     byte[] address = ecKey.getAddress();
     WitnessCapsule witnessCapsule = new WitnessCapsule(ByteString.copyFrom(address));
-    chainBaseManager.getWitnessScheduleStore().saveActiveWitnesses(new ArrayList<>());
-    chainBaseManager.addWitness(ByteString.copyFrom(address));
+    chainManager.getWitnessScheduleStore().saveActiveWitnesses(new ArrayList<>());
+    chainManager.addWitness(ByteString.copyFrom(address));
 
     Protocol.Block block = getSignedBlock(witnessCapsule.getAddress(), time, privateKey);
 
@@ -138,7 +152,7 @@ public class PrometheusApiServiceTest extends BaseTest {
   }
 
   private Map<ByteString, String> addTestWitnessAndAccount() {
-    chainBaseManager.getWitnesses().clear();
+    chainManager.getWitnesses().clear();
     return IntStream.range(0, 2)
         .mapToObj(
             i -> {
@@ -147,12 +161,12 @@ public class PrometheusApiServiceTest extends BaseTest {
               ByteString address = ByteString.copyFrom(ecKey.getAddress());
 
               WitnessCapsule witnessCapsule = new WitnessCapsule(address);
-              chainBaseManager.getWitnessStore().put(address.toByteArray(), witnessCapsule);
-              chainBaseManager.addWitness(address);
+              chainManager.getWitnessStore().put(address.toByteArray(), witnessCapsule);
+              chainManager.addWitness(address);
 
               AccountCapsule accountCapsule =
                   new AccountCapsule(Protocol.Account.newBuilder().setAddress(address).build());
-              chainBaseManager.getAccountStore().put(address.toByteArray(), accountCapsule);
+              chainManager.getAccountStore().put(address.toByteArray(), accountCapsule);
 
               return Maps.immutableEntry(address, privateKey);
             })

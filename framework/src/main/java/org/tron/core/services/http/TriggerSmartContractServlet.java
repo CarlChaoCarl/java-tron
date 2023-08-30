@@ -27,19 +27,23 @@ import org.tron.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 @Slf4j(topic = "API")
 public class TriggerSmartContractServlet extends RateLimiterServlet {
 
+  private final String functionSelector = "function_selector";
+
   @Autowired
   private Wallet wallet;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
   }
 
-  private void validateParameter(String contract) {
+  protected void validateParameter(String contract) {
     JSONObject jsonObject = JSONObject.parseObject(contract);
-    if (StringUtil.isNullOrEmpty(jsonObject.getString(Util.OWNER_ADDRESS))) {
-      throw new InvalidParameterException(Util.OWNER_ADDRESS + " isn't set.");
+    if (!jsonObject.containsKey("owner_address")
+        || StringUtil.isNullOrEmpty(jsonObject.getString("owner_address"))) {
+      throw new InvalidParameterException("owner_address isn't set.");
     }
-    if (StringUtil.isNullOrEmpty(jsonObject.getString(Util.CONTRACT_ADDRESS))) {
-      throw new InvalidParameterException(Util.CONTRACT_ADDRESS + " isn't set.");
+    if (!jsonObject.containsKey("contract_address")
+        || StringUtil.isNullOrEmpty(jsonObject.getString("contract_address"))) {
+      throw new InvalidParameterException("contract_address isn't set.");
     }
   }
 
@@ -58,13 +62,16 @@ public class TriggerSmartContractServlet extends RateLimiterServlet {
       JsonFormat.merge(contract, build, visible);
       JSONObject jsonObject = JSONObject.parseObject(contract);
 
-      boolean isFunctionSelectorSet =
-          !StringUtil.isNullOrEmpty(jsonObject.getString(Util.FUNCTION_SELECTOR));
+      boolean isFunctionSelectorSet = jsonObject.containsKey(functionSelector)
+          && !StringUtil.isNullOrEmpty(jsonObject.getString(functionSelector));
+      String data;
       if (isFunctionSelectorSet) {
-        String selector = jsonObject.getString(Util.FUNCTION_SELECTOR);
-        String parameter = jsonObject.getString(Util.FUNCTION_PARAMETER);
-        String data = Util.parseMethod(selector, parameter);
+        String selector = jsonObject.getString(functionSelector);
+        String parameter = jsonObject.getString("parameter");
+        data = Util.parseMethod(selector, parameter);
         build.setData(ByteString.copyFrom(ByteArray.fromHexString(data)));
+      } else {
+        build.setData(ByteString.copyFrom(new byte[0]));
       }
 
       build.setCallTokenValue(Util.getJsonLongValue(jsonObject, "call_token_value"));

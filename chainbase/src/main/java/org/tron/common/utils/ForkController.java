@@ -19,7 +19,6 @@ import org.tron.core.ChainBaseManager;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.config.Parameter.ForkBlockVersionConsts;
 import org.tron.core.config.Parameter.ForkBlockVersionEnum;
-import org.tron.core.store.DynamicPropertiesStore;
 
 @Slf4j(topic = "utils")
 public class ForkController {
@@ -38,17 +37,6 @@ public class ForkController {
 
   public void init(ChainBaseManager manager) {
     this.manager = manager;
-    DynamicPropertiesStore store = manager.getDynamicPropertiesStore();
-    int latestVersion = store.getLatestVersion();
-    if (latestVersion == 0) {
-      for (ForkBlockVersionEnum version : ForkBlockVersionEnum.values()) {
-        int v = version.getValue();
-        if (pass(v) && latestVersion < v) {
-          latestVersion = v;
-        }
-      }
-      store.saveLatestVersion(latestVersion);
-    }
   }
 
   public boolean pass(ForkBlockVersionEnum forkBlockVersionEnum) {
@@ -99,7 +87,7 @@ public class ForkController {
       }
     }
     return count >= Math
-        .ceil((double) versionEnum.getHardForkRate() * stats.length / 100);
+        .ceil((double) versionEnum.getHardForkRate() * manager.getWitnesses().size() / 100);
   }
 
 
@@ -128,9 +116,9 @@ public class ForkController {
   private void downgrade(int version, int slot) {
     for (ForkBlockVersionEnum versionEnum : ForkBlockVersionEnum.values()) {
       int versionValue = versionEnum.getValue();
-      if (versionValue > version && !pass(versionValue)) {
+      if (versionValue > version) {
         byte[] stats = manager.getDynamicPropertiesStore().statsByVersion(versionValue);
-        if (Objects.nonNull(stats)) {
+        if (!check(stats) && Objects.nonNull(stats)) {
           stats[slot] = VERSION_DOWNGRADE;
           manager.getDynamicPropertiesStore().statsByVersion(versionValue, stats);
         }
@@ -141,13 +129,15 @@ public class ForkController {
   private void upgrade(int version, int slotSize) {
     for (ForkBlockVersionEnum versionEnum : ForkBlockVersionEnum.values()) {
       int versionValue = versionEnum.getValue();
-      if (versionValue < version && !pass(versionValue)) {
+      if (versionValue < version) {
         byte[] stats = manager.getDynamicPropertiesStore().statsByVersion(versionValue);
-        if (stats == null || stats.length == 0) {
-          stats = new byte[slotSize];
+        if (!check(stats)) {
+          if (stats == null || stats.length == 0) {
+            stats = new byte[slotSize];
+          }
+          Arrays.fill(stats, VERSION_UPGRADE);
+          manager.getDynamicPropertiesStore().statsByVersion(versionValue, stats);
         }
-        Arrays.fill(stats, VERSION_UPGRADE);
-        manager.getDynamicPropertiesStore().statsByVersion(versionValue, stats);
       }
     }
   }
@@ -165,10 +155,6 @@ public class ForkController {
       return;
     }
 
-    if (manager.getDynamicPropertiesStore().getLatestVersion() >= version) {
-      return;
-    }
-
     downgrade(version, slot);
 
     byte[] stats = manager.getDynamicPropertiesStore().statsByVersion(version);
@@ -176,9 +162,8 @@ public class ForkController {
       stats = new byte[witnesses.size()];
     }
 
-    if (pass(version)) {
+    if (check(stats)) {
       upgrade(version, stats.length);
-      manager.getDynamicPropertiesStore().saveLatestVersion(version);
       return;
     }
 
@@ -200,12 +185,11 @@ public class ForkController {
   }
 
   public synchronized void reset() {
-    int size = manager.getWitnessScheduleStore().getActiveWitnesses().size();
     for (ForkBlockVersionEnum versionEnum : ForkBlockVersionEnum.values()) {
       int versionValue = versionEnum.getValue();
       byte[] stats = manager.getDynamicPropertiesStore().statsByVersion(versionValue);
       if (Objects.nonNull(stats) && !pass(versionValue)) {
-        stats = new byte[size];
+        Arrays.fill(stats, VERSION_DOWNGRADE);
         manager.getDynamicPropertiesStore().statsByVersion(versionValue, stats);
       }
     }
@@ -228,5 +212,4 @@ public class ForkController {
       return instance;
     }
   }
-
 }

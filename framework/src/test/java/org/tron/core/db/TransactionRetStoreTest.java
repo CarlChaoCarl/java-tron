@@ -1,44 +1,52 @@
 package org.tron.core.db;
 
-import javax.annotation.Resource;
+import java.io.File;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.tron.common.BaseTest;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.FileUtil;
 import org.tron.core.Constant;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.capsule.TransactionInfoCapsule;
 import org.tron.core.capsule.TransactionRetCapsule;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
 import org.tron.core.exception.BadItemException;
 import org.tron.core.store.TransactionRetStore;
 import org.tron.protos.Protocol.Transaction;
 
-public class TransactionRetStoreTest extends BaseTest {
+public class TransactionRetStoreTest {
 
   private static final byte[] transactionId = TransactionStoreTest.randomBytes(32);
   private static final byte[] blockNum = ByteArray.fromLong(1);
+  private static String dbPath = "output_TransactionRetStore_test";
   private static String dbDirectory = "db_TransactionRetStore_test";
   private static String indexDirectory = "index_TransactionRetStore_test";
-  @Resource
-  private TransactionRetStore transactionRetStore;
+  private static TronApplicationContext context;
+  private static TransactionRetStore transactionRetStore;
   private static Transaction transaction;
-  @Resource
-  private TransactionStore transactionStore;
-
-  private static TransactionCapsule transactionCapsule;
-  private static TransactionRetCapsule transactionRetCapsule;
+  private static TransactionStore transactionStore;
 
   static {
-    dbPath = "output_TransactionRetStore_test";
     Args.setParam(new String[]{"--output-directory", dbPath, "--storage-db-directory", dbDirectory,
         "--storage-index-directory", indexDirectory}, Constant.TEST_CONF);
+    context = new TronApplicationContext(DefaultConfig.class);
+  }
+
+  @AfterClass
+  public static void destroy() {
+    Args.clearParam();
+    context.destroy();
+    FileUtil.deleteDir(new File(dbPath));
   }
 
   @BeforeClass
   public static void init() {
+    transactionRetStore = context.getBean(TransactionRetStore.class);
+    transactionStore = context.getBean(TransactionStore.class);
     TransactionInfoCapsule transactionInfoCapsule = new TransactionInfoCapsule();
 
     transactionInfoCapsule.setId(transactionId);
@@ -46,18 +54,12 @@ public class TransactionRetStoreTest extends BaseTest {
     transactionInfoCapsule.setBlockNumber(100L);
     transactionInfoCapsule.setBlockTimeStamp(200L);
 
-    transactionRetCapsule = new TransactionRetCapsule();
+    TransactionRetCapsule transactionRetCapsule = new TransactionRetCapsule();
     transactionRetCapsule.addTransactionInfo(transactionInfoCapsule.getInstance());
-
-    transaction = Transaction.newBuilder().build();
-    transactionCapsule = new TransactionCapsule(transaction);
-    transactionCapsule.setBlockNum(1);
-
-  }
-
-  @Before
-  public void before() {
     transactionRetStore.put(blockNum, transactionRetCapsule);
+    transaction = Transaction.newBuilder().build();
+    TransactionCapsule transactionCapsule = new TransactionCapsule(transaction);
+    transactionCapsule.setBlockNum(1);
     transactionStore.put(transactionId, transactionCapsule);
   }
 

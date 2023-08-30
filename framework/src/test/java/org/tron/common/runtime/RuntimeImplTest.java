@@ -3,19 +3,26 @@ package org.tron.common.runtime;
 import static org.tron.common.runtime.TvmTestUtils.generateDeploySmartContractAndGetTransaction;
 import static org.tron.common.runtime.TvmTestUtils.generateTriggerSmartContractAndGetTransaction;
 
+import java.io.File;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
-import org.junit.Assert;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.tron.common.BaseTest;
+import org.testng.Assert;
+import org.tron.common.application.Application;
+import org.tron.common.application.ApplicationFactory;
+import org.tron.common.application.TronApplicationContext;
+import org.tron.common.utils.FileUtil;
 import org.tron.core.Constant;
 import org.tron.core.Wallet;
 import org.tron.core.actuator.VMActuator;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.ContractCapsule;
 import org.tron.core.capsule.TransactionCapsule;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
+import org.tron.core.db.Manager;
 import org.tron.core.db.TransactionContext;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
@@ -31,28 +38,31 @@ import org.tron.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 
 @Slf4j
 
-public class RuntimeImplTest extends BaseTest {
+public class RuntimeImplTest {
 
+  private Manager dbManager;
+  private TronApplicationContext context;
   private Repository repository;
-  private static final byte[] callerAddress;
-  private final long callerTotalBalance = 4_000_000_000L;
-  private static final byte[] creatorAddress;
-  private final long creatorTotalBalance = 3_000_000_000L;
-
-  static {
-    dbPath = "output_RuntimeImplTest";
-    Args.setParam(new String[]{"--output-directory", dbPath, "--debug"}, Constant.TEST_CONF);
-    callerAddress = Hex
-        .decode(Wallet.getAddressPreFixString() + "abd4b9367799eaa3197fecb144eb71de1e049abc");
-    creatorAddress = Hex
-        .decode(Wallet.getAddressPreFixString() + "abd4b9367799eaa3197fecb144eb71de1e049abd");
-  }
+  private String dbPath = "output_RuntimeImplTest";
+  private Application AppT;
+  private byte[] callerAddress;
+  private long callerTotalBalance = 4_000_000_000L;
+  private byte[] creatorAddress;
+  private long creatorTotalBalance = 3_000_000_000L;
 
   /**
    * Init data.
    */
   @Before
   public void init() {
+    Args.setParam(new String[]{"--output-directory", dbPath, "--debug"}, Constant.TEST_CONF);
+    context = new TronApplicationContext(DefaultConfig.class);
+    AppT = ApplicationFactory.create(context);
+    callerAddress = Hex
+        .decode(Wallet.getAddressPreFixString() + "abd4b9367799eaa3197fecb144eb71de1e049abc");
+    creatorAddress = Hex
+        .decode(Wallet.getAddressPreFixString() + "abd4b9367799eaa3197fecb144eb71de1e049abd");
+    dbManager = context.getBean(Manager.class);
     dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderTimestamp(1526647838000L);
     dbManager.getDynamicPropertiesStore().saveTotalEnergyWeight(5_000_000_000L); // unit is trx
     repository = RepositoryImpl.createRoot(StoreFactory.getInstance());
@@ -107,10 +117,11 @@ public class RuntimeImplTest extends BaseTest {
         + "060018201915060aa565b505050565b600080600091505b8282101560e1576001905060018201915060cc56"
         + "5b5050505600a165627a7a72305820267cf0ebf31051a92ff62bed7490045b8063be9f1e1a22d07dce25765"
         + "4c8c17b0029";
+    String libraryAddressPair = null;
 
     Transaction trx = generateDeploySmartContractAndGetTransaction(contractName, creatorAddress,
         ABI,
-        code, value, feeLimit, consumeUserResourcePercent, null);
+        code, value, feeLimit, consumeUserResourcePercent, libraryAddressPair);
 
     RuntimeImpl runtimeImpl = new RuntimeImpl();
     runtimeImpl.execute(
@@ -156,6 +167,7 @@ public class RuntimeImplTest extends BaseTest {
         expectEnergyLimit4);
 
     feeLimit = 3_000_000_000L;
+    value = 10L;
     long expectEnergyLimit5 = 20_009_999L;
     Assert.assertEquals(
         ((VMActuator) runtimeImpl.getActuator2())
@@ -163,6 +175,7 @@ public class RuntimeImplTest extends BaseTest {
         expectEnergyLimit5);
 
     feeLimit = 3_000L;
+    value = 10L;
     long expectEnergyLimit6 = 30L;
     Assert.assertEquals(
         ((VMActuator) runtimeImpl.getActuator2())
@@ -194,10 +207,11 @@ public class RuntimeImplTest extends BaseTest {
         + "060018201915060aa565b505050565b600080600091505b8282101560e1576001905060018201915060cc56"
         + "5b5050505600a165627a7a72305820267cf0ebf31051a92ff62bed7490045b8063be9f1e1a22d07dce25765"
         + "4c8c17b0029";
+    String libraryAddressPair = null;
     TVMTestResult result = TvmTestUtils
         .deployContractWithCreatorEnergyLimitAndReturnTvmTestResult(contractName, creatorAddress,
             ABI, code, value,
-            feeLimit, consumeUserResourcePercent, null, dbManager, null,
+            feeLimit, consumeUserResourcePercent, libraryAddressPair, dbManager, null,
             creatorEnergyLimit);
 
     byte[] contractAddress = result.getContractAddress();
@@ -215,6 +229,8 @@ public class RuntimeImplTest extends BaseTest {
     AccountCapsule callerAccount = repository.getAccount(callerAddress);
     TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(trx);
 
+    feeLimit = 1_000_000_000L;
+    value = 0L;
     long expectEnergyLimit1 = 10_000_000L;
     Assert.assertEquals(
         ((VMActuator) runtimeImpl.getActuator2())
@@ -229,6 +245,8 @@ public class RuntimeImplTest extends BaseTest {
     repository.putAccountValue(creatorAddress, creatorAccount);
     repository.commit();
 
+    feeLimit = 1_000_000_000L;
+    value = 0L;
     long expectEnergyLimit2 = 10_005_000L;
     Assert.assertEquals(
         ((VMActuator) runtimeImpl.getActuator2())
@@ -259,6 +277,8 @@ public class RuntimeImplTest extends BaseTest {
     repository.putAccountValue(callerAddress, callerAccount);
     repository.commit();
 
+    value = 10L;
+    feeLimit = 5_000_000_000L;
     long expectEnergyLimit5 = 30_014_999L;
     Assert.assertEquals(
         ((VMActuator) runtimeImpl.getActuator2())
@@ -291,10 +311,11 @@ public class RuntimeImplTest extends BaseTest {
         + "5060018201915060aa565b505050565b600080600091505b8282101560e1576001905060018201915060cc5"
         + "65b5050505600a165627a7a72305820267cf0ebf31051a92ff62bed7490045b8063be9f1e1a22d07dce2576"
         + "54c8c17b0029";
+    String libraryAddressPair = null;
     TVMTestResult result = TvmTestUtils
         .deployContractWithCreatorEnergyLimitAndReturnTvmTestResult(contractName, creatorAddress,
             ABI, code, value,
-            feeLimit, consumeUserResourcePercent, null, dbManager, null,
+            feeLimit, consumeUserResourcePercent, libraryAddressPair, dbManager, null,
             creatorEnergyLimit);
 
     byte[] contractAddress = result.getContractAddress();
@@ -312,6 +333,8 @@ public class RuntimeImplTest extends BaseTest {
     AccountCapsule callerAccount = repository.getAccount(callerAddress);
     TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(trx);
 
+    feeLimit = 1_000_000_000L;
+    value = 0L;
     long expectEnergyLimit1 = 10_000_000L;
     Assert.assertEquals(
         ((VMActuator) runtimeImpl.getActuator2())
@@ -326,6 +349,8 @@ public class RuntimeImplTest extends BaseTest {
     repository.putAccountValue(creatorAddress, creatorAccount);
     repository.commit();
 
+    feeLimit = 1_000_000_000L;
+    value = 0L;
     long expectEnergyLimit2 = 10_005_000L;
     Assert.assertEquals(
         ((VMActuator) runtimeImpl.getActuator2())
@@ -366,10 +391,11 @@ public class RuntimeImplTest extends BaseTest {
         + "060018201915060aa565b505050565b600080600091505b8282101560e1576001905060018201915060cc56"
         + "5b5050505600a165627a7a72305820267cf0ebf31051a92ff62bed7490045b8063be9f1e1a22d07dce25765"
         + "4c8c17b0029";
+    String libraryAddressPair = null;
     TVMTestResult result = TvmTestUtils
         .deployContractWithCreatorEnergyLimitAndReturnTvmTestResult(contractName, creatorAddress,
             ABI, code, value,
-            feeLimit, consumeUserResourcePercent, null, dbManager, null,
+            feeLimit, consumeUserResourcePercent, libraryAddressPair, dbManager, null,
             creatorEnergyLimit);
 
     byte[] contractAddress = result.getContractAddress();
@@ -387,6 +413,8 @@ public class RuntimeImplTest extends BaseTest {
     AccountCapsule callerAccount = repository.getAccount(callerAddress);
     TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(trx);
 
+    feeLimit = 1_000_000_000L;
+    value = 0L;
     long expectEnergyLimit1 = 10_000_000L;
     Assert.assertEquals(
         ((VMActuator) runtimeImpl.getActuator2())
@@ -401,6 +429,8 @@ public class RuntimeImplTest extends BaseTest {
     repository.putAccountValue(creatorAddress, creatorAccount);
     repository.commit();
 
+    feeLimit = 1_000_000_000L;
+    value = 0L;
     long expectEnergyLimit2 = 10_000_000L;
     Assert.assertEquals(
         ((VMActuator) runtimeImpl.getActuator2())
@@ -415,6 +445,21 @@ public class RuntimeImplTest extends BaseTest {
             .getTotalEnergyLimitWithFixRatio(creatorAccount, callerAccount, contract, feeLimit,
                 value),
         expectEnergyLimit3);
+
+  }
+
+  /**
+   * Release resources.
+   */
+  @After
+  public void destroy() {
+    Args.clearParam();
+    context.destroy();
+    if (FileUtil.deleteDir(new File(dbPath))) {
+      logger.info("Release resources successful.");
+    } else {
+      logger.info("Release resources failure.");
+    }
   }
 }
 

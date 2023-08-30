@@ -189,7 +189,7 @@ public class FreezeBalanceActuator extends AbstractActuator {
       throw new ContractValidateException("frozenBalance must be positive");
     }
     if (frozenBalance < TRX_PRECISION) {
-      throw new ContractValidateException("frozenBalance must be greater than or equal to 1 TRX");
+      throw new ContractValidateException("frozenBalance must be more than 1TRX");
     }
 
     int frozenCount = accountCapsule.getFrozenCount();
@@ -197,7 +197,7 @@ public class FreezeBalanceActuator extends AbstractActuator {
       throw new ContractValidateException("frozenCount must be 0 or 1");
     }
     if (frozenBalance > accountCapsule.getBalance()) {
-      throw new ContractValidateException("frozenBalance must be less than or equal to accountBalance");
+      throw new ContractValidateException("frozenBalance must be less than accountBalance");
     }
 
     long frozenDuration = freezeBalanceContract.getFrozenDuration();

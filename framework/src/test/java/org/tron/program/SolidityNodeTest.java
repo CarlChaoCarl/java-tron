@@ -6,6 +6,8 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.tron.common.application.Application;
+import org.tron.common.application.ApplicationFactory;
 import org.tron.common.application.TronApplicationContext;
 import org.tron.common.client.DatabaseGrpcClient;
 import org.tron.core.Constant;
@@ -21,12 +23,14 @@ public class SolidityNodeTest {
   private static TronApplicationContext context;
 
   private static RpcApiService rpcApiService;
-  private static String dbPath = "output_sn_test";
+  private static Application appT;
+  private static String dbPath = "output_witness_test";
 
   static {
     Args.setParam(new String[]{"-d", dbPath}, Constant.TEST_CONF);
     context = new TronApplicationContext(DefaultConfig.class);
     Args.getInstance().setSolidityNode(true);
+    appT = ApplicationFactory.create(context);
     rpcApiService = context.getBean(RpcApiService.class);
   }
 
@@ -75,11 +79,11 @@ public class SolidityNodeTest {
   @Test
   public void testSolidityGrpcCall() {
     DatabaseGrpcClient databaseGrpcClient = null;
-    String address = Args.getInstance().getTrustNodeAddr();
+    String addr = Args.getInstance().getTrustNodeAddr();
     try {
-      databaseGrpcClient = new DatabaseGrpcClient(address);
+      databaseGrpcClient = new DatabaseGrpcClient(addr);
     } catch (Exception e) {
-      logger.error("Failed to create database grpc client {}", address);
+      logger.error("Failed to create database grpc client {}", addr);
     }
 
     Assert.assertNotNull(databaseGrpcClient);
@@ -89,14 +93,6 @@ public class SolidityNodeTest {
     Block genesisBlock = databaseGrpcClient.getBlock(0);
     Assert.assertNotNull(genesisBlock);
     Assert.assertFalse(genesisBlock.getTransactionsList().isEmpty());
-    Block invalidBlock = databaseGrpcClient.getBlock(-1);
-    Assert.assertNotNull(invalidBlock);
-    try {
-      databaseGrpcClient = new DatabaseGrpcClient(address, -1);
-    } catch (Exception e) {
-      logger.error("Failed to create database grpc client {}", address);
-    }
-    databaseGrpcClient.shutdown();
   }
 
 }

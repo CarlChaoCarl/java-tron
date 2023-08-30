@@ -1,7 +1,6 @@
 package org.tron.core.services.ratelimiter;
 
 import java.lang.reflect.Field;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 import org.tron.core.Constant;
@@ -19,10 +18,5 @@ public class GlobalRateLimiterTest {
     field.set(runtimeData, "127.0.0.1");
     Assert.assertEquals(runtimeData.getRemoteAddr(), "127.0.0.1");
     GlobalRateLimiter.acquire(runtimeData);
-  }
-
-  @AfterClass
-  public static void destroy() {
-    Args.clearParam();
   }
 }

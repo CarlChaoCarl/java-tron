@@ -41,6 +41,9 @@ public class FetchBlockService {
 
   private final long fetchTimeOut = CommonParameter.getInstance().fetchBlockTimeout;
 
+  private static final int BLOCK_FETCH_TIME_OUT_LIMIT =
+      2 * Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
+
   private static final double BLOCK_FETCH_LEFT_TIME_PERCENT = 0.5;
 
   private final ScheduledExecutorService fetchBlockWorkerExecutor =
@@ -73,9 +76,12 @@ public class FetchBlockService {
     sha256HashList.stream().filter(sha256Hash -> new BlockCapsule.BlockId(sha256Hash).getNum()
         == chainBaseManager.getHeadBlockNum() + 1)
         .findFirst().ifPresent(sha256Hash -> {
-          fetchBlockInfo = new FetchBlockInfo(sha256Hash, peer, System.currentTimeMillis());
-          logger.info("Set fetchBlockInfo, block: {}, peer: {}, time: {}", sha256Hash,
-              fetchBlockInfo.getPeer().getInetAddress(), fetchBlockInfo.getTime());
+          if (System.currentTimeMillis() - chainBaseManager.getHeadBlockTimeStamp()
+              < BLOCK_FETCH_TIME_OUT_LIMIT) {
+            fetchBlockInfo = new FetchBlockInfo(sha256Hash, peer, System.currentTimeMillis());
+            logger.info("Set fetchBlockInfo, block: {}, peer: {}, time: {}", sha256Hash,
+                fetchBlockInfo.getPeer().getInetAddress(), fetchBlockInfo.getTime());
+          }
         });
   }
 
@@ -91,6 +97,13 @@ public class FetchBlockService {
 
   private void fetchBlockProcess(FetchBlockInfo fetchBlock) {
     if (null == fetchBlock) {
+      return;
+    }
+    if (System.currentTimeMillis() - chainBaseManager.getHeadBlockTimeStamp()
+        >= BLOCK_FETCH_TIME_OUT_LIMIT) {
+      this.fetchBlockInfo = null;
+      logger.info("Clear fetchBlockInfo due to {} ms past head block time",
+              BLOCK_FETCH_TIME_OUT_LIMIT);
       return;
     }
     Item item = new Item(fetchBlock.getHash(), InventoryType.BLOCK);

@@ -48,11 +48,7 @@ public class GetTransactionByIdSolidityServletTest {
   public static void init() {
     // Allows for mocking URL connections
     URLStreamHandlerFactory urlStreamHandlerFactory = mock(URLStreamHandlerFactory.class);
-    try {
-      URL.setURLStreamHandlerFactory(urlStreamHandlerFactory);
-    } catch (Error e) {
-      logger.info("Ignore error: {}", e.getMessage());
-    }
+    URL.setURLStreamHandlerFactory(urlStreamHandlerFactory);
 
     httpUrlStreamHandler = new HttpUrlStreamHandler();
     given(urlStreamHandlerFactory.createURLStreamHandler("http")).willReturn(httpUrlStreamHandler);
@@ -63,7 +59,7 @@ public class GetTransactionByIdSolidityServletTest {
    */
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     getTransactionByIdSolidityServlet = new GetTransactionByIdSolidityServlet();
     this.request = mock(HttpServletRequest.class);
     this.response = mock(HttpServletResponse.class);
@@ -100,7 +96,7 @@ public class GetTransactionByIdSolidityServletTest {
     httpUrlConnection.setDoOutput(true);
     String postData = "{\"value\": \"309b6fa3d01353e46f57dd8a8f27611f98e392b50d035cef21"
         + "3f2c55225a8bd2\"}";
-    httpUrlConnection.setRequestProperty("Content-Length", String.valueOf(postData.length()));
+    httpUrlConnection.setRequestProperty("Content-Length", "" + postData.length());
 
     when(httpUrlConnection.getOutputStream()).thenReturn(outContent);
     OutputStreamWriter out = new OutputStreamWriter(httpUrlConnection.getOutputStream(),
@@ -125,15 +121,14 @@ public class GetTransactionByIdSolidityServletTest {
     while ((line = in.readLine()) != null) {
       result.append(line).append("\n");
     }
-    Assert.assertNotNull(result);
     in.close();
     writer.flush();
     FileInputStream fileInputStream = new FileInputStream("temp.txt");
     InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
     BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 
-    StringBuilder sb = new StringBuilder();
-    String text;
+    StringBuffer sb = new StringBuffer();
+    String text = null;
     while ((text = bufferedReader.readLine()) != null) {
       sb.append(text);
     }
@@ -155,7 +150,7 @@ public class GetTransactionByIdSolidityServletTest {
     httpUrlConnection.setDoOutput(true);
     String postData = "{\"value\": \"309b6fa3d01353e46f57dd8a8f27611f98e392b50d035cef21"
         + "3f2c55225a8bd2\"}";
-    httpUrlConnection.setRequestProperty("Content-Length", String.valueOf(postData.length()));
+    httpUrlConnection.setRequestProperty("Content-Length", "" + postData.length());
 
     when(httpUrlConnection.getOutputStream()).thenReturn(outContent);
     OutputStreamWriter out = new OutputStreamWriter(httpUrlConnection.getOutputStream(),
@@ -180,15 +175,14 @@ public class GetTransactionByIdSolidityServletTest {
     while ((line = in.readLine()) != null) {
       result.append(line).append("\n");
     }
-    Assert.assertNotNull(result);
     in.close();
     writer.flush();
     FileInputStream fileInputStream = new FileInputStream("temp.txt");
     InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
     BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 
-    StringBuilder sb = new StringBuilder();
-    String text;
+    StringBuffer sb = new StringBuffer();
+    String text = null;
     while ((text = bufferedReader.readLine()) != null) {
       sb.append(text);
     }

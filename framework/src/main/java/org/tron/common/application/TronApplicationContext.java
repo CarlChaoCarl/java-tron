@@ -2,7 +2,8 @@ package org.tron.common.application;
 
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.tron.program.FullNode;
+import org.tron.core.db.Manager;
+import org.tron.core.net.TronNetService;
 
 public class TronApplicationContext extends AnnotationConfigApplicationContext {
 
@@ -22,13 +23,19 @@ public class TronApplicationContext extends AnnotationConfigApplicationContext {
   }
 
   @Override
-  public void doClose() {
-    logger.info("******** start to close ********");
+  public void destroy() {
+
     Application appT = ApplicationFactory.create(this);
     appT.shutdownServices();
     appT.shutdown();
-    super.doClose();
-    logger.info("******** close end ********");
-    FullNode.shutDownSign = true;
+
+    TronNetService tronNetService = getBean(TronNetService.class);
+    tronNetService.close();
+
+    Manager dbManager = getBean(Manager.class);
+    dbManager.stopRePushThread();
+    dbManager.stopRePushTriggerThread();
+    dbManager.stopFilterProcessThread();
+    super.destroy();
   }
 }

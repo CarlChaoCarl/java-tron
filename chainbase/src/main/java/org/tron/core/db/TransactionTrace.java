@@ -2,8 +2,6 @@ package org.tron.core.db;
 
 import static org.tron.common.runtime.InternalTransaction.TrxType.TRX_CONTRACT_CALL_TYPE;
 import static org.tron.common.runtime.InternalTransaction.TrxType.TRX_CONTRACT_CREATION_TYPE;
-import static org.tron.core.config.Parameter.ChainConstant.WINDOW_SIZE_PRECISION;
-import static org.tron.protos.contract.Common.ResourceCode.ENERGY;
 
 import java.util.Objects;
 import lombok.Getter;
@@ -257,7 +255,7 @@ public class TransactionTrace {
     AccountCapsule origin = accountStore.get(originAccount);
     AccountCapsule caller = accountStore.get(callerAccount);
     if (dynamicPropertiesStore.supportUnfreezeDelay()
-        && getRuntimeResult().getException() == null && !getRuntimeResult().isRevert()) {
+        && receipt.getReceipt().getResult().equals(contractResult.SUCCESS)) {
 
       // just fo caller is not origin, we set the related field for origin account
       if (origin != null && !caller.getAddress().equals(origin.getAddress())) {
@@ -265,16 +263,14 @@ public class TransactionTrace {
             receipt.getOriginEnergyUsage(),
             receipt.getOriginEnergyWindowSize(),
             receipt.getOriginEnergyMergedUsage(),
-            receipt.getOriginEnergyMergedWindowSize(),
-            receipt.getOriginEnergyWindowSizeV2());
+            receipt.getOriginEnergyMergedWindowSize());
       }
 
       resetAccountUsage(caller,
           receipt.getCallerEnergyUsage(),
           receipt.getCallerEnergyWindowSize(),
           receipt.getCallerEnergyMergedUsage(),
-          receipt.getCallerEnergyMergedWindowSize(),
-          receipt.getCallerEnergyWindowSizeV2());
+          receipt.getCallerEnergyMergedWindowSize());
     }
     receipt.payEnergyBill(
         dynamicPropertiesStore, accountStore, forkController,
@@ -286,12 +282,8 @@ public class TransactionTrace {
   }
 
   private void resetAccountUsage(AccountCapsule accountCap,
-      long usage, long size, long mergedUsage, long mergedSize, long size2) {
-    if (dynamicPropertiesStore.supportAllowCancelAllUnfreezeV2()) {
-      resetAccountUsageV2(accountCap, usage, size, mergedUsage, mergedSize, size2);
-      return;
-    }
-    long currentSize = accountCap.getWindowSize(ENERGY);
+      long usage, long size, long mergedUsage, long mergedSize) {
+    long currentSize = accountCap.getWindowSize(Common.ResourceCode.ENERGY);
     long currentUsage = accountCap.getEnergyUsage();
     // Drop the pre consumed frozen energy
     long newArea = currentUsage * currentSize
@@ -302,24 +294,8 @@ public class TransactionTrace {
     long newUsage = Long.max(0, newArea / newSize);
     // Reset account usage and window size
     accountCap.setEnergyUsage(newUsage);
-    accountCap.setNewWindowSize(ENERGY, newUsage == 0 ? 0L : newSize);
-  }
-
-  private void resetAccountUsageV2(AccountCapsule accountCap,
-      long usage, long size, long mergedUsage, long mergedSize, long size2) {
-    long currentSize = accountCap.getWindowSize(ENERGY);
-    long currentSize2 = accountCap.getWindowSizeV2(ENERGY);
-    long currentUsage = accountCap.getEnergyUsage();
-    // Drop the pre consumed frozen energy
-    long newArea = currentUsage * currentSize - (mergedUsage * mergedSize - usage * size);
-    // If area merging happened during suicide, use the current window size
-    long newSize = mergedSize == currentSize ? size : currentSize;
-    long newSize2 = mergedSize == currentSize ? size2 : currentSize2;
-    // Calc new usage by fixed x-axes
-    long newUsage = Long.max(0, newArea / newSize);
-    // Reset account usage and window size
-    accountCap.setEnergyUsage(newUsage);
-    accountCap.setNewWindowSizeV2(ENERGY, newUsage == 0 ? 0L : newSize2);
+    accountCap.setNewWindowSize(Common.ResourceCode.ENERGY,
+        newUsage == 0 ? 0L : newSize);
   }
 
   public boolean checkNeedRetry() {
@@ -378,7 +354,7 @@ public class TransactionTrace {
   public static byte[] convertToTronAddress(byte[] address) {
     if (address.length == 20) {
       byte[] newAddress = new byte[21];
-      byte[] temp = new byte[] {DecodeUtil.addressPreFixByte};
+      byte[] temp = new byte[]{DecodeUtil.addressPreFixByte};
       System.arraycopy(temp, 0, newAddress, 0, temp.length);
       System.arraycopy(address, 0, newAddress, temp.length, address.length);
       address = newAddress;

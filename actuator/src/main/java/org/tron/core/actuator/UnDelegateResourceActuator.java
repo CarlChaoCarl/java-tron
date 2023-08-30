@@ -10,6 +10,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Arrays;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.tron.common.utils.DecodeUtil;
 import org.tron.common.utils.StringUtil;
 import org.tron.core.capsule.AccountCapsule;
@@ -143,8 +144,9 @@ public class UnDelegateResourceActuator extends AbstractActuator {
 
         long now = chainBaseManager.getHeadSlot();
         if (Objects.nonNull(receiverCapsule) && transferUsage > 0) {
-          processor.unDelegateIncrease(ownerCapsule, receiverCapsule,
-              transferUsage, BANDWIDTH, now);
+          ownerCapsule.setNetUsage(processor.unDelegateIncrease(ownerCapsule, receiverCapsule,
+              transferUsage, BANDWIDTH, now));
+          ownerCapsule.setLatestConsumeTime(now);
         }
       }
       break;
@@ -158,7 +160,9 @@ public class UnDelegateResourceActuator extends AbstractActuator {
 
         long now = chainBaseManager.getHeadSlot();
         if (Objects.nonNull(receiverCapsule) && transferUsage > 0) {
-          processor.unDelegateIncrease(ownerCapsule, receiverCapsule, transferUsage, ENERGY, now);
+          ownerCapsule.setEnergyUsage(processor.unDelegateIncrease(ownerCapsule, receiverCapsule,
+              transferUsage, ENERGY, now));
+          ownerCapsule.setLatestConsumeTimeForEnergy(now);
         }
       }
       break;
@@ -236,7 +240,7 @@ public class UnDelegateResourceActuator extends AbstractActuator {
     }
 
     byte[] receiverAddress = unDelegateResourceContract.getReceiverAddress().toByteArray();
-    if (!DecodeUtil.addressValid(receiverAddress)) {
+    if (ArrayUtils.isEmpty(receiverAddress) || !DecodeUtil.addressValid(receiverAddress)) {
       throw new ContractValidateException("Invalid receiverAddress");
     }
     if (Arrays.equals(receiverAddress, ownerAddress)) {

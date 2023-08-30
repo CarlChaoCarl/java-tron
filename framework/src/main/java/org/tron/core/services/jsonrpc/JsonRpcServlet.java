@@ -1,11 +1,9 @@
 package org.tron.core.services.jsonrpc;
 
 import com.googlecode.jsonrpc4j.HttpStatusCodeProvider;
-import com.googlecode.jsonrpc4j.JsonRpcInterceptor;
 import com.googlecode.jsonrpc4j.JsonRpcServer;
 import com.googlecode.jsonrpc4j.ProxyUtil;
 import java.io.IOException;
-import java.util.Collections;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -13,7 +11,6 @@ import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.tron.common.parameter.CommonParameter;
 import org.tron.core.Wallet;
 import org.tron.core.db.Manager;
 import org.tron.core.services.NodeInfoService;
@@ -31,9 +28,6 @@ public class JsonRpcServlet extends RateLimiterServlet {
   private Wallet wallet;
   @Autowired
   private Manager manager;
-
-  @Autowired
-  private JsonRpcInterceptor interceptor;
 
   @Override
   public void init(ServletConfig config) throws ServletException {
@@ -63,9 +57,6 @@ public class JsonRpcServlet extends RateLimiterServlet {
     rpcServer.setHttpStatusCodeProvider(httpStatusCodeProvider);
 
     rpcServer.setShouldLogInvocationErrors(false);
-    if (CommonParameter.getInstance().isMetricsPrometheusEnable()) {
-      rpcServer.setInterceptorList(Collections.singletonList(interceptor));
-    }
   }
 
   @Override

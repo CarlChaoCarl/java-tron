@@ -216,7 +216,6 @@ public class JsonRpcApiUtil {
         case WithdrawBalanceContract:
         case WithdrawExpireUnfreezeContract:
         case UnfreezeBalanceV2Contract:
-        case CancelAllUnfreezeV2Contract:
           TransactionInfo transactionInfo = wallet
               .getTransactionInfoById(ByteString.copyFrom(ByteArray.fromHexString(hash)));
           amount = getAmountFromTransactionInfo(hash, contract.getType(), transactionInfo);
@@ -293,7 +292,6 @@ public class JsonRpcApiUtil {
         case WithdrawBalanceContract:
         case WithdrawExpireUnfreezeContract:
         case UnfreezeBalanceV2Contract:
-        case CancelAllUnfreezeV2Contract:
           amount = getAmountFromTransactionInfo(hash, contract.getType(), transactionInfo);
           break;
         case UnfreezeAssetContract:
@@ -336,15 +334,11 @@ public class JsonRpcApiUtil {
           case WithdrawExpireUnfreezeContract:
             amount = transactionInfo.getWithdrawExpireAmount();
             break;
-          case CancelAllUnfreezeV2Contract:
-            amount = transactionInfo.getCancelUnfreezeV2AmountMap().values()
-                .stream().mapToLong(v -> v).sum();
-            break;
           default:
             break;
         }
       } else {
-        logger.warn("Can't find transaction {} ", hash);
+        logger.error("Can't find transaction {} ", hash);
       }
     } catch (Exception e) {
       logger.warn("Exception happens when get amount from transactionInfo. Exception = [{}]",

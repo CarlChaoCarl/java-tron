@@ -1,35 +1,26 @@
 package org.tron.core.jsonrpc;
 
-import com.alibaba.fastjson.JSON;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
-import io.prometheus.client.CollectorRegistry;
-import javax.annotation.Resource;
+import java.io.File;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.bouncycastle.util.encoders.Hex;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.tron.common.BaseTest;
-import org.tron.common.parameter.CommonParameter;
-import org.tron.common.prometheus.Metrics;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.FileUtil;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.core.Constant;
 import org.tron.core.Wallet;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.TransactionCapsule;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
+import org.tron.core.db.Manager;
 import org.tron.core.services.NodeInfoService;
-import org.tron.core.services.jsonrpc.FullNodeJsonRpcHttpService;
 import org.tron.core.services.jsonrpc.TronJsonRpcImpl;
 import org.tron.core.services.jsonrpc.types.BlockResult;
 import org.tron.core.services.jsonrpc.types.TransactionResult;
@@ -39,35 +30,33 @@ import org.tron.protos.contract.BalanceContract.TransferContract;
 
 
 @Slf4j
-public class JsonrpcServiceTest extends BaseTest {
+public class JsonrpcServiceTest {
+  private static String dbPath = "output_jsonrpc_service_test";
   private static final String OWNER_ADDRESS;
   private static final String OWNER_ADDRESS_ACCOUNT_NAME = "first";
 
   private static TronJsonRpcImpl tronJsonRpc;
-  @Resource
-  private NodeInfoService nodeInfoService;
+  private static TronApplicationContext context;
+  private static NodeInfoService nodeInfoService;
 
   private static BlockCapsule blockCapsule;
   private static TransactionCapsule transactionCapsule1;
-  @Resource
-  private Wallet wallet;
-
-  @Resource
-  private FullNodeJsonRpcHttpService fullNodeJsonRpcHttpService;
+  private static TransactionCapsule transactionCapsule2;
 
   static {
-    dbPath = "output_jsonrpc_service_test";
     Args.setParam(new String[]{"--output-directory", dbPath}, Constant.TEST_CONF);
-    CommonParameter.getInstance().setJsonRpcHttpFullNodeEnable(true);
-    CommonParameter.getInstance().setMetricsPrometheusEnable(true);
-    Metrics.init();
+    context = new TronApplicationContext(DefaultConfig.class);
 
     OWNER_ADDRESS =
         Wallet.getAddressPreFixString() + "abd4b9367799eaa3197fecb144eb71de1e049abc";
+    nodeInfoService = context.getBean("nodeInfoService", NodeInfoService.class);
   }
 
-  @Before
-  public void init() {
+  @BeforeClass
+  public static void init() {
+    Manager dbManager = context.getBean(Manager.class);
+    Wallet wallet = context.getBean(Wallet.class);
+
     AccountCapsule accountCapsule =
         new AccountCapsule(
             ByteString.copyFromUtf8(OWNER_ADDRESS_ACCOUNT_NAME),
@@ -100,8 +89,8 @@ public class JsonrpcServiceTest extends BaseTest {
     transactionCapsule1 =
         new TransactionCapsule(transferContract1, ContractType.TransferContract);
     transactionCapsule1.setBlockNum(blockCapsule.getNum());
-    TransactionCapsule transactionCapsule2 = new TransactionCapsule(transferContract2,
-        ContractType.TransferContract);
+    transactionCapsule2 =
+        new TransactionCapsule(transferContract2, ContractType.TransferContract);
     transactionCapsule2.setBlockNum(2L);
 
     blockCapsule.addTransaction(transactionCapsule1);
@@ -116,6 +105,17 @@ public class JsonrpcServiceTest extends BaseTest {
         .put(transactionCapsule2.getTransactionId().getBytes(), transactionCapsule2);
 
     tronJsonRpc = new TronJsonRpcImpl(nodeInfoService, wallet, dbManager);
+  }
+
+  @AfterClass
+  public static void removeDb() {
+    Args.clearParam();
+    context.destroy();
+    if (FileUtil.deleteDir(new File(dbPath))) {
+      logger.info("Release resources successful.");
+    } else {
+      logger.info("Release resources failure.");
+    }
   }
 
   @Test
@@ -252,42 +252,6 @@ public class JsonrpcServiceTest extends BaseTest {
     }
     Assert.assertEquals(ByteArray.toJsonHex(transactionCapsule1.getBlockNum()),
         transactionResult.getBlockNumber());
-  }
-
-  @Test
-  public void testGetBlockByNumber2() {
-    fullNodeJsonRpcHttpService.start();
-    JsonArray params = new JsonArray();
-    params.add(ByteArray.toJsonHex(blockCapsule.getNum()));
-    params.add(false);
-    JsonObject requestBody = new JsonObject();
-    requestBody.addProperty("jsonrpc", "2.0");
-    requestBody.addProperty("method", "eth_getBlockByNumber");
-    requestBody.add("params", params);
-    requestBody.addProperty("id", 1);
-    CloseableHttpResponse response;
-    try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-      HttpPost httpPost = new HttpPost("http://127.0.0.1:8545/jsonrpc");
-      httpPost.addHeader("Content-Type", "application/json");
-      httpPost.setEntity(new StringEntity(requestBody.toString()));
-      response = httpClient.execute(httpPost);
-      String resp = EntityUtils.toString(response.getEntity());
-      BlockResult blockResult = JSON.parseObject(resp).getObject("result", BlockResult.class);
-      Assert.assertEquals(ByteArray.toJsonHex(blockCapsule.getNum()),
-          blockResult.getNumber());
-      Assert.assertEquals(blockCapsule.getTransactions().size(),
-          blockResult.getTransactions().length);
-      Assert.assertEquals("0x0000000000000000",
-          blockResult.getNonce());
-      response.close();
-      Assert.assertEquals(1, CollectorRegistry.defaultRegistry.getSampleValue(
-          "tron:jsonrpc_service_latency_seconds_count",
-          new String[] {"method"}, new String[] {"eth_getBlockByNumber"}).intValue());
-    } catch (Exception e) {
-      Assert.fail(e.getMessage());
-    } finally {
-      fullNodeJsonRpcHttpService.stop();
-    }
   }
 
 }

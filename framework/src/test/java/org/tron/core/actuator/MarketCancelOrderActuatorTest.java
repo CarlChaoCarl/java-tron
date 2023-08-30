@@ -1,14 +1,20 @@
 package org.tron.core.actuator;
 
+import static org.testng.Assert.fail;
+
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import java.io.File;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.tron.common.BaseTest;
+import org.tron.common.application.TronApplicationContext;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.FileUtil;
 import org.tron.core.ChainBaseManager;
 import org.tron.core.Constant;
 import org.tron.core.Wallet;
@@ -19,7 +25,9 @@ import org.tron.core.capsule.MarketOrderCapsule;
 import org.tron.core.capsule.MarketOrderIdListCapsule;
 import org.tron.core.capsule.TransactionResultCapsule;
 import org.tron.core.capsule.utils.MarketUtils;
+import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
+import org.tron.core.db.Manager;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.core.exception.ItemNotFoundException;
@@ -38,8 +46,9 @@ import org.tron.protos.contract.MarketContract.MarketSellAssetContract;
 
 @Slf4j
 
-public class MarketCancelOrderActuatorTest extends BaseTest {
+public class MarketCancelOrderActuatorTest {
 
+  private static final String dbPath = "output_MarketCancelOrder_test";
   private static final String ACCOUNT_NAME_FIRST = "ownerF";
   private static final String OWNER_ADDRESS_FIRST;
   private static final String ACCOUNT_NAME_SECOND = "ownerS";
@@ -49,10 +58,12 @@ public class MarketCancelOrderActuatorTest extends BaseTest {
   private static final String TOKEN_ID_ONE = String.valueOf(1L);
   private static final String TOKEN_ID_TWO = String.valueOf(2L);
   private static final String TRX = "_";
+  private static TronApplicationContext context;
+  private static Manager dbManager;
 
   static {
-    dbPath = "output_MarketCancelOrder_test";
     Args.setParam(new String[]{"--output-directory", dbPath}, Constant.TEST_CONF);
+    context = new TronApplicationContext(DefaultConfig.class);
     OWNER_ADDRESS_FIRST =
         Wallet.getAddressPreFixString() + "abd4b9367799eaa3197fecb144eb71de1e049abc";
     OWNER_ADDRESS_SECOND =
@@ -62,16 +73,37 @@ public class MarketCancelOrderActuatorTest extends BaseTest {
   }
 
   /**
-   * create temp Capsule test need.
+   * Init data.
    */
-  @Before
-  public void initTest() {
+  @BeforeClass
+  public static void init() {
+    dbManager = context.getBean(Manager.class);
     dbManager.getDynamicPropertiesStore().saveAllowMarketTransaction(1L);
     dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderTimestamp(1000000);
     dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderNumber(10);
     dbManager.getDynamicPropertiesStore().saveNextMaintenanceTime(2000000);
     dbManager.getDynamicPropertiesStore().saveAllowSameTokenName(1);
+  }
 
+  /**
+   * Release resources.
+   */
+  @AfterClass
+  public static void destroy() {
+    Args.clearParam();
+    context.destroy();
+    if (FileUtil.deleteDir(new File(dbPath))) {
+      logger.info("Release resources successful.");
+    } else {
+      logger.info("Release resources failure.");
+    }
+  }
+
+  /**
+   * create temp Capsule test need.
+   */
+  @Before
+  public void initTest() {
     byte[] ownerAddressFirstBytes = ByteArray.fromHexString(OWNER_ADDRESS_FIRST);
     byte[] ownerAddressSecondBytes = ByteArray.fromHexString(OWNER_ADDRESS_SECOND);
 
@@ -190,7 +222,7 @@ public class MarketCancelOrderActuatorTest extends BaseTest {
 
     try {
       actuator.validate();
-      Assert.fail("Invalid address");
+      fail("Invalid address");
     } catch (ContractValidateException e) {
       Assert.assertEquals("Invalid address", e.getMessage());
     }
@@ -210,7 +242,7 @@ public class MarketCancelOrderActuatorTest extends BaseTest {
 
     try {
       actuator.validate();
-      Assert.fail("Account does not exist!");
+      fail("Account does not exist!");
     } catch (ContractValidateException e) {
       Assert.assertEquals("Account does not exist!", e.getMessage());
     }
@@ -229,7 +261,7 @@ public class MarketCancelOrderActuatorTest extends BaseTest {
         OWNER_ADDRESS_FIRST, orderId));
     try {
       actuator.validate();
-      Assert.fail("orderId not exists");
+      fail("orderId not exists");
     } catch (ContractValidateException e) {
       Assert.assertEquals("orderId not exists", e.getMessage());
     }
@@ -263,7 +295,7 @@ public class MarketCancelOrderActuatorTest extends BaseTest {
 
     try {
       actuator.validate();
-      Assert.fail("Order is not active!");
+      fail("Order is not active!");
     } catch (ContractValidateException e) {
       Assert.assertEquals("Order is not active!", e.getMessage());
     }
@@ -298,7 +330,7 @@ public class MarketCancelOrderActuatorTest extends BaseTest {
     try {
       actuator.validate();
       actuator.execute(ret);
-      Assert.fail("Order does not belong to the account!");
+      fail("Order does not belong to the account!");
     } catch (ContractValidateException e) {
       Assert.assertEquals("Order does not belong to the account!", e.getMessage());
     } catch (ContractExeException e) {
@@ -340,7 +372,7 @@ public class MarketCancelOrderActuatorTest extends BaseTest {
     try {
       actuator.validate();
       actuator.execute(ret);
-      Assert.fail("No enough balance !");
+      fail("No enough balance !");
     } catch (ContractValidateException e) {
       Assert.assertEquals("No enough balance !", e.getMessage());
     } catch (ContractExeException e) {
@@ -377,7 +409,7 @@ public class MarketCancelOrderActuatorTest extends BaseTest {
     try {
       actuator.validate();
     } catch (ContractValidateException e) {
-      Assert.fail("validateSuccess error");
+      fail("validateSuccess error");
     }
   }
 
