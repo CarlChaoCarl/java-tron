@@ -7,13 +7,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.tron.common.cache.CommonCache;
+import org.tron.common.cache.CommonCacheBuilder;
+
 public class IPQpsStrategy extends Strategy {
 
   public static final String STRATEGY_PARAM_IPQPS = "qps";
   public static final Double DEFAULT_IPQPS = 2D;
 
-  private Cache<String, RateLimiter> ipLimiter = CacheBuilder.newBuilder().maximumSize(10000)
-      .expireAfterWrite(600, TimeUnit.SECONDS).recordStats().build();
+  private CommonCache<String, RateLimiter> ipLimiter = CommonCacheBuilder.newBuilder()
+      .maximumSize(10000).expireAfterWrite(600, TimeUnit.SECONDS).recordStats()
+      .build();
 
   public IPQpsStrategy(String paramString) {
     super(paramString);

@@ -17,6 +17,10 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import org.tron.common.cache.CommonCache;
+import org.tron.common.cache.CommonCacheBuilder;
+
 import org.tron.common.es.ExecutorServiceManager;
 import org.tron.common.utils.Pair;
 import org.tron.core.capsule.BlockCapsule;
@@ -49,7 +53,7 @@ public class SyncService {
   private Map<BlockMessage, PeerConnection> blockJustReceived = new ConcurrentHashMap<>();
 
   private long blockCacheTimeout = Args.getInstance().getBlockCacheTimeout();
-  private Cache<BlockId, PeerConnection> requestBlockIds = CacheBuilder.newBuilder()
+  private CommonCache<BlockId, PeerConnection> requestBlockIds = CommonCacheBuilder.newBuilder()
       .maximumSize(10_000)
       .expireAfterWrite(blockCacheTimeout, TimeUnit.MINUTES).initialCapacity(10_000)
       .recordStats().build();

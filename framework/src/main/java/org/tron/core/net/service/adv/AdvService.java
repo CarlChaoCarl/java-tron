@@ -21,6 +21,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import org.tron.common.cache.CommonCache;
+import org.tron.common.cache.CommonCacheBuilder;
+
 import org.tron.common.es.ExecutorServiceManager;
 import org.tron.common.overlay.message.Message;
 import org.tron.common.utils.Sha256Hash;
@@ -58,16 +62,16 @@ public class AdvService {
   private ConcurrentHashMap<Item, Long> invToSpread = new ConcurrentHashMap<>();
 
   private long blockCacheTimeout = Args.getInstance().getBlockCacheTimeout();
-  private Cache<Item, Long> invToFetchCache = CacheBuilder.newBuilder()
+  private CommonCache<Item, Long> invToFetchCache = CommonCacheBuilder.newBuilder()
       .maximumSize(MAX_INV_TO_FETCH_CACHE_SIZE)
       .expireAfterWrite(blockCacheTimeout, TimeUnit.MINUTES)
       .recordStats().build();
 
-  private Cache<Item, Message> trxCache = CacheBuilder.newBuilder()
+  private CommonCache<Item, Message> trxCache = CommonCacheBuilder.newBuilder()
       .maximumSize(MAX_TRX_CACHE_SIZE).expireAfterWrite(1, TimeUnit.HOURS)
       .recordStats().build();
 
-  private Cache<Item, Message> blockCache = CacheBuilder.newBuilder()
+  private CommonCache<Item, Message> blockCache = CommonCacheBuilder.newBuilder()
       .maximumSize(MAX_BLOCK_CACHE_SIZE).expireAfterWrite(1, TimeUnit.MINUTES)
       .recordStats().build();
 

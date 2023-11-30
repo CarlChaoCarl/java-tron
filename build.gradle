@@ -69,6 +69,7 @@ subprojects {
     configurations.all {
         resolutionStrategy {
             force group: 'com.google.guava', name: 'guava', version: '30.1-jre'
+            force group: 'com.github.ben-manes.caffeine', name: 'caffeine', version: '2.9.3'
         }
     }
 }

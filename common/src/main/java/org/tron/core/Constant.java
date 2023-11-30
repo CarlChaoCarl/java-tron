@@ -371,4 +371,6 @@ public class Constant {
   public static final String DYNAMIC_CONFIG_CHECK_INTERVAL = "node.dynamicConfig.checkInterval";
 
   public static final String COMMITTEE_ALLOW_TVM_SHANGHAI = "committee.allowTvmShangHai";
+
+  public static final String NODE_CACHE_CAFFEINE_ACTIVE = "node.cache.caffeine.active";
 }

@@ -7,6 +7,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import org.tron.common.cache.CommonCache;
+import org.tron.common.cache.CommonCacheBuilder;
+
 import org.tron.common.es.ExecutorServiceManager;
 import org.tron.common.prometheus.MetricKeys;
 import org.tron.common.prometheus.MetricLabels;
@@ -24,7 +28,7 @@ public class TronStatsManager {
   private volatile long UDP_TRAFFIC_IN = 0;
   private volatile long UDP_TRAFFIC_OUT = 0;
 
-  private static Cache<InetAddress, NodeStatistics> cache = CacheBuilder.newBuilder()
+  private static CommonCache<InetAddress, NodeStatistics> cache = CommonCacheBuilder.newBuilder()
           .maximumSize(3000).recordStats().build();
 
   private final String esName = "net-traffic-collector";

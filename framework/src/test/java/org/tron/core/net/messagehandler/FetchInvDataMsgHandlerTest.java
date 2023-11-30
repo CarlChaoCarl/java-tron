@@ -9,6 +9,9 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.tron.common.cache.CommonCache;
+import org.tron.common.cache.CommonCacheBuilder;
+
 import org.tron.common.utils.ReflectUtils;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.core.capsule.BlockCapsule;
@@ -42,14 +45,16 @@ public class FetchInvDataMsgHandlerTest {
     List<Sha256Hash> blockIds = new LinkedList<>();
     blockIds.add(blockId);
 
-    Cache<Item, Long> advInvSpread = CacheBuilder.newBuilder().maximumSize(20000)
-        .expireAfterWrite(1, TimeUnit.HOURS).recordStats().build();
+    CommonCache<Item, Long> advInvSpread = CommonCacheBuilder.newBuilder()
+        .maximumSize(20000).expireAfterWrite(1, TimeUnit.HOURS).recordStats()
+        .build();
     Mockito.when(peer.getAdvInvSpread()).thenReturn(advInvSpread);
     Mockito.when(peer.isNeedSyncFromUs()).thenReturn(true);
     Mockito.when(peer.isSyncFinish()).thenReturn(false);
     Mockito.when(peer.getBlockBothHave()).thenReturn(blockId);
-    Cache<Sha256Hash, Long> syncBlockIdCache = CacheBuilder.newBuilder()
-        .maximumSize(2 * Parameter.NetConstants.SYNC_FETCH_BATCH_NUM).recordStats().build();
+    CommonCache<Sha256Hash, Long> syncBlockIdCache = CommonCacheBuilder.newBuilder()
+        .maximumSize(2 * Parameter.NetConstants.SYNC_FETCH_BATCH_NUM).recordStats()
+        .build();
     Mockito.when(peer.getSyncBlockIdCache()).thenReturn(syncBlockIdCache);
     Mockito.when(peer.getLastSyncBlockId()).thenReturn(blockId);
     BlockCapsule blockCapsule = new BlockCapsule(1, Sha256Hash.ZERO_HASH,
