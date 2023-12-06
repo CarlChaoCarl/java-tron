@@ -25,6 +25,7 @@ public class TronCache<K, V> {
   TronCache(CacheType name, String strategy) {
     this.name = name;
     this.cache = CacheBuilder.from(strategy).build();
+    strategy = castGuavaSpec2Caffeine(strategy);
     this.caffeineCache = Caffeine.from(strategy).build();
   }
 
@@ -89,5 +90,12 @@ public class TronCache<K, V> {
   @Override
   public int hashCode() {
     return Objects.hashCode(name);
+  }
+
+  private static String castGuavaSpec2Caffeine(String guavaSpec) {
+    int beforeConcurrencyLevel = guavaSpec.indexOf(",concurrencyLevel");
+    int beforeRecordStats = guavaSpec.indexOf(",recordStats");
+    String ret = guavaSpec.substring(0, beforeConcurrencyLevel) + guavaSpec.substring(beforeRecordStats, guavaSpec.length());
+    return ret;
   }
 }

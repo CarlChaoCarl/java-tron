@@ -230,7 +230,7 @@ public class Args extends CommonParameter {
     PARAMETER.dynamicConfigEnable = false;
     PARAMETER.dynamicConfigCheckInterval = 600;
     PARAMETER.allowTvmShangHai = 0;
-    PARAMETER.caffeineCacheActive = false;
+    PARAMETER.caffeineCacheActive = true;
   }
 
   /**
@@ -1185,7 +1185,7 @@ public class Args extends CommonParameter {
 
     PARAMETER.caffeineCacheActive =
         config.hasPath(Constant.NODE_CACHE_CAFFEINE_ACTIVE) ? config
-            .getBoolean(Constant.NODE_CACHE_CAFFEINE_ACTIVE) : false;
+            .getBoolean(Constant.NODE_CACHE_CAFFEINE_ACTIVE) : true;
 
     logConfig();
   }
