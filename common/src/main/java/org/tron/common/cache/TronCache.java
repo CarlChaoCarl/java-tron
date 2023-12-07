@@ -24,9 +24,14 @@ public class TronCache<K, V> {
 
   TronCache(CacheType name, String strategy) {
     this.name = name;
-    this.cache = CacheBuilder.from(strategy).build();
-    strategy = castGuavaSpec2Caffeine(strategy);
-    this.caffeineCache = Caffeine.from(strategy).build();
+    if (isCaffeine) {
+      this.cache = null;
+      strategy = castGuavaSpec2Caffeine(strategy);
+      this.caffeineCache = Caffeine.from(strategy).build();
+    } else {
+      this.cache = CacheBuilder.from(strategy).build();
+      this.caffeineCache = null;
+    }
   }
 
   TronCache(CacheType name, String strategy, CacheLoader<K, V> loader) {

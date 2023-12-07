@@ -13,8 +13,13 @@ public class CommonCache<K, V> {
 
   public CommonCache(com.github.benmanes.caffeine.cache.Cache caffeineCache,
                      com.google.common.cache.Cache guavaCache) {
-    this.caffeineCache = caffeineCache;
-    this.guavaCache = guavaCache;
+    if (isCaffeine) {
+      this.caffeineCache = caffeineCache;
+      this.guavaCache = null;
+    } else {
+      this.caffeineCache = null;
+      this.guavaCache = guavaCache;
+    }
   }
 
   public V getIfPresent(@CompatibleWith("K") Object key) {
