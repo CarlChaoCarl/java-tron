@@ -6,6 +6,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
+import lombok.extern.slf4j.Slf4j;
 import org.tron.common.parameter.CommonParameter;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -13,7 +14,7 @@ import java.util.function.Function;
 
 import lombok.Getter;
 
-
+@Slf4j(topic = "app")
 public class TronCache<K, V> {
 
   @Getter
@@ -42,24 +43,30 @@ public class TronCache<K, V> {
 
   public void put(K k, V v) {
     if(isCaffeine) {
+      logger.info("isCaffeine");
       this.caffeineCache.put(k, v);
     } else {
+      logger.info("isGuava");
       this.cache.put(k, v);
     }
   }
 
   public V getIfPresent(K k) {
     if(isCaffeine) {
+      logger.info("isCaffeine");
       return this.caffeineCache.getIfPresent(k);
     } else {
+      logger.info("isGuava");
       return this.cache.getIfPresent(k);
     }
   }
 
   public V get(K k, Callable<? extends V> loader) throws ExecutionException {
     if(isCaffeine) {
+      logger.info("isCaffeine");
       return this.caffeineCache.get(k, (Function<? super K, ? extends V>) loader);
     } else {
+      logger.info("isGuava");
       return this.cache.get(k, loader);
     }
   }

@@ -1,10 +1,12 @@
 package org.tron.common.cache;
 
 import com.google.errorprone.annotations.CompatibleWith;
+import lombok.extern.slf4j.Slf4j;
 import org.tron.common.parameter.CommonParameter;
 
 import java.util.concurrent.ConcurrentMap;
 
+@Slf4j(topic = "app")
 public class CommonCache<K, V> {
 
   private com.github.benmanes.caffeine.cache.Cache caffeineCache;
@@ -24,16 +26,20 @@ public class CommonCache<K, V> {
 
   public V getIfPresent(@CompatibleWith("K") Object key) {
     if (isCaffeine) {
+      logger.info("isCaffeine");
       return (V)caffeineCache.getIfPresent(key);
     } else {
+      logger.info("isGuava");
       return (V)guavaCache.getIfPresent(key);
     }
   }
 
   public void put(K key, V value) {
     if (isCaffeine) {
+      logger.info("isCaffeine");
       caffeineCache.put(key, value);
     } else {
+      logger.info("isGuava");
       guavaCache.put(key, value);
     }
   }
