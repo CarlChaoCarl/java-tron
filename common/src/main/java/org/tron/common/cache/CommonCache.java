@@ -26,20 +26,20 @@ public class CommonCache<K, V> {
 
   public V getIfPresent(@CompatibleWith("K") Object key) {
     if (isCaffeine) {
-      logger.info("isCaffeine");
+      logger.info("isCaffeine get {}", caffeineCache.getIfPresent(key) == null?" null":" not null");
       return (V)caffeineCache.getIfPresent(key);
     } else {
-      logger.info("isGuava");
+      logger.info("isGuava get {}", guavaCache.getIfPresent(key) == null?" null":" not null");
       return (V)guavaCache.getIfPresent(key);
     }
   }
 
   public void put(K key, V value) {
     if (isCaffeine) {
-      logger.info("isCaffeine");
+      logger.info("isCaffeine put");
       caffeineCache.put(key, value);
     } else {
-      logger.info("isGuava");
+      logger.info("isGuava put");
       guavaCache.put(key, value);
     }
   }

@@ -43,30 +43,30 @@ public class TronCache<K, V> {
 
   public void put(K k, V v) {
     if(isCaffeine) {
-      logger.info("isCaffeine");
+      logger.info("isCaffeine put");
       this.caffeineCache.put(k, v);
     } else {
-      logger.info("isGuava");
+      logger.info("isGuava put");
       this.cache.put(k, v);
     }
   }
 
   public V getIfPresent(K k) {
     if(isCaffeine) {
-      logger.info("isCaffeine");
+      logger.info("isCaffeine {}", this.caffeineCache.getIfPresent(k) == null?" null":" not null");
       return this.caffeineCache.getIfPresent(k);
     } else {
-      logger.info("isGuava");
+      logger.info("isGuava {}", this.cache.getIfPresent(k) == null?" null":" not null");
       return this.cache.getIfPresent(k);
     }
   }
 
   public V get(K k, Callable<? extends V> loader) throws ExecutionException {
     if(isCaffeine) {
-      logger.info("isCaffeine");
+      logger.info("isCaffeine {}", this.caffeineCache.get(k, (Function<? super K, ? extends V>) loader) == null?" null":" not null");
       return this.caffeineCache.get(k, (Function<? super K, ? extends V>) loader);
     } else {
-      logger.info("isGuava");
+      logger.info("isGuava {}", this.cache.get(k, loader) == null?" null":" not null");
       return this.cache.get(k, loader);
     }
   }
