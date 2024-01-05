@@ -19,6 +19,10 @@ import org.bouncycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.tron.common.backup.socket.BackupServer;
+
+import org.tron.common.cache.CommonCache;
+import org.tron.common.cache.CommonCacheBuilder;
+
 import org.tron.common.overlay.message.Message;
 import org.tron.common.prometheus.MetricKeys;
 import org.tron.common.prometheus.MetricLabels;
@@ -98,7 +102,7 @@ public class TronNetDelegate {
   @Setter
   private volatile boolean exit = true;
 
-  private Cache<BlockId, Long> freshBlockId = CacheBuilder.newBuilder()
+  private CommonCache<BlockId, Long> freshBlockId = CommonCacheBuilder.newBuilder()
           .maximumSize(blockIdCacheSize).expireAfterWrite(1, TimeUnit.HOURS)
           .recordStats().build();
 

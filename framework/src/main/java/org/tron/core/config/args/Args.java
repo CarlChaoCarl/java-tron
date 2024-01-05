@@ -230,6 +230,7 @@ public class Args extends CommonParameter {
     PARAMETER.dynamicConfigEnable = false;
     PARAMETER.dynamicConfigCheckInterval = 600;
     PARAMETER.allowTvmShangHai = 0;
+    PARAMETER.caffeineCacheActive = false;
   }
 
   /**
@@ -1182,6 +1183,10 @@ public class Args extends CommonParameter {
         config.hasPath(Constant.COMMITTEE_ALLOW_TVM_SHANGHAI) ? config
             .getInt(Constant.COMMITTEE_ALLOW_TVM_SHANGHAI) : 0;
 
+    PARAMETER.caffeineCacheActive =
+        config.hasPath(Constant.NODE_CACHE_CAFFEINE_ACTIVE) ? config
+            .getBoolean(Constant.NODE_CACHE_CAFFEINE_ACTIVE) : false;
+
     logConfig();
   }
 
@@ -1660,6 +1665,9 @@ public class Args extends CommonParameter {
     logger.info("ShutDown blockTime  : {}", parameter.getShutdownBlockTime());
     logger.info("ShutDown blockHeight : {}", parameter.getShutdownBlockHeight());
     logger.info("ShutDown blockCount : {}", parameter.getShutdownBlockCount());
+    logger.info("***************************************************************");
+    logger.info("************************ cache config *************************");
+    logger.info("local cache caffeine active: {}", parameter.caffeineCacheActive);
     logger.info("***************************************************************");
     logger.info("\n");
   }

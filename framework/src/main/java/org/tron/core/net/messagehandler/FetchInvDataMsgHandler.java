@@ -8,6 +8,10 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import org.tron.common.cache.CommonCache;
+import org.tron.common.cache.CommonCacheBuilder;
+
 import org.tron.common.overlay.message.Message;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.consensus.ConsensusDelegate;
@@ -37,8 +41,9 @@ import org.tron.protos.Protocol.Transaction;
 @Component
 public class FetchInvDataMsgHandler implements TronMsgHandler {
 
-  private volatile Cache<Long, Boolean> epochCache = CacheBuilder.newBuilder().initialCapacity(100)
-      .maximumSize(1000).expireAfterWrite(1, TimeUnit.HOURS).build();
+  private volatile CommonCache<Long, Boolean> epochCache = CommonCacheBuilder.newBuilder()
+      .initialCapacity(100).maximumSize(1000).expireAfterWrite(1, TimeUnit.HOURS)
+      .build();
 
   private static final int MAX_SIZE = 1_000_000;
   @Autowired

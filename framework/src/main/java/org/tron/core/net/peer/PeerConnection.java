@@ -20,6 +20,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import org.tron.common.cache.CommonCache;
+import org.tron.common.cache.CommonCacheBuilder;
+
 import org.tron.common.overlay.message.Message;
 import org.tron.common.prometheus.MetricKeys;
 import org.tron.common.prometheus.Metrics;
@@ -106,13 +110,15 @@ public class PeerConnection {
 
   @Setter
   @Getter
-  private Cache<Item, Long> advInvReceive = CacheBuilder.newBuilder().maximumSize(invCacheSize)
-      .expireAfterWrite(1, TimeUnit.HOURS).recordStats().build();
+  private CommonCache<Item, Long> advInvReceive = CommonCacheBuilder.newBuilder()
+      .maximumSize(invCacheSize).expireAfterWrite(1, TimeUnit.HOURS).recordStats()
+      .build();
 
   @Setter
   @Getter
-  private Cache<Item, Long> advInvSpread = CacheBuilder.newBuilder().maximumSize(invCacheSize)
-      .expireAfterWrite(1, TimeUnit.HOURS).recordStats().build();
+  private CommonCache<Item, Long> advInvSpread = CommonCacheBuilder.newBuilder()
+      .maximumSize(invCacheSize).expireAfterWrite(1, TimeUnit.HOURS).recordStats()
+      .build();
 
   @Setter
   @Getter
@@ -132,8 +138,9 @@ public class PeerConnection {
   @Getter
   private volatile long remainNum;
   @Getter
-  private Cache<Sha256Hash, Long> syncBlockIdCache = CacheBuilder.newBuilder()
-      .maximumSize(2 * NetConstants.SYNC_FETCH_BATCH_NUM).recordStats().build();
+  private CommonCache<Sha256Hash, Long> syncBlockIdCache = CommonCacheBuilder.newBuilder()
+      .maximumSize(2 * NetConstants.SYNC_FETCH_BATCH_NUM).recordStats()
+      .build();
   @Setter
   @Getter
   private Deque<BlockId> syncBlockToFetch = new ConcurrentLinkedDeque<>();

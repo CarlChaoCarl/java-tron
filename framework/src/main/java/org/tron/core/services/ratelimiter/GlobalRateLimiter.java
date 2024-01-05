@@ -5,6 +5,10 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.RateLimiter;
 import java.util.concurrent.TimeUnit;
+
+import org.tron.common.cache.CommonCache;
+import org.tron.common.cache.CommonCacheBuilder;
+
 import org.tron.core.config.args.Args;
 
 public class GlobalRateLimiter {
@@ -13,7 +17,7 @@ public class GlobalRateLimiter {
 
   private static double IP_QPS = Args.getInstance().getRateLimiterGlobalIpQps();
 
-  private static Cache<String, RateLimiter> cache = CacheBuilder.newBuilder()
+  private static CommonCache<String, RateLimiter> cache = CommonCacheBuilder.newBuilder()
       .maximumSize(10000).expireAfterWrite(1, TimeUnit.HOURS).build();
 
   private static RateLimiter rateLimiter = RateLimiter.create(QPS);

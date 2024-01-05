@@ -16,6 +16,10 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import org.tron.common.cache.CommonCache;
+import org.tron.common.cache.CommonCacheBuilder;
+
 import org.tron.common.es.ExecutorServiceManager;
 import org.tron.core.config.args.Args;
 import org.tron.core.net.TronNetDelegate;
@@ -33,7 +37,7 @@ public class EffectiveCheckService {
   @Autowired
   private TronNetDelegate tronNetDelegate;
 
-  private final Cache<InetSocketAddress, Boolean> nodesCache = CacheBuilder.newBuilder()
+  private final CommonCache<InetSocketAddress, Boolean> nodesCache = CommonCacheBuilder.newBuilder()
       .initialCapacity(100)
       .maximumSize(10000)
       .expireAfterWrite(20, TimeUnit.MINUTES).build();

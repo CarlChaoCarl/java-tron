@@ -7,6 +7,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import org.tron.common.cache.CommonCache;
+import org.tron.common.cache.CommonCacheBuilder;
+
 import org.tron.consensus.base.Param;
 import org.tron.consensus.pbft.PbftManager;
 import org.tron.consensus.pbft.message.PbftBaseMessage;
@@ -23,7 +27,7 @@ public class PbftMsgHandler {
 
   private static final Striped<Lock> striped = Striped.lazyWeakLock(1024);
 
-  private static final Cache<String, Boolean> msgCache = CacheBuilder.newBuilder()
+  private static final CommonCache<String, Boolean> msgCache = CommonCacheBuilder.newBuilder()
       .initialCapacity(3000).maximumSize(10000).expireAfterWrite(10, TimeUnit.MINUTES).build();
 
   @Autowired

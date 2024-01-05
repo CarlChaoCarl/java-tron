@@ -48,6 +48,10 @@ import org.springframework.stereotype.Component;
 import org.tron.api.GrpcAPI.TransactionInfoList;
 import org.tron.common.args.GenesisBlock;
 import org.tron.common.bloom.Bloom;
+
+import org.tron.common.cache.CommonCache;
+import org.tron.common.cache.CommonCacheBuilder;
+
 import org.tron.common.es.ExecutorServiceManager;
 import org.tron.common.logsfilter.EventPluginLoader;
 import org.tron.common.logsfilter.FilterQuery;
@@ -210,7 +214,7 @@ public class Manager {
   private boolean isRunTriggerCapsuleProcessThread = true;
   private BlockingQueue<TransactionCapsule> pushTransactionQueue = new LinkedBlockingQueue<>();
   @Getter
-  private Cache<Sha256Hash, Boolean> transactionIdCache = CacheBuilder
+  private CommonCache<Sha256Hash, Boolean> transactionIdCache = CommonCacheBuilder
       .newBuilder().maximumSize(TX_ID_CACHE_SIZE)
       .expireAfterWrite(1, TimeUnit.HOURS).recordStats().build();
   @Autowired

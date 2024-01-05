@@ -1,5 +1,6 @@
 package org.tron.consensus.pbft;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -25,6 +26,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import org.tron.common.cache.CommonCache;
+import org.tron.common.cache.CommonCacheBuilder;
+
+import org.tron.common.parameter.CommonParameter;
 import org.tron.consensus.base.Param;
 import org.tron.consensus.base.Param.Miner;
 import org.tron.consensus.dpos.MaintenanceManager;
@@ -32,6 +38,8 @@ import org.tron.consensus.pbft.message.PbftBaseMessage;
 import org.tron.consensus.pbft.message.PbftMessage;
 import org.tron.core.ChainBaseManager;
 import org.tron.protos.Protocol.PBFTMessage.DataType;
+
+
 
 @Slf4j(topic = "pbft")
 @Component
@@ -43,12 +51,12 @@ public class PbftMessageHandle {
   //Preparation stage voting information
   private Map<String, PbftMessage> pareVoteMap = Maps.newConcurrentMap();
   private AtomicLongMap<String> agreePare = AtomicLongMap.create();
-  private Cache<String, PbftMessage> pareMsgCache = CacheBuilder.newBuilder()
+  private CommonCache<String, PbftMessage> pareMsgCache = CommonCacheBuilder.newBuilder()
       .initialCapacity(1000).maximumSize(10000).expireAfterWrite(2, TimeUnit.MINUTES).build();
   //Submit stage voting information
   private Map<String, PbftMessage> commitVoteMap = Maps.newConcurrentMap();
   private AtomicLongMap<String> agreeCommit = AtomicLongMap.create();
-  private Cache<String, PbftMessage> commitMsgCache = CacheBuilder.newBuilder()
+  private CommonCache<String, PbftMessage> commitMsgCache = CommonCacheBuilder.newBuilder()
       .initialCapacity(1000).maximumSize(10000).expireAfterWrite(2, TimeUnit.MINUTES).build();
   //pbft timeout
   private Map<String, Long> timeOuts = Maps.newConcurrentMap();
@@ -64,6 +72,13 @@ public class PbftMessageHandle {
             }
           });
 
+  private  boolean isCaffeine = CommonParameter.getInstance().caffeineCacheActive;
+  private com.github.benmanes.caffeine.cache.LoadingCache<String, List<ByteString>> dataCaffeineSignCache =
+      Caffeine.newBuilder()
+          .initialCapacity(100).maximumSize(1000).expireAfterWrite(2, TimeUnit.MINUTES)
+          .build(key -> createExpensiveGraph(key));
+
+
   private PbftMessage srPbftMessage;
 
   private Timer timer = new Timer("pbft-timer");
@@ -74,6 +89,11 @@ public class PbftMessageHandle {
   private MaintenanceManager maintenanceManager;
   @Autowired
   private ChainBaseManager chainBaseManager;
+
+
+  private List<ByteString> createExpensiveGraph(String s) {
+    return new ArrayList<>();
+  }
 
   @PostConstruct
   public void init() {
@@ -205,14 +225,25 @@ public class PbftMessageHandle {
     commitVoteMap.put(key, message);
     //The number of votes plus 1
     long agCou = agreeCommit.incrementAndGet(message.getDataKey());
-    dataSignCache.getUnchecked(message.getDataKey())
-        .add(message.getPbftMessage().getSignature());
+    if (isCaffeine) {
+      dataCaffeineSignCache.get(message.getDataKey())
+          .add(message.getPbftMessage().getSignature());
+    } else {
+      dataSignCache.getUnchecked(message.getDataKey())
+          .add(message.getPbftMessage().getSignature());
+    }
+
     if (agCou >= Param.getInstance().getAgreeNodeCount()) {
       srPbftMessage = null;
       remove(message.getNo());
       //commit,
       if (!isSyncing()) {
-        pbftMessageAction.action(message, dataSignCache.getUnchecked(message.getDataKey()));
+        if (isCaffeine) {
+          pbftMessageAction.action(message, dataCaffeineSignCache.get(message.getDataKey()));
+        } else {
+          pbftMessageAction.action(message, dataSignCache.getUnchecked(message.getDataKey()));
+        }
+
       }
     }
   }
