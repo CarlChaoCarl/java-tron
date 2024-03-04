@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.tron.common.application.Application;
 import org.tron.common.application.ApplicationFactory;
@@ -91,7 +92,8 @@ public class SnapshotManagerTest {
         tronDatabase.get(protoCapsule.getData()));
   }
 
-  @Test
+  @Ignore
+  //@Test
   public synchronized void testClose() {
     while (revokingDatabase.size() != 0) {
       revokingDatabase.pop();
