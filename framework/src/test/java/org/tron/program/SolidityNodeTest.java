@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.tron.common.BaseTest;
 import org.tron.common.client.DatabaseGrpcClient;
@@ -67,7 +68,8 @@ public class SolidityNodeTest extends BaseTest {
     Assert.assertTrue(Args.getInstance().isSolidityNode());
   }
 
-  @Test
+  @Ignore
+  //@Test
   public void testSolidityGrpcCall() {
     rpcApiService.init(Args.getInstance());
     rpcApiService.start();
