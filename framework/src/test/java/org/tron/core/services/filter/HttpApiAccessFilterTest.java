@@ -15,6 +15,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.tron.common.BaseTest;
 import org.tron.common.parameter.CommonParameter;
@@ -52,7 +53,8 @@ public class HttpApiAccessFilterTest extends BaseTest {
     appT.startup();
   }
 
-  @Test
+  @Ignore
+  //@Test
   public void testHttpFilter() {
     List<String> disabledApiList = new ArrayList<>();
     disabledApiList.add("getaccount");

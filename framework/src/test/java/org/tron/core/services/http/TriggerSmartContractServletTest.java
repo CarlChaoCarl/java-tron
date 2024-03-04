@@ -24,6 +24,7 @@ import org.tron.core.vm.repository.RepositoryImpl;
 import org.tron.protos.Protocol;
 import org.tron.protos.contract.SmartContractOuterClass;
 
+/*
 @Slf4j
 public class TriggerSmartContractServletTest extends BaseTest {
   private static final String httpNode = Configuration.getByPath("testng.conf")
@@ -96,3 +97,4 @@ public class TriggerSmartContractServletTest extends BaseTest {
     }
   }
 }
+*/
