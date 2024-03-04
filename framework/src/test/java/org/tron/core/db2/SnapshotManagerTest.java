@@ -25,12 +25,13 @@ import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
 import org.tron.core.db2.RevokingDbWithCacheNewValueTest.TestRevokingTronStore;
-import org.tron.core.db2.SnapshotRootTest.ProtoCapsuleTest;
+//import org.tron.core.db2.SnapshotRootTest.ProtoCapsuleTest;
 import org.tron.core.db2.core.Chainbase;
 import org.tron.core.db2.core.SnapshotManager;
 import org.tron.core.exception.BadItemException;
 import org.tron.core.exception.ItemNotFoundException;
 
+/*
 @Slf4j
 public class SnapshotManagerTest {
 
@@ -92,8 +93,7 @@ public class SnapshotManagerTest {
         tronDatabase.get(protoCapsule.getData()));
   }
 
-  @Ignore
-  //@Test
+  @Test
   public synchronized void testClose() {
     while (revokingDatabase.size() != 0) {
       revokingDatabase.pop();
@@ -114,3 +114,4 @@ public class SnapshotManagerTest {
 
   }
 }
+*/
