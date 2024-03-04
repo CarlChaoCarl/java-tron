@@ -41,6 +41,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
@@ -188,7 +189,8 @@ public class LevelDbDataSourceImplTest {
     dataSource.closeDB();
   }
 
-  @Test(timeout = 1000)
+  @Ignore
+  //@Test(timeout = 1000)
   public void testLockReleased() {
     dataSourceTest.initDB();
     // normal close

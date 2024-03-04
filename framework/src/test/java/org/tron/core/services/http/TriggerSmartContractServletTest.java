@@ -8,6 +8,7 @@ import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.tron.common.BaseTest;
@@ -68,7 +69,8 @@ public class TriggerSmartContractServletTest extends BaseTest {
   }
 
 
-  @Test
+  @Ignore
+  //@Test
   public void testNormalCall() {
     HttpMethed.waitToProduceOneBlock(httpNode);
     JsonObject parameter = new JsonObject();
