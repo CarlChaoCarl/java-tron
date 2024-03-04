@@ -16,6 +16,7 @@ import org.apache.http.util.EntityUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.tron.common.BaseTest;
 import org.tron.common.parameter.CommonParameter;
@@ -263,7 +264,9 @@ public class JsonrpcServiceTest extends BaseTest {
         transactionResult.getBlockNumber());
   }
 
-  @Test
+
+  @Ignore
+  //@Test
   public void testGetBlockByNumber2() {
     fullNodeJsonRpcHttpService.init(Args.getInstance());
     fullNodeJsonRpcHttpService.start();

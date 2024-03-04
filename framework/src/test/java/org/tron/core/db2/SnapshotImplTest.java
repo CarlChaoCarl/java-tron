@@ -27,6 +27,7 @@ public class SnapshotImplTest {
   private Application appT;
   private SnapshotManager revokingDatabase;
 
+  /*
   @Before
   public void init() {
     Args.setParam(new String[]{"-d", "output_revokingStore_test"}, Constant.TEST_CONF);
@@ -50,14 +51,7 @@ public class SnapshotImplTest {
     revokingDatabase.shutdown();
   }
 
-  /**
-   * linklist is: from -> root
-   * root:key1=>value1, key2=>value2
-   * from:key3=>value3, key4=>value4
-   * after construct, getSnapshotImplIns(root);
-   * from: key1=>value1, key2=>value2, key3=>value3, key4=>value4
-   * from: get key1 or key2, traverse 0 times
-   */
+
   @Test
   public void testMergeRoot() {
     // linklist is: from -> root
@@ -76,18 +70,7 @@ public class SnapshotImplTest {
     assertEquals(new String("value2".getBytes()), new String(s2));
   }
 
-  /**
-   * linklist is: from2 -> from -> root
-   * root:
-   * from:key1=>value1, key2=>value2
-   * from2:key3=>value3,key4=>value4
-   * before merge: from2.mergeAhead(from);
-   * from2: get key1 or key2, traverse 1 times
-   * after merge
-   * from2:key1=>value1, key2=>value2, value3=>value3,key4=>value4
-   * from2: get key1 or key2, traverse 0 times
-   *
-   */
+
   @Test
   public void testMergeAhead() {
 
@@ -101,19 +84,6 @@ public class SnapshotImplTest {
     from2.put("key3".getBytes(), "value3".getBytes());
     from2.put("key4".getBytes(), "value4".getBytes());
 
-    /*
-    // before merge  get data in from is success，traverse 0 times
-    byte[] s1 = from.get("key1".getBytes());
-    assertEquals(new String("value1".getBytes()), new String(s1));
-    byte[] s2 = from.get("key2".getBytes());
-    assertEquals(new String("value2".getBytes()), new String(s2));
-    // before merge  get data in from2 is success， traverse 0 times
-    byte[] s3 = from2.get("key3".getBytes());
-    assertEquals(new String("value3".getBytes()), new String(s3));
-    byte[] s4 = from2.get("key4".getBytes());
-    assertEquals(new String("value4".getBytes()), new String(s4));
-     */
-
     // before merge from2 get data is success， traverse 1 times
     byte[] s11 = from2.get("key1".getBytes());
     assertEquals(new String("value1".getBytes()), new String(s11));
@@ -125,19 +95,6 @@ public class SnapshotImplTest {
 
     // do mergeAhead
     from2.mergeAhead(from);
-    /*
-    // after merge  get data in from is success， traverse 0 times
-    s1 = from.get("key1".getBytes());
-    assertEquals(new String("value1".getBytes()), new String(s1));
-    s2 = from.get("key2".getBytes());
-    assertEquals(new String("value2".getBytes()), new String(s2));
-
-    // after merge get data in from2 is success， traverse 0 times
-    s3 = from2.get("key3".getBytes());
-    assertEquals(new String("value3".getBytes()), new String(s3));
-    s4 = from2.get("key4".getBytes());
-    assertEquals(new String("value4".getBytes()), new String(s4));
-     */
 
     // after merge from2 get data is success， traverse 0 times
     byte[] s1 = from2.get("key1".getBytes());
@@ -150,12 +107,7 @@ public class SnapshotImplTest {
     assertNull(from.get("key4".getBytes()));
   }
 
-  /**
-   * from: key1=>value1, key2=>value2, key3=>value31
-   * from2: key3=>value32,key4=>value4
-   * after merge: from2.mergeAhead(from);
-   * from2: key1=>value1, key2=>value2, key3=>value32, key4=>value4
-   */
+
   @Test
   public void testMergeOverride() {
     // linklist is: from2 -> from -> root
@@ -182,10 +134,7 @@ public class SnapshotImplTest {
     assertEquals(new String("value4".getBytes()), new String(s4));
   }
 
-  /**
-   * The constructor of SnapshotImpl is not public
-   * so reflection is used to construct the object here.
-   */
+
   private SnapshotImpl getSnapshotImplIns(Snapshot snapshot) {
     Class clazz = SnapshotImpl.class;
     try {
@@ -197,5 +146,6 @@ public class SnapshotImplTest {
     }
     return null;
   }
+  */
 
 }

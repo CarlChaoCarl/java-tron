@@ -134,12 +134,15 @@ test {
         forkEvery = 100
         jvmArgs "-XX:MetaspaceSize=128m","-XX:MaxMetaspaceSize=256m", "-XX:+UseG1GC"
     }
+    if (System.getenv("CI") == null) {
+        maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    }
 }
 
 jacocoTestReport {
     reports {
         xml.enabled true
-        csv.enabled false
+        csv.enabled true
         html.destination file("${buildDir}/jacocoHtml")
     }
     getExecutionData().setFrom(fileTree('../framework/build/jacoco').include("**.exec"))

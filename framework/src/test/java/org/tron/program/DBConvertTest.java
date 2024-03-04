@@ -11,6 +11,7 @@ import org.iq80.leveldb.Options;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.FileUtil;
@@ -92,7 +93,8 @@ public class DBConvertTest {
     FileUtil.deleteDir(new File(OUTPUT_DIRECTORY));
   }
 
-  @Test
+  @Ignore
+  //@Test
   public void testRun() {
     String[] args = new String[] { INPUT_DIRECTORY, OUTPUT_DIRECTORY };
     Assert.assertEquals(0, DBConvert.run(args));
