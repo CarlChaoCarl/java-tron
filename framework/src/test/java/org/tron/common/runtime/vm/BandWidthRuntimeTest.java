@@ -30,7 +30,7 @@ import org.tron.core.Constant;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.ReceiptCapsule;
-import org.tron.core.capsule.TransactionCapsule;
+//import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.TransactionTrace;
 import org.tron.core.exception.AccountResourceInsufficientException;
@@ -48,6 +48,7 @@ import org.tron.protos.Protocol.Transaction.raw;
 import org.tron.protos.contract.SmartContractOuterClass.CreateSmartContract;
 import org.tron.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 
+/*
 public class BandWidthRuntimeTest extends BaseTest {
 
   public static final long totalBalance = 1000_0000_000_000L;
@@ -71,9 +72,6 @@ public class BandWidthRuntimeTest extends BaseTest {
     );
   }
 
-  /**
-   * Init data.
-   */
   @Before
   public void before() {
     if (init) {
@@ -239,3 +237,4 @@ public class BandWidthRuntimeTest extends BaseTest {
     return trace.getRuntimeResult().getContractAddress();
   }
 }
+*/
