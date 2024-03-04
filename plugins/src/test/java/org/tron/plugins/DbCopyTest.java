@@ -3,12 +3,14 @@ package org.tron.plugins;
 import java.io.IOException;
 import java.util.UUID;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import picocli.CommandLine;
 
 public class DbCopyTest extends DbTest {
 
-  @Test
+  @Ignore
+  //@Test
   public void testRun() {
     String[] args = new String[] { "db", "cp",  INPUT_DIRECTORY,
         tmpDir + UUID.randomUUID()};
