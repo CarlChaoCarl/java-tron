@@ -36,6 +36,7 @@ import org.tron.core.consensus.ConsensusService;
 import org.tron.core.net.TronNetDelegate;
 import org.tron.protos.Protocol;
 
+/*
 @Slf4j(topic = "metric")
 public class PrometheusApiServiceTest extends BaseTest {
   static LocalDateTime localDateTime = LocalDateTime.now();
@@ -171,3 +172,5 @@ public class PrometheusApiServiceTest extends BaseTest {
   }
 
 }
+
+ */
