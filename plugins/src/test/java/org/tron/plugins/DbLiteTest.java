@@ -19,6 +19,7 @@ import org.tron.common.config.DbBackupConfig;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.utils.FileUtil;
 import org.tron.common.utils.PublicMethod;
+import org.tron.common.utils.TestParallelUtil;
 import org.tron.common.utils.Utils;
 import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
@@ -90,7 +91,7 @@ public class DbLiteTest {
       throws InterruptedException, IOException {
     logger.info("dbType {}, checkpointVersion {}", dbType, checkpointVersion);
     init();
-    dbPath = String.format("%s_%s_%d", dbPath, dbType, System.currentTimeMillis());
+    dbPath = String.format("%s_%s_%d_%d", dbPath, dbType, System.currentTimeMillis(), TestParallelUtil.getWorkerId());
 
     final String[] argsForSnapshot =
         new String[]{"-o", "split", "-t", "snapshot", "--fn-data-path",

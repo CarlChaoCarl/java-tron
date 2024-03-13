@@ -9,6 +9,7 @@ import org.iq80.leveldb.DB;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
+import org.tron.common.utils.TestParallelUtil;
 import org.tron.plugins.utils.ByteArray;
 import org.tron.plugins.utils.DBUtils;
 import org.tron.plugins.utils.MarketUtils;
@@ -28,7 +29,7 @@ public class DbTest {
 
   @Before
   public void init() throws IOException {
-    INPUT_DIRECTORY = temporaryFolder.newFolder().toString();
+    INPUT_DIRECTORY = temporaryFolder.newFolder().toString() + TestParallelUtil.getWorkerId();
     initDB(new File(INPUT_DIRECTORY, ACCOUNT));
     initDB(new File(INPUT_DIRECTORY, MARKET));
     initDB(new File(INPUT_DIRECTORY, DBUtils.CHECKPOINT_DB_V2));

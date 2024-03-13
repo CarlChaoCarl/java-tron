@@ -9,8 +9,7 @@ import picocli.CommandLine;
 
 public class DbCopyTest extends DbTest {
 
-  @Ignore
-  //@Test
+  @Test
   public void testRun() {
     String[] args = new String[] { "db", "cp",  INPUT_DIRECTORY,
         tmpDir + UUID.randomUUID()};
