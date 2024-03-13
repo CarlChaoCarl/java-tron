@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.tron.common.application.Application;
 import org.tron.common.application.ApplicationFactory;
@@ -25,13 +24,12 @@ import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.config.DefaultConfig;
 import org.tron.core.config.args.Args;
 import org.tron.core.db2.RevokingDbWithCacheNewValueTest.TestRevokingTronStore;
-//import org.tron.core.db2.SnapshotRootTest.ProtoCapsuleTest;
+import org.tron.core.db2.SnapshotRootTest.ProtoCapsuleTest;
 import org.tron.core.db2.core.Chainbase;
 import org.tron.core.db2.core.SnapshotManager;
 import org.tron.core.exception.BadItemException;
 import org.tron.core.exception.ItemNotFoundException;
 
-/*
 @Slf4j
 public class SnapshotManagerTest {
 
@@ -114,4 +112,3 @@ public class SnapshotManagerTest {
 
   }
 }
-*/

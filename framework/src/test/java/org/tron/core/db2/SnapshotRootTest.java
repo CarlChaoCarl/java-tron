@@ -73,7 +73,6 @@ public class SnapshotRootTest {
     tronDatabase.close();
   }
 
-  /*
   @Test
   public synchronized void testMerge() {
     tronDatabase = new TestRevokingTronStore("testSnapshotRoot-testMerge");
@@ -167,7 +166,6 @@ public class SnapshotRootTest {
                     + "check second cache failed!",
             allDBNames.stream().collect(Collectors.joining(","))), allDBNames.size() == 1);
   }
-   */
 
   private Set<String> parseRevokingDBNames(TronApplicationContext context) {
     SnapshotManager snapshotManager = context.getBean(SnapshotManager.class);
