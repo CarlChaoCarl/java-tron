@@ -3,6 +3,7 @@ package org.tron.common.logsfilter;
 import org.junit.Assert;
 import org.junit.Test;
 import org.tron.common.logsfilter.nativequeue.NativeMessageQueue;
+import org.tron.common.utils.TestParallelUtil;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
@@ -29,6 +30,9 @@ public class NativeMessageQueueTest {
 
   @Test
   public void publishTrigger() {
+    if (TestParallelUtil.getWorkerId() != 0) {
+      bindPort += TestParallelUtil.getWorkerId();
+    }
 
     int sendLength = 0;
     boolean bRet = NativeMessageQueue.getInstance().start(bindPort, sendLength);

@@ -89,8 +89,9 @@ public class DbLiteTest {
   void testTools(String dbType, int checkpointVersion)
       throws InterruptedException, IOException {
     logger.info("dbType {}, checkpointVersion {}", dbType, checkpointVersion);
-    dbPath = String.format("%s_%s_%d", dbPath, dbType, System.currentTimeMillis());
     init();
+    dbPath = String.format("%s_%s_%d", dbPath, dbType, System.currentTimeMillis());
+
     final String[] argsForSnapshot =
         new String[]{"-o", "split", "-t", "snapshot", "--fn-data-path",
             dbPath + File.separator + databaseDir, "--dataset-path",

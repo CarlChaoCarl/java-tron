@@ -2,18 +2,26 @@ package org.tron.common.logsfilter;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.tron.common.logsfilter.trigger.BlockLogTrigger;
 import org.tron.common.logsfilter.trigger.TransactionLogTrigger;
+import org.tron.common.utils.TestParallelUtil;
 
 public class EventLoaderTest {
 
   @Test
   public void launchNativeQueue() {
+    int bindPort = 5555;
+    if (TestParallelUtil.getWorkerId()!=0) {
+      bindPort += TestParallelUtil.getWorkerId();
+    }
+
     EventPluginConfig config = new EventPluginConfig();
     config.setSendQueueLength(1000);
-    config.setBindPort(5555);
+    config.setBindPort(bindPort);
     config.setUseNativeQueue(true);
 
     List<TriggerConfig> triggerConfigList = new ArrayList<>();
