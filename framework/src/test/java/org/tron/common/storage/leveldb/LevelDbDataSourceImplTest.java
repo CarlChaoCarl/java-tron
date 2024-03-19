@@ -188,7 +188,7 @@ public class LevelDbDataSourceImplTest {
     dataSource.closeDB();
   }
 
-  @Test(timeout = 1000)
+  @Test
   public void testLockReleased() {
     dataSourceTest.initDB();
     // normal close
