@@ -265,8 +265,7 @@ public class JsonrpcServiceTest extends BaseTest {
   }
 
 
-  @Ignore
-  //@Test
+  @Test
   public void testGetBlockByNumber2() {
     fullNodeJsonRpcHttpService.init(Args.getInstance());
     fullNodeJsonRpcHttpService.start();

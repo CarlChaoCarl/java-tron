@@ -270,8 +270,7 @@ public class PrecompiledContractsVerifyProofTest extends BaseTest {
     }
   }
 
-  @Ignore
-  //@Test
+  @Test
   public void verifyTransfer1v1ProofCorrect() throws ZksnarkException {
     int totalCountNum = 2;
     long leafCount = 0;

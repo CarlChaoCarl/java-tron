@@ -120,7 +120,6 @@ public class TrieTest {
   }
 
   @Ignore
-  //@Test
   public void testOrder() {
     TrieImpl trie = new TrieImpl();
     int n = 100;

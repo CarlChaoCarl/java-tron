@@ -1244,8 +1244,7 @@ public class SendCoinShieldTest extends BaseTest {
     }
   }
 
-  @Ignore
-  //@Test
+  @Test
   public void TestCreateMultipleTxAtTheSameTime() throws Exception {
     librustzcashInitZksnarkParams();
     dbManager.getDynamicPropertiesStore().saveAllowShieldedTransaction(1);

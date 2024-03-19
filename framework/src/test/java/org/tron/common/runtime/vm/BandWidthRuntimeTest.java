@@ -48,7 +48,7 @@ import org.tron.protos.Protocol.Transaction.raw;
 import org.tron.protos.contract.SmartContractOuterClass.CreateSmartContract;
 import org.tron.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 
-/*
+
 public class BandWidthRuntimeTest extends BaseTest {
 
   public static final long totalBalance = 1000_0000_000_000L;
@@ -115,8 +115,7 @@ public class BandWidthRuntimeTest extends BaseTest {
     init = true;
   }
 
-  @Ignore
-  //@Test
+  @Test
   public void testSuccess() {
     try {
       byte[] contractAddress = createContract();
@@ -147,8 +146,7 @@ public class BandWidthRuntimeTest extends BaseTest {
     }
   }
 
-  @Ignore
-  //@Test
+  @Test
   public void testSuccessNoBandd() {
     try {
       byte[] contractAddress = createContract();
@@ -237,4 +235,3 @@ public class BandWidthRuntimeTest extends BaseTest {
     return trace.getRuntimeResult().getContractAddress();
   }
 }
-*/

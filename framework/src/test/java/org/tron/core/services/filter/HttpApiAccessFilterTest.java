@@ -53,8 +53,7 @@ public class HttpApiAccessFilterTest extends BaseTest {
     appT.startup();
   }
 
-  @Ignore
-  //@Test
+  @Test
   public void testHttpFilter() {
     List<String> disabledApiList = new ArrayList<>();
     disabledApiList.add("getaccount");
