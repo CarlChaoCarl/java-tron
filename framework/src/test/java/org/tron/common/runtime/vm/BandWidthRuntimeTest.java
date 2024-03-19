@@ -30,7 +30,7 @@ import org.tron.core.Constant;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.ReceiptCapsule;
-//import org.tron.core.capsule.TransactionCapsule;
+import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.config.args.Args;
 import org.tron.core.db.TransactionTrace;
 import org.tron.core.exception.AccountResourceInsufficientException;
