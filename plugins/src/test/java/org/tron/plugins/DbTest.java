@@ -17,7 +17,7 @@ import picocli.CommandLine;
 
 public class DbTest {
 
-  String INPUT_DIRECTORY;
+  public String INPUT_DIRECTORY;
   private static final String ACCOUNT = "account";
   private static final String MARKET = DBUtils.MARKET_PAIR_PRICE_TO_ORDER;
   CommandLine cli = new CommandLine(new Toolkit());
@@ -29,7 +29,8 @@ public class DbTest {
 
   @Before
   public void init() throws IOException {
-    INPUT_DIRECTORY = temporaryFolder.newFolder().toString() + TestParallelUtil.getWorkerId();
+    String path = TestParallelUtil.getWorkerId() + "";
+    INPUT_DIRECTORY = temporaryFolder.newFolder(path).toString();
     initDB(new File(INPUT_DIRECTORY, ACCOUNT));
     initDB(new File(INPUT_DIRECTORY, MARKET));
     initDB(new File(INPUT_DIRECTORY, DBUtils.CHECKPOINT_DB_V2));
