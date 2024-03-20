@@ -90,7 +90,6 @@ public class VM {
 
           program.setPreviouslyExecutedOp((byte) op.getOpcode());
         } catch (RuntimeException e) {
-          logger.error("VM exception" + ExceptionUtils.getStackTrace(e));
           logger.info("VM halted: [{}]", e.getMessage());
           if (!(e instanceof TransferException)) {
             program.spendAllEnergy();
