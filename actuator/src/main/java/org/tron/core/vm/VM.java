@@ -5,6 +5,7 @@ import static org.tron.core.Constant.DYNAMIC_ENERGY_FACTOR_DECIMAL;
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.springframework.util.StringUtils;
 import org.tron.core.vm.config.VMConfig;
@@ -89,6 +90,7 @@ public class VM {
 
           program.setPreviouslyExecutedOp((byte) op.getOpcode());
         } catch (RuntimeException e) {
+          logger.error("VM exception" + ExceptionUtils.getStackTrace(e));
           logger.info("VM halted: [{}]", e.getMessage());
           if (!(e instanceof TransferException)) {
             program.spendAllEnergy();

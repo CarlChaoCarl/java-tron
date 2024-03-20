@@ -300,13 +300,11 @@ public class JsonrpcServiceTest extends BaseTest {
           blockResult.getNonce());
       response.close();
 
-      /*Assert.assertEquals(1, CollectorRegistry.defaultRegistry.getSampleValue(
+      Assert.assertEquals(1, CollectorRegistry.defaultRegistry.getSampleValue(
           "tron:jsonrpc_service_latency_seconds_count",
           new String[] {"method"}, new String[] {"eth_getBlockByNumber"}).intValue());
-       */
     } catch (Exception e) {
-      Assert.assertEquals("test", ExceptionUtils.getStackTrace(e));
-      //Assert.fail(e.getMessage());
+      Assert.fail(e.getMessage());
     } finally {
       fullNodeJsonRpcHttpService.stop();
       CommonParameter.getInstance().setJsonRpcHttpFullNodePort(jsonRpcHttpFullNodePort);
