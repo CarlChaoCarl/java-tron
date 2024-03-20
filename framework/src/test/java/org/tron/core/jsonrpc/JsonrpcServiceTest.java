@@ -23,6 +23,7 @@ import org.tron.common.parameter.CommonParameter;
 import org.tron.common.prometheus.Metrics;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Sha256Hash;
+import org.tron.common.utils.TestParallelUtil;
 import org.tron.core.Constant;
 import org.tron.core.Wallet;
 import org.tron.core.capsule.AccountCapsule;
@@ -267,6 +268,10 @@ public class JsonrpcServiceTest extends BaseTest {
 
   @Test
   public void testGetBlockByNumber2() {
+    int jsonRpcHttpFullNodePort = CommonParameter.getInstance().getJsonRpcHttpFullNodePort();
+    int testPort = 10000 + jsonRpcHttpFullNodePort + TestParallelUtil.getWorkerId();
+    CommonParameter.getInstance().setJsonRpcHttpFullNodePort(testPort);
+
     fullNodeJsonRpcHttpService.init(Args.getInstance());
     fullNodeJsonRpcHttpService.start();
     JsonArray params = new JsonArray();
