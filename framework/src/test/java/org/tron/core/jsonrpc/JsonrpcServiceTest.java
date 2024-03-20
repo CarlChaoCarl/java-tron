@@ -7,6 +7,7 @@ import com.google.protobuf.ByteString;
 import io.prometheus.client.CollectorRegistry;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -304,6 +305,7 @@ public class JsonrpcServiceTest extends BaseTest {
           "tron:jsonrpc_service_latency_seconds_count",
           new String[] {"method"}, new String[] {"eth_getBlockByNumber"}).intValue());
     } catch (Exception e) {
+      logger.error("testGetBlockByNumber2:" + ExceptionUtils.getStackTrace(e));
       Assert.fail(e.getMessage());
     } finally {
       fullNodeJsonRpcHttpService.stop();
