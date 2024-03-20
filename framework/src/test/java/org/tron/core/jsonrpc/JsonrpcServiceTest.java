@@ -128,7 +128,6 @@ public class JsonrpcServiceTest extends BaseTest {
         .put(transactionCapsule2.getTransactionId().getBytes(), transactionCapsule2);
 
     tronJsonRpc = new TronJsonRpcImpl(nodeInfoService, wallet, dbManager);
-
   }
 
   @Test
@@ -310,6 +309,7 @@ public class JsonrpcServiceTest extends BaseTest {
       //Assert.fail(e.getMessage());
     } finally {
       fullNodeJsonRpcHttpService.stop();
+      CommonParameter.getInstance().setJsonRpcHttpFullNodePort(jsonRpcHttpFullNodePort);
     }
   }
 
