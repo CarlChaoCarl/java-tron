@@ -284,7 +284,8 @@ public class JsonrpcServiceTest extends BaseTest {
     requestBody.addProperty("id", 1);
     CloseableHttpResponse response;
     try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-      HttpPost httpPost = new HttpPost("http://127.0.0.1:8545/jsonrpc");
+      String requestUrl = "http://127.0.0.1:+" + testPort + "+/jsonrpc";
+      HttpPost httpPost = new HttpPost(requestUrl);
       httpPost.addHeader("Content-Type", "application/json");
       httpPost.setEntity(new StringEntity(requestBody.toString()));
       response = httpClient.execute(httpPost);
