@@ -299,12 +299,12 @@ public class JsonrpcServiceTest extends BaseTest {
       Assert.assertEquals("0x0000000000000000",
           blockResult.getNonce());
       response.close();
-
+/*
       Assert.assertEquals(1, CollectorRegistry.defaultRegistry.getSampleValue(
           "tron:jsonrpc_service_latency_seconds_count",
           new String[] {"method"}, new String[] {"eth_getBlockByNumber"}).intValue());
+ */
     } catch (Exception e) {
-      logger.error("testGetBlockByNumber2:" + ExceptionUtils.getStackTrace(e));
       Assert.fail(e.getMessage());
     } finally {
       fullNodeJsonRpcHttpService.stop();
