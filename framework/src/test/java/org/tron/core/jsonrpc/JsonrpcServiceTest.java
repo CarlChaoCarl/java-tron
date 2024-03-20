@@ -267,13 +267,15 @@ public class JsonrpcServiceTest extends BaseTest {
 
 
   @Test
-  public void testGetBlockByNumber2() {
+  public void testGetBlockByNumber2() throws InterruptedException {
     int jsonRpcHttpFullNodePort = CommonParameter.getInstance().getJsonRpcHttpFullNodePort();
     int testPort = 10000 + jsonRpcHttpFullNodePort + TestParallelUtil.getWorkerId();
     CommonParameter.getInstance().setJsonRpcHttpFullNodePort(testPort);
 
     fullNodeJsonRpcHttpService.init(Args.getInstance());
     fullNodeJsonRpcHttpService.start();
+    Thread.sleep(100);
+
     JsonArray params = new JsonArray();
     params.add(ByteArray.toJsonHex(blockCapsule.getNum()));
     params.add(false);
