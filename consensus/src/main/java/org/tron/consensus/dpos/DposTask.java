@@ -2,6 +2,7 @@ package org.tron.consensus.dpos;
 
 import static org.tron.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
 
+import com.google.common.base.Stopwatch;
 import com.google.protobuf.ByteString;
 import java.util.concurrent.ExecutorService;
 import lombok.Setter;
@@ -80,6 +81,11 @@ public class DposTask {
     ExecutorServiceManager.shutdownAndAwaitTermination(produceExecutor, name);
   }
 
+  private boolean testTrue(ByteString pWitness) {
+    Miner miner = dposService.getMiners().get(pWitness);
+    return miner==null;
+  }
+
   private State produceBlock() {
 
     State state = stateManager.getState();
@@ -97,8 +103,8 @@ public class DposTask {
         }
 
         ByteString pWitness = dposSlot.getScheduledWitness(slot);
-
         Miner miner = dposService.getMiners().get(pWitness);
+        logger.warn(miner==null?"miners not found":"miners found");
         if (miner == null) {
           return State.NOT_MY_TURN;
         }
