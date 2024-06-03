@@ -1,5 +1,7 @@
 package org.tron.core.utils;
 
+import static org.tron.core.Constant.CREATE_ACCOUNT_TRANSACTION_MAX_BYTE_SIZE;
+import static org.tron.core.Constant.CREATE_ACCOUNT_TRANSACTION_MIN_BYTE_SIZE;
 import static org.tron.core.Constant.DYNAMIC_ENERGY_INCREASE_FACTOR_RANGE;
 import static org.tron.core.Constant.DYNAMIC_ENERGY_MAX_FACTOR_RANGE;
 import static org.tron.core.config.Parameter.ChainConstant.ONE_YEAR_BLOCK_NUMBERS;
@@ -733,18 +735,47 @@ public class ProposalUtil {
           throw new ContractValidateException(
               "Bad chain parameter id [ALLOW_OLD_REWARD_OPT]");
         }
+        if (dynamicPropertiesStore.allowOldRewardOpt()) {
+          throw new ContractValidateException(
+              "[ALLOW_OLD_REWARD_OPT] has been valid, no need to propose again");
+        }
         if (value != 1) {
           throw new ContractValidateException(
               "This value[ALLOW_OLD_REWARD_OPT] is only allowed to be 1");
         }
         if (!dynamicPropertiesStore.useNewRewardAlgorithm()) {
           throw new ContractValidateException(
-              "[ALLOW_NEW_REWARD] proposal must be approved "
+              "[ALLOW_NEW_REWARD] or [ALLOW_TVM_VOTE] proposal must be approved "
                   + "before [ALLOW_OLD_REWARD_OPT] can be proposed");
         }
-        if (dynamicPropertiesStore.useNewRewardAlgorithmFromStart()) {
+        break;
+      }
+      case ALLOW_ENERGY_ADJUSTMENT: {
+        if (!forkController.pass(ForkBlockVersionEnum.VERSION_4_7_5)) {
           throw new ContractValidateException(
-              "no need old reward opt, ALLOW_NEW_REWARD from start cycle 1");
+                  "Bad chain parameter id [ALLOW_ENERGY_ADJUSTMENT]");
+        }
+        if (dynamicPropertiesStore.getAllowEnergyAdjustment() == 1) {
+          throw new ContractValidateException(
+              "[ALLOW_ENERGY_ADJUSTMENT] has been valid, no need to propose again");
+        }
+        if (value != 1) {
+          throw new ContractValidateException(
+                  "This value[ALLOW_ENERGY_ADJUSTMENT] is only allowed to be 1");
+        }
+        break;
+      }
+      case MAX_CREATE_ACCOUNT_TX_SIZE: {
+        if (!forkController.pass(ForkBlockVersionEnum.VERSION_4_7_5)) {
+          throw new ContractValidateException(
+              "Bad chain parameter id [MAX_CREATE_ACCOUNT_TX_SIZE]");
+        }
+        if (value < CREATE_ACCOUNT_TRANSACTION_MIN_BYTE_SIZE
+            || value > CREATE_ACCOUNT_TRANSACTION_MAX_BYTE_SIZE) {
+          throw new ContractValidateException(
+              "This value[MAX_CREATE_ACCOUNT_TX_SIZE] is only allowed to be greater than or equal "
+                  + "to " + CREATE_ACCOUNT_TRANSACTION_MIN_BYTE_SIZE + " and less than or equal to "
+                  + CREATE_ACCOUNT_TRANSACTION_MAX_BYTE_SIZE + "!");
         }
         break;
       }
@@ -824,7 +855,9 @@ public class ProposalUtil {
     ALLOW_TVM_SHANGHAI(76), // 0, 1
     ALLOW_CANCEL_ALL_UNFREEZE_V2(77), // 0, 1
     MAX_DELEGATE_LOCK_PERIOD(78), // (86400, 10512000]
-    ALLOW_OLD_REWARD_OPT(79); // 0, 1
+    ALLOW_OLD_REWARD_OPT(79), // 0, 1
+    ALLOW_ENERGY_ADJUSTMENT(81), // 0, 1
+    MAX_CREATE_ACCOUNT_TX_SIZE(82); // [500, 10000]
 
     private long code;
 

@@ -13,7 +13,7 @@ public class DbCopyTest extends DbTest {
   @Ignore
   public void testRun() {
     String[] args = new String[] { "db", "cp",  INPUT_DIRECTORY,
-        tmpDir + UUID.randomUUID()};
+        genarateTmpDir()};
     Assert.assertEquals(0, cli.execute(args));
   }
 
@@ -34,7 +34,7 @@ public class DbCopyTest extends DbTest {
   @Test
   public void testEmpty() throws IOException {
     String[] args = new String[] {"db", "cp", temporaryFolder.newFolder().toString(),
-        tmpDir + UUID.randomUUID()};
+        genarateTmpDir()};
     Assert.assertEquals(0, cli.execute(args));
   }
 
@@ -48,7 +48,7 @@ public class DbCopyTest extends DbTest {
   @Test
   public void testSrcIsFile() throws IOException {
     String[] args = new String[] {"db", "cp", temporaryFolder.newFile().toString(),
-        tmpDir + UUID.randomUUID()};
+        genarateTmpDir()};
     Assert.assertEquals(403, cli.execute(args));
   }
 

@@ -219,6 +219,10 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
 
   private static final byte[] ALLOW_OLD_REWARD_OPT = "ALLOW_OLD_REWARD_OPT".getBytes();
 
+  private static final byte[] ALLOW_ENERGY_ADJUSTMENT = "ALLOW_ENERGY_ADJUSTMENT".getBytes();
+
+  private static final byte[] MAX_CREATE_ACCOUNT_TX_SIZE = "MAX_CREATE_ACCOUNT_TX_SIZE".getBytes();
+
   @Autowired
   private DynamicPropertiesStore(@Value("properties") String dbName) {
     super(dbName);
@@ -2525,10 +2529,6 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     return getNewRewardAlgorithmEffectiveCycle() != Long.MAX_VALUE;
   }
 
-  public boolean useNewRewardAlgorithmFromStart() {
-    return getNewRewardAlgorithmEffectiveCycle() == 1;
-  }
-
   public void saveNewRewardAlgorithmEffectiveCycle() {
     if (getNewRewardAlgorithmEffectiveCycle() == Long.MAX_VALUE) {
       long currentCycle = getCurrentCycleNumber();
@@ -2839,19 +2839,8 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
             getUnfreezeDelayDays() > 0;
   }
 
-  /**
-   *  @require NEW_REWARD_ALGORITHM_EFFECTIVE_CYCLE != Long.MAX_VALUE
-   *  @require NEW_REWARD_ALGORITHM_EFFECTIVE_CYCLE > 1
-   */
   public void saveAllowOldRewardOpt(long allowOldRewardOpt) {
-    if (useNewRewardAlgorithm()) {
-      if (useNewRewardAlgorithmFromStart()) {
-        throw new IllegalStateException("no need old reward opt, ALLOW_NEW_REWARD from start");
-      }
-      this.put(ALLOW_OLD_REWARD_OPT, new BytesCapsule(ByteArray.fromLong(allowOldRewardOpt)));
-    } else {
-      throw new IllegalStateException("not support old reward opt, ALLOW_NEW_REWARD not set");
-    }
+    this.put(ALLOW_OLD_REWARD_OPT, new BytesCapsule(ByteArray.fromLong(allowOldRewardOpt)));
   }
 
   public boolean allowOldRewardOpt() {
@@ -2863,6 +2852,29 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElse(CommonParameter.getInstance().getAllowOldRewardOpt());
+  }
+
+  public void saveAllowEnergyAdjustment(long allowEnergyAdjustment) {
+    this.put(ALLOW_ENERGY_ADJUSTMENT, new BytesCapsule(ByteArray.fromLong(allowEnergyAdjustment)));
+  }
+
+  public long getAllowEnergyAdjustment() {
+    return Optional.ofNullable(getUnchecked(ALLOW_ENERGY_ADJUSTMENT))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElse(CommonParameter.getInstance().getAllowEnergyAdjustment());
+  }
+
+  public void saveMaxCreateAccountTxSize(long maxCreateAccountTxSize) {
+    this.put(MAX_CREATE_ACCOUNT_TX_SIZE,
+        new BytesCapsule(ByteArray.fromLong(maxCreateAccountTxSize)));
+  }
+
+  public long getMaxCreateAccountTxSize() {
+    return Optional.ofNullable(getUnchecked(MAX_CREATE_ACCOUNT_TX_SIZE))
+        .map(BytesCapsule::getData)
+        .map(ByteArray::toLong)
+        .orElse(CommonParameter.getInstance().getMaxCreateAccountTxSize());
   }
 
   private static class DynamicResourceProperties {
