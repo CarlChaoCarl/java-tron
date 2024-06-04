@@ -23,6 +23,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.tron.common.BaseTest;
+import org.tron.common.parameter.CommonParameter;
 import org.tron.common.runtime.RuntimeImpl;
 import org.tron.common.runtime.TvmTestUtils;
 import org.tron.common.utils.Commons;
@@ -121,6 +122,7 @@ public class BandWidthRuntimeTest extends BaseTest {
   @Test
   public void testSuccess() {
     try {
+      CommonParameter.getInstance().setDebug(true);
       byte[] contractAddress = createContract();
       TriggerSmartContract triggerContract = TvmTestUtils.createTriggerContract(contractAddress,
           "setCoin(uint256)", "3", false,
@@ -152,6 +154,8 @@ public class BandWidthRuntimeTest extends BaseTest {
   @Test
   public void testSuccessNoBandd() {
     try {
+      CommonParameter.getInstance().setDebug(true);
+
       byte[] contractAddress = createContract();
       TriggerSmartContract triggerContract = TvmTestUtils.createTriggerContract(contractAddress,
           "setCoin(uint256)", "50", false,
