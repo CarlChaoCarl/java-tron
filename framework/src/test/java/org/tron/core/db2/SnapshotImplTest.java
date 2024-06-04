@@ -26,10 +26,11 @@ public class SnapshotImplTest {
   private TronApplicationContext context;
   private Application appT;
   private SnapshotManager revokingDatabase;
+  public static final String outputPath = "output_revokingStore_test_SnapshotImplTest";
 
   @Before
   public void init() {
-    Args.setParam(new String[]{"-d", "output_revokingStore_test"}, Constant.TEST_CONF);
+    Args.setParam(new String[]{"-d", outputPath}, Constant.TEST_CONF);
     context = new TronApplicationContext(DefaultConfig.class);
     appT = ApplicationFactory.create(context);
 
@@ -44,7 +45,7 @@ public class SnapshotImplTest {
   public void removeDb() {
     Args.clearParam();
     context.destroy();
-    FileUtil.deleteDir(new File("output_revokingStore_test"));
+    FileUtil.deleteDir(new File(outputPath));
 
     tronDatabase.close();
     revokingDatabase.shutdown();

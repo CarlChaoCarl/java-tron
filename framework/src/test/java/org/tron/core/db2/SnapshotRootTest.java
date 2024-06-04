@@ -45,11 +45,11 @@ public class SnapshotRootTest {
           "exchange","market_order","account-trace","contract-state","trans"));
   private Set<String> allDBNames;
   private Set<String> allRevokingDBNames;
-
+  public static final String outputPath = "output_revokingStore_test_SnapshotRootTest";
 
   @Before
   public void init() {
-    Args.setParam(new String[]{"-d", "output_revokingStore_test"}, Constant.TEST_CONF);
+    Args.setParam(new String[]{"-d", outputPath}, Constant.TEST_CONF);
     context = new TronApplicationContext(DefaultConfig.class);
     appT = ApplicationFactory.create(context);
   }
@@ -58,7 +58,7 @@ public class SnapshotRootTest {
   public void removeDb() {
     Args.clearParam();
     context.destroy();
-    FileUtil.deleteDir(new File("output_revokingStore_test"));
+    FileUtil.deleteDir(new File(outputPath));
   }
 
   @Test
@@ -133,7 +133,7 @@ public class SnapshotRootTest {
       throws ItemNotFoundException {
     revokingDatabase = context.getBean(SnapshotManager.class);
     allRevokingDBNames = parseRevokingDBNames(context);
-    allDBNames = Arrays.stream(new File("output_revokingStore_test/database").list())
+    allDBNames = Arrays.stream(new File(outputPath + "/database").list())
             .collect(Collectors.toSet());
     if (CollectionUtils.isEmpty(allDBNames)) {
       throw new ItemNotFoundException("No DBs found");
@@ -152,10 +152,10 @@ public class SnapshotRootTest {
     revokingDatabase = context.getBean(SnapshotManager.class);
     allRevokingDBNames = parseRevokingDBNames(context);
     allRevokingDBNames.add("secondCheckTestDB");
-    FileUtil.createDirIfNotExists("output_revokingStore_test/database/secondCheckTestDB");
-    allDBNames = Arrays.stream(new File("output_revokingStore_test/database").list())
+    FileUtil.createDirIfNotExists(outputPath + "/database/secondCheckTestDB");
+    allDBNames = Arrays.stream(new File(outputPath + "/database").list())
             .collect(Collectors.toSet());
-    FileUtil.deleteDir(new File("output_revokingStore_test/database/secondCheckTestDB"));
+    FileUtil.deleteDir(new File(outputPath + "/database/secondCheckTestDB"));
     if (CollectionUtils.isEmpty(allDBNames)) {
       throw new ItemNotFoundException("No DBs found");
     }
