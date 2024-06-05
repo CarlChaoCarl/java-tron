@@ -18,6 +18,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.tron.common.BaseTest;
 import org.tron.common.parameter.CommonParameter;
+import org.tron.common.utils.TestParallelUtil;
 import org.tron.core.Constant;
 import org.tron.core.config.args.Args;
 import org.tron.core.services.http.FullNodeHttpApiService;
@@ -76,6 +77,9 @@ public class HttpApiAccessFilterTest extends BaseTest {
           httpPort = Args.getInstance().getPBFTHttpPort();
         } else {
           httpPort = Args.getInstance().getFullNodeHttpPort();
+        }
+        if (TestParallelUtil.getWorkerId()!=0) {
+          httpPort += TestParallelUtil.getWorkerId();
         }
 
         String url = String.format("http://%s:%d%s", ip, httpPort, urlPath);

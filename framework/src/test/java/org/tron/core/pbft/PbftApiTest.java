@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.tron.common.BaseTest;
 import org.tron.common.crypto.ECKey;
 import org.tron.common.utils.Sha256Hash;
+import org.tron.common.utils.TestParallelUtil;
 import org.tron.common.utils.Utils;
 import org.tron.core.ChainBaseManager;
 import org.tron.core.Constant;
@@ -58,6 +59,11 @@ public class PbftApiTest extends BaseTest {
 
     Assert.assertTrue(dynamicPropertiesStore.getLatestBlockHeaderNumber() >= 10);
     commonDataBase.saveLatestPbftBlockNum(6);
+    int pBFTHttpPort = Args.getInstance().getPBFTHttpPort();
+    if (TestParallelUtil.getWorkerId()!=0) {
+      Args.getInstance().setPBFTHttpPort(pBFTHttpPort + TestParallelUtil.getWorkerId());
+    }
+
     httpApiOnPBFTService.init(Args.getInstance());
     httpApiOnPBFTService.start();
     CloseableHttpResponse response;
