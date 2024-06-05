@@ -7,7 +7,6 @@ import com.google.protobuf.ByteString;
 import io.prometheus.client.CollectorRegistry;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -17,7 +16,6 @@ import org.apache.http.util.EntityUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.tron.common.BaseTest;
 import org.tron.common.parameter.CommonParameter;
@@ -299,11 +297,9 @@ public class JsonrpcServiceTest extends BaseTest {
       Assert.assertEquals("0x0000000000000000",
           blockResult.getNonce());
       response.close();
-/*
       Assert.assertEquals(1, CollectorRegistry.defaultRegistry.getSampleValue(
           "tron:jsonrpc_service_latency_seconds_count",
           new String[] {"method"}, new String[] {"eth_getBlockByNumber"}).intValue());
- */
     } catch (Exception e) {
       Assert.fail(e.getMessage());
     } finally {

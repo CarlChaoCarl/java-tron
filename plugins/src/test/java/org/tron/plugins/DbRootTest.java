@@ -32,7 +32,7 @@ public class DbRootTest {
 
     File file = folder.newFolder();
 
-    File database = Paths.get(file.getPath(),"database").toFile();
+    File database = Paths.get(file.getPath(),"DbRootTest/database").toFile();
     Assert.assertTrue(database.mkdirs());
 
 

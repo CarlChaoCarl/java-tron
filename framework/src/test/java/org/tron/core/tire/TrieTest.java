@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import org.bouncycastle.util.Arrays;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.tron.core.capsule.utils.FastByteComparisons;
 import org.tron.core.capsule.utils.RLP;
@@ -120,7 +119,7 @@ public class TrieTest {
     }
   }
 
-  @Ignore
+  @Test
   public void testOrder() {
     TrieImpl trie = new TrieImpl();
     int n = 100;

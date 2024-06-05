@@ -8,7 +8,6 @@ import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.tron.common.BaseTest;
@@ -23,7 +22,6 @@ import org.tron.core.vm.repository.Repository;
 import org.tron.core.vm.repository.RepositoryImpl;
 import org.tron.protos.Protocol;
 import org.tron.protos.contract.SmartContractOuterClass;
-
 
 @Slf4j
 public class TriggerSmartContractServletTest extends BaseTest {
