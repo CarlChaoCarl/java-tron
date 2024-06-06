@@ -1,8 +1,13 @@
 package org.tron.core.metrics.prometheus;
 
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Maps;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
 import io.prometheus.client.CollectorRegistry;
+
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -13,6 +18,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,19 +34,26 @@ import org.tron.common.parameter.CommonParameter;
 import org.tron.common.prometheus.MetricLabels;
 import org.tron.common.prometheus.Metrics;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.FileUtil;
 import org.tron.common.utils.PublicMethod;
 import org.tron.common.utils.Sha256Hash;
+import org.tron.common.utils.TestParallelUtil;
 import org.tron.common.utils.Utils;
 import org.tron.consensus.dpos.DposSlot;
 import org.tron.core.ChainBaseManager;
 import org.tron.core.Constant;
+import org.tron.core.Wallet;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.BlockCapsule;
+import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.capsule.WitnessCapsule;
 import org.tron.core.config.args.Args;
 import org.tron.core.consensus.ConsensusService;
 import org.tron.core.net.TronNetDelegate;
+import org.tron.core.services.jsonrpc.FullNodeJsonRpcHttpService;
+import org.tron.core.services.jsonrpc.types.BlockResult;
 import org.tron.protos.Protocol;
+import org.tron.protos.contract.BalanceContract;
 
 @Slf4j(topic = "metric")
 public class PrometheusApiServiceTest extends BaseTest {
@@ -47,12 +66,18 @@ public class PrometheusApiServiceTest extends BaseTest {
   private static final AtomicInteger port = new AtomicInteger(0);
   private final long time = ZonedDateTime.of(localDateTime,
       ZoneId.systemDefault()).toInstant().toEpochMilli();
+
+  private static BlockCapsule blockCapsule;
+  private static TransactionCapsule transactionCapsule1;
+
   @Resource
   private TronNetDelegate tronNetDelegate;
   @Resource
   private ConsensusService consensusService;
   @Resource
   private ChainBaseManager chainManager;
+  @Resource
+  private FullNodeJsonRpcHttpService fullNodeJsonRpcHttpService;
 
   static {
     Args.setParam(new String[] {"-d", dbPath(), "-w"}, Constant.TEST_CONF);
@@ -100,7 +125,43 @@ public class PrometheusApiServiceTest extends BaseTest {
             new AccountCapsule(Protocol.Account.newBuilder().setAddress(addressByte).build());
     chainBaseManager.getAccountStore().put(addressByte.toByteArray(), accountCapsule);
 
+
+
+    blockCapsule = new BlockCapsule(
+        1,
+        Sha256Hash.wrap(ByteString.copyFrom(
+            ByteArray.fromHexString(
+                "0304f784e4e7bae517bcab94c3e0c9214fb4ac7ff9d7d5a937d1f40031f87b81"))),
+        1,
+        ByteString.copyFromUtf8("testAddress"));
+    BalanceContract.TransferContract transferContract1 = BalanceContract.TransferContract.newBuilder()
+        .setAmount(1L)
+        .setOwnerAddress(ByteString.copyFrom("0x0000000000000000000".getBytes()))
+        .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(
+            (Wallet.getAddressPreFixString() + "A389132D6639FBDA4FBC8B659264E6B7C90DB086"))))
+        .build();
+
+    BalanceContract.TransferContract transferContract2 = BalanceContract.TransferContract.newBuilder()
+        .setAmount(2L)
+        .setOwnerAddress(ByteString.copyFrom("0x0000000000000000000".getBytes()))
+        .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(
+            (Wallet.getAddressPreFixString() + "ED738B3A0FE390EAA71B768B6D02CDBD18FB207B"))))
+        .build();
+
+    transactionCapsule1 =
+        new TransactionCapsule(transferContract1, Protocol.Transaction.Contract.ContractType.TransferContract);
+    transactionCapsule1.setBlockNum(blockCapsule.getNum());
+    TransactionCapsule transactionCapsule2 = new TransactionCapsule(transferContract2,
+        Protocol.Transaction.Contract.ContractType.TransferContract);
+    transactionCapsule2.setBlockNum(2L);
+
+    blockCapsule.addTransaction(transactionCapsule1);
+    blockCapsule.addTransaction(transactionCapsule2);
+    //dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderNumber(1L);
+    dbManager.getBlockIndexStore().put(blockCapsule.getBlockId());
+    dbManager.getBlockStore().put(blockCapsule.getBlockId().getBytes(), blockCapsule);
   }
+
 
   private void generateBlock(Map<ByteString, String> witnessAndAccount) throws Exception {
 
@@ -168,6 +229,66 @@ public class PrometheusApiServiceTest extends BaseTest {
     blockCapsule.setMerkleRoot();
     blockCapsule.sign(ByteArray.fromHexString(witnessAddressMap.get(witnessAddress)));
     return blockCapsule;
+  }
+
+
+
+  @Test
+  public void testGetBlockByNumber2() {
+    /*
+    CommonParameter.getInstance().setJsonRpcHttpFullNodeEnable(true);
+    CommonParameter.getInstance().setJsonRpcHttpPBFTNodeEnable(true);
+    CommonParameter.getInstance().setJsonRpcHttpSolidityNodeEnable(true);
+    CommonParameter.getInstance().setMetricsPrometheusEnable(true);
+    Metrics.init();
+     */
+
+    int jsonRpcHttpFullNodePort = CommonParameter.getInstance().getJsonRpcHttpFullNodePort();
+    int testPort = 10000 + jsonRpcHttpFullNodePort + TestParallelUtil.getWorkerId();
+    CommonParameter.getInstance().setJsonRpcHttpFullNodePort(testPort);
+    fullNodeJsonRpcHttpService.init(Args.getInstance());
+    fullNodeJsonRpcHttpService.start();
+
+    JsonArray params = new JsonArray();
+    params.add(ByteArray.toJsonHex(blockCapsule.getNum()));
+    params.add(false);
+    JsonObject requestBody = new JsonObject();
+    requestBody.addProperty("jsonrpc", "2.0");
+    requestBody.addProperty("method", "eth_getBlockByNumber");
+    requestBody.add("params", params);
+    requestBody.addProperty("id", 1);
+    CloseableHttpResponse response;
+    try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+      String requestUrl = "http://127.0.0.1:" + testPort + "/jsonrpc";
+      HttpPost httpPost = new HttpPost(requestUrl);
+      httpPost.addHeader("Content-Type", "application/json");
+      httpPost.setEntity(new StringEntity(requestBody.toString()));
+      response = httpClient.execute(httpPost);
+      String resp = EntityUtils.toString(response.getEntity());
+      BlockResult blockResult = JSON.parseObject(resp).getObject("result", BlockResult.class);
+      Assert.assertEquals(ByteArray.toJsonHex(blockCapsule.getNum()),
+          blockResult.getNumber());
+      Assert.assertEquals(blockCapsule.getTransactions().size(),
+          blockResult.getTransactions().length);
+      Assert.assertEquals("0x0000000000000000",
+          blockResult.getNonce());
+      response.close();
+      logger.error("isMetricsPrometheusEnable:"
+          + (CommonParameter.getInstance().isMetricsPrometheusEnable() ? "true":"false"));
+      Double d = CollectorRegistry.defaultRegistry.getSampleValue(
+          "tron:jsonrpc_service_latency_seconds_count",
+          new String[] {"method"}, new String[] {"eth_getBlockByNumber"});
+      System.out.println("d:" + d);
+      Assert.assertEquals(1, CollectorRegistry.defaultRegistry.getSampleValue(
+          "tron:jsonrpc_service_latency_seconds_count",
+          new String[] {"method"}, new String[] {"eth_getBlockByNumber"}).intValue());
+    } catch (Exception e) {
+      logger.error("testGetBlockByNumber2 exception:", e);
+      Assert.fail(e.getMessage());
+    } finally {
+      fullNodeJsonRpcHttpService.stop();
+      CommonParameter.getInstance().setJsonRpcHttpFullNodePort(jsonRpcHttpFullNodePort);
+    }
   }
 
 }

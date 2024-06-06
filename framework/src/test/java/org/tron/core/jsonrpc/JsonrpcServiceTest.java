@@ -66,12 +66,6 @@ public class JsonrpcServiceTest extends BaseTest {
 
   static {
     Args.setParam(new String[]{"--output-directory", dbPath()}, Constant.TEST_CONF);
-    CommonParameter.getInstance().setJsonRpcHttpFullNodeEnable(true);
-    CommonParameter.getInstance().setJsonRpcHttpPBFTNodeEnable(true);
-    CommonParameter.getInstance().setJsonRpcHttpSolidityNodeEnable(true);
-    CommonParameter.getInstance().setMetricsPrometheusEnable(true);
-    Metrics.init();
-
     OWNER_ADDRESS =
         Wallet.getAddressPreFixString() + "abd4b9367799eaa3197fecb144eb71de1e049abc";
   }
@@ -264,49 +258,6 @@ public class JsonrpcServiceTest extends BaseTest {
         transactionResult.getBlockNumber());
   }
 
-
-  @Test
-  public void testGetBlockByNumber2() {
-    int jsonRpcHttpFullNodePort = CommonParameter.getInstance().getJsonRpcHttpFullNodePort();
-    int testPort = 10000 + jsonRpcHttpFullNodePort + TestParallelUtil.getWorkerId();
-    CommonParameter.getInstance().setJsonRpcHttpFullNodePort(testPort);
-    fullNodeJsonRpcHttpService.init(Args.getInstance());
-    fullNodeJsonRpcHttpService.start();
-
-    JsonArray params = new JsonArray();
-    params.add(ByteArray.toJsonHex(blockCapsule.getNum()));
-    params.add(false);
-    JsonObject requestBody = new JsonObject();
-    requestBody.addProperty("jsonrpc", "2.0");
-    requestBody.addProperty("method", "eth_getBlockByNumber");
-    requestBody.add("params", params);
-    requestBody.addProperty("id", 1);
-    CloseableHttpResponse response;
-    try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-      String requestUrl = "http://127.0.0.1:" + testPort + "/jsonrpc";
-      HttpPost httpPost = new HttpPost(requestUrl);
-      httpPost.addHeader("Content-Type", "application/json");
-      httpPost.setEntity(new StringEntity(requestBody.toString()));
-      response = httpClient.execute(httpPost);
-      String resp = EntityUtils.toString(response.getEntity());
-      BlockResult blockResult = JSON.parseObject(resp).getObject("result", BlockResult.class);
-      Assert.assertEquals(ByteArray.toJsonHex(blockCapsule.getNum()),
-          blockResult.getNumber());
-      Assert.assertEquals(blockCapsule.getTransactions().size(),
-          blockResult.getTransactions().length);
-      Assert.assertEquals("0x0000000000000000",
-          blockResult.getNonce());
-      response.close();
-      Assert.assertEquals(1, CollectorRegistry.defaultRegistry.getSampleValue(
-          "tron:jsonrpc_service_latency_seconds_count",
-          new String[] {"method"}, new String[] {"eth_getBlockByNumber"}).intValue());
-    } catch (Exception e) {
-      Assert.fail(e.getMessage());
-    } finally {
-      fullNodeJsonRpcHttpService.stop();
-      CommonParameter.getInstance().setJsonRpcHttpFullNodePort(jsonRpcHttpFullNodePort);
-    }
-  }
 
   @Test
   public void testServicesInit() {
