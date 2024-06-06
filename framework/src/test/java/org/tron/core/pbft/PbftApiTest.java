@@ -61,14 +61,16 @@ public class PbftApiTest extends BaseTest {
     commonDataBase.saveLatestPbftBlockNum(6);
     int pBFTHttpPort = Args.getInstance().getPBFTHttpPort();
     if (TestParallelUtil.getWorkerId()!=0) {
-      Args.getInstance().setPBFTHttpPort(pBFTHttpPort + TestParallelUtil.getWorkerId());
+      pBFTHttpPort += TestParallelUtil.getWorkerId();
+      Args.getInstance().setPBFTHttpPort(pBFTHttpPort);
     }
 
     httpApiOnPBFTService.init(Args.getInstance());
     httpApiOnPBFTService.start();
     CloseableHttpResponse response;
     try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-      HttpGet httpGet = new HttpGet("http://127.0.0.1:8092/walletpbft/getnowblock");
+      String requestURL = "http://127.0.0.1:" + pBFTHttpPort + "/walletpbft/getnowblock";
+      HttpGet httpGet = new HttpGet(requestURL);
       response = httpClient.execute(httpGet);
       String responseString = EntityUtils.toString(response.getEntity());
       JSONObject jsonObject = JSON.parseObject(responseString);

@@ -13,6 +13,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,6 +48,15 @@ public class HttpApiAccessFilterTest extends BaseTest {
    */
   @Before
   public void init() {
+    int solidityHttpPort = Args.getInstance().getSolidityHttpPort();
+    int pBFTHttpPort = Args.getInstance().getPBFTHttpPort();
+    int fullNodeHttpPort = Args.getInstance().getFullNodeHttpPort();
+    if (TestParallelUtil.getWorkerId()!=0) {
+      Args.getInstance().setSolidityHttpPort(solidityHttpPort + TestParallelUtil.getWorkerId());
+      Args.getInstance().setPBFTHttpPort(pBFTHttpPort + TestParallelUtil.getWorkerId());
+      Args.getInstance().setFullNodeHttpPort(fullNodeHttpPort + TestParallelUtil.getWorkerId());
+    }
+
     appT.addService(httpApiService);
     appT.addService(httpApiOnSolidityService);
     appT.addService(httpApiOnPBFTService);
@@ -77,9 +87,6 @@ public class HttpApiAccessFilterTest extends BaseTest {
           httpPort = Args.getInstance().getPBFTHttpPort();
         } else {
           httpPort = Args.getInstance().getFullNodeHttpPort();
-        }
-        if (TestParallelUtil.getWorkerId()!=0) {
-          httpPort += TestParallelUtil.getWorkerId();
         }
 
         String url = String.format("http://%s:%d%s", ip, httpPort, urlPath);
