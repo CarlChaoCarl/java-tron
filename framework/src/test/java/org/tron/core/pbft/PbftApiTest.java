@@ -60,10 +60,6 @@ public class PbftApiTest extends BaseTest {
     Assert.assertTrue(dynamicPropertiesStore.getLatestBlockHeaderNumber() >= 10);
     commonDataBase.saveLatestPbftBlockNum(6);
     int pBFTHttpPort = Args.getInstance().getPBFTHttpPort();
-    if (TestParallelUtil.getWorkerId()!=0) {
-      pBFTHttpPort += TestParallelUtil.getWorkerId();
-      Args.getInstance().setPBFTHttpPort(pBFTHttpPort);
-    }
 
     httpApiOnPBFTService.init(Args.getInstance());
     httpApiOnPBFTService.start();

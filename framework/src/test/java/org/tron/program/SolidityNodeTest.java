@@ -71,8 +71,6 @@ public class SolidityNodeTest extends BaseTest {
   @Test
   public void testSolidityGrpcCall() {
     rpcApiService.init(Args.getInstance());
-    int rpcPort = Args.getInstance().getRpcPort();
-    Args.getInstance().setRpcPort(rpcPort + TestParallelUtil.getWorkerId());
     rpcApiService.start();
     DatabaseGrpcClient databaseGrpcClient = null;
     String address = Args.getInstance().getTrustNodeAddr();

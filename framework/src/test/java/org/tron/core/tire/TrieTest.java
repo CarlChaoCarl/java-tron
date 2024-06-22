@@ -123,7 +123,7 @@ public class TrieTest {
   public void testOrder() {
     TrieImpl trie = new TrieImpl();
     int n = 100;
-    List<Integer> value = new ArrayList<>();
+    List<Integer> value =Collections.synchronizedList(new ArrayList<>());
     for (int i = 1; i < n; i++) {
       value.add(i);
       trie.put(RLP.encodeInt(i), String.valueOf(i).getBytes());

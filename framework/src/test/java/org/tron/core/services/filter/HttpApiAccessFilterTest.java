@@ -48,15 +48,6 @@ public class HttpApiAccessFilterTest extends BaseTest {
    */
   @Before
   public void init() {
-    int solidityHttpPort = Args.getInstance().getSolidityHttpPort();
-    int pBFTHttpPort = Args.getInstance().getPBFTHttpPort();
-    int fullNodeHttpPort = Args.getInstance().getFullNodeHttpPort();
-    if (TestParallelUtil.getWorkerId()!=0) {
-      Args.getInstance().setSolidityHttpPort(solidityHttpPort + TestParallelUtil.getWorkerId());
-      Args.getInstance().setPBFTHttpPort(pBFTHttpPort + TestParallelUtil.getWorkerId());
-      Args.getInstance().setFullNodeHttpPort(fullNodeHttpPort + TestParallelUtil.getWorkerId());
-    }
-
     appT.addService(httpApiService);
     appT.addService(httpApiOnSolidityService);
     appT.addService(httpApiOnPBFTService);

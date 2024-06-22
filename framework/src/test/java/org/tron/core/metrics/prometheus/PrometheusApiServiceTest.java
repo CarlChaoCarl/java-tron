@@ -235,17 +235,8 @@ public class PrometheusApiServiceTest extends BaseTest {
 
   @Test
   public void testGetBlockByNumber2() {
-    /*
-    CommonParameter.getInstance().setJsonRpcHttpFullNodeEnable(true);
-    CommonParameter.getInstance().setJsonRpcHttpPBFTNodeEnable(true);
-    CommonParameter.getInstance().setJsonRpcHttpSolidityNodeEnable(true);
-    CommonParameter.getInstance().setMetricsPrometheusEnable(true);
-    Metrics.init();
-     */
 
     int jsonRpcHttpFullNodePort = CommonParameter.getInstance().getJsonRpcHttpFullNodePort();
-    int testPort = 10000 + jsonRpcHttpFullNodePort + TestParallelUtil.getWorkerId();
-    CommonParameter.getInstance().setJsonRpcHttpFullNodePort(testPort);
     fullNodeJsonRpcHttpService.init(Args.getInstance());
     fullNodeJsonRpcHttpService.start();
 
@@ -259,7 +250,7 @@ public class PrometheusApiServiceTest extends BaseTest {
     requestBody.addProperty("id", 1);
     CloseableHttpResponse response;
     try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-      String requestUrl = "http://127.0.0.1:" + testPort + "/jsonrpc";
+      String requestUrl = "http://127.0.0.1:" + jsonRpcHttpFullNodePort + "/jsonrpc";
       HttpPost httpPost = new HttpPost(requestUrl);
       httpPost.addHeader("Content-Type", "application/json");
       httpPost.setEntity(new StringEntity(requestBody.toString()));
