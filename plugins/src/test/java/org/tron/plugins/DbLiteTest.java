@@ -84,6 +84,7 @@ public class DbLiteTest {
   @After
   public void clear() {
     Args.clearParam();
+    Args.getInstance().setRpcPort(50051);
   }
 
   void testTools(String dbType, int checkpointVersion)

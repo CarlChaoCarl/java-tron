@@ -31,7 +31,7 @@ public class BackupManagerTest {
   @Before
   public void setUp() throws Exception {
     Args.setParam(new String[] {"-d", temporaryFolder.newFolder().toString()}, Constant.TEST_CONF);
-    CommonParameter.getInstance().setBackupPort(PublicMethod.chooseRandomPort());
+    //CommonParameter.getInstance().setBackupPort(PublicMethod.chooseRandomPort());
     manager = new BackupManager();
     backupServer = new BackupServer(manager);
   }
