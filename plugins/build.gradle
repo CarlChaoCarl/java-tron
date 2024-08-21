@@ -35,7 +35,10 @@ dependencies {
     implementation group: 'org.rocksdb', name: 'rocksdbjni', version: '5.15.10'
     implementation 'io.github.tronprotocol:leveldbjni-all:1.18.2'
     implementation 'io.github.tronprotocol:leveldb:1.18.2'
+    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.2.0'
+    implementation group: 'com.alibaba', name: 'fastjson', version: '1.1.25'
     implementation project(":protocol")
+    implementation project(":common")
 }
 
 check.dependsOn 'lint'

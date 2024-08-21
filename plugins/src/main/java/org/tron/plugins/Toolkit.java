@@ -3,7 +3,7 @@ package org.tron.plugins;
 import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
-@CommandLine.Command(subcommands = { CommandLine.HelpCommand.class, Db.class})
+@CommandLine.Command(subcommands = { CommandLine.HelpCommand.class, Db.class, Tool.class})
 public class Toolkit implements Callable<Integer> {
 
 

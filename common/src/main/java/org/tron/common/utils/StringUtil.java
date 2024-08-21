@@ -16,7 +16,10 @@
 package org.tron.common.utils;
 
 import com.google.protobuf.ByteString;
+import org.bouncycastle.util.encoders.Hex;
 import org.tron.common.parameter.CommonParameter;
+
+import java.nio.charset.StandardCharsets;
 
 public class StringUtil {
 
