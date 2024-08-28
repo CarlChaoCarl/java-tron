@@ -9,7 +9,9 @@ import picocli.CommandLine;
     subcommands = {CommandLine.HelpCommand.class,
         BlockTransAccount.class,
         AccountBalanceDiff.class,
-        AccountPermissionDiff.class
+        AccountPermissionDiff.class,
+        AccountEnergyDiff.class,
+        AccountBandwidthDiff.class
     },
     commandListHeading = "%nCommands:%n%nThe most commonly used db commands are:%n"
 )

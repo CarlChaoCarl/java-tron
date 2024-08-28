@@ -3,21 +3,16 @@ package org.tron.plugins;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.google.protobuf.ByteString;
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.bouncycastle.util.encoders.Hex;
-import org.tron.common.utils.StringUtil;
 import picocli.CommandLine;
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-
 
 @Slf4j(topic = "blockaccount")
 @CommandLine.Command(name = "blockaccount", aliases = "blockaccount",
@@ -80,19 +75,19 @@ public class BlockTransAccount implements Callable<Integer> {
   }
 
   private void transAccount(String transInfo) throws IOException {
-      JSONObject transInfoObject = (JSONObject)JSON.parse(transInfo);
-      JSONObject rawDataObject = (JSONObject)transInfoObject.get("raw_data");
-      JSONArray contractArr = (JSONArray)rawDataObject.get("contract");
-      JSONObject contractObject = (JSONObject) contractArr.get(0);
-      String contractType = contractObject.get("type").toString();
-      String ownerAddress =  getOwnerAddress(contractObject);
-      if (ownerAddress !=null) {
-        logger.info("trans_type {}, owner_address {}", contractType, ownerAddress);
-      } else {
-        logger.info("trans_type {}", contractType);
-      }
-      Long balance = getAccountBalance(ownerAddress);
-      logger.info("balance {}", balance);
+    JSONObject transInfoObject = (JSONObject)JSON.parse(transInfo);
+    JSONObject rawDataObject = (JSONObject)transInfoObject.get("raw_data");
+    JSONArray contractArr = (JSONArray)rawDataObject.get("contract");
+    JSONObject contractObject = (JSONObject) contractArr.get(0);
+    String contractType = contractObject.get("type").toString();
+    String ownerAddress =  getOwnerAddress(contractObject);
+    if (ownerAddress != null) {
+      logger.info("trans_type {}, owner_address {}", contractType, ownerAddress);
+    } else {
+      logger.info("trans_type {}", contractType);
+    }
+    Long balance = getAccountBalance(ownerAddress);
+    logger.info("balance {}", balance);
   }
 
   private Long getAccountBalance(String address) throws IOException {
@@ -134,7 +129,8 @@ public class BlockTransAccount implements Callable<Integer> {
   }
 
   private String getTransactionInfo(String transId) throws IOException {
-    StringBuilder url = new StringBuilder().append("http://3.225.171.164:8090/wallet/gettransactionbyid?value=")
+    StringBuilder url = new StringBuilder()
+        .append("http://3.225.171.164:8090/wallet/gettransactionbyid?value=")
         .append(transId);
     Request request = new Request.Builder()
         .addHeader("Content-Type", "application/json")
@@ -148,8 +144,10 @@ public class BlockTransAccount implements Callable<Integer> {
     return response.body().string();
   }
 
-  private static OkHttpClient createHttpClient(int maxTotalConnections, long connectionKeepAliveTimeInMillis) {
-    ConnectionPool connectionPool = new ConnectionPool(maxTotalConnections, connectionKeepAliveTimeInMillis, TimeUnit.MILLISECONDS);
+  private static OkHttpClient createHttpClient(int maxTotalConnections,
+                                               long connectionKeepAliveTimeInMillis) {
+    ConnectionPool connectionPool = new ConnectionPool(maxTotalConnections,
+        connectionKeepAliveTimeInMillis, TimeUnit.MILLISECONDS);
     return new OkHttpClient.Builder()
         .followRedirects(false)
         .retryOnConnectionFailure(true)
@@ -163,7 +161,7 @@ public class BlockTransAccount implements Callable<Integer> {
       JSONObject parameter = (JSONObject)contractObject.get("parameter");
       JSONObject value = (JSONObject)parameter.get("value");
       ownerAddress = value.get("owner_address").toString();
-      ownerAddress = StringUtil.encode58Check(Hex.decode(ownerAddress));
+      //ownerAddress = StringUtil.encode58Check(Hex.decode(ownerAddress));
     } catch (Exception ex) {
       ex.printStackTrace();
     }

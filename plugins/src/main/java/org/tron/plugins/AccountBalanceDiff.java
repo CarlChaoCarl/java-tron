@@ -1,21 +1,16 @@
 package org.tron.plugins;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import java.net.SocketTimeoutException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.bouncycastle.util.encoders.Hex;
-import org.tron.common.utils.StringUtil;
 import picocli.CommandLine;
-
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 
 @Slf4j(topic = "accountbalance")
@@ -57,10 +52,10 @@ public class AccountBalanceDiff implements Callable<Integer> {
       return 404;
     }
     if (dest.isEmpty()) {
-      logger.info(" {} exist, please delete it first.", dest);
+      logger.info(" {} does not exist.", dest);
       spec.commandLine().getErr().println(spec.commandLine().getColorScheme()
-          .errorText(String.format("%s exist, please delete it first.", dest)));
-      return 402;
+          .errorText(String.format("%s does not exist.", dest)));
+      return 404;
     }
 
     Long balance1 = transAccount(src, address);
@@ -76,10 +71,10 @@ public class AccountBalanceDiff implements Callable<Integer> {
     return 0;
   }
 
-  private Long transAccount(String apiNode, String address) throws IOException {
-      Long balance = getAccountBalance(apiNode, address);
-      logger.info("balance {}", balance);
-      return balance;
+  private Long transAccount(String apiNode, String address) {
+    Long balance = getAccountBalance(apiNode, address);
+    logger.info("balance {}", balance);
+    return balance;
   }
 
   private Long getAccountBalance(String apiNode, String address) {
@@ -89,7 +84,8 @@ public class AccountBalanceDiff implements Callable<Integer> {
           .addHeader("Content-Type", "application/json")
           .url(url)
           .build();
-      OkHttpClient httpClient = createHttpClient(100, 30000);
+      OkHttpClient httpClient = createHttpClient(100,
+          30000);
       Response response = httpClient.newCall(request).execute();
       String res = response.body().string();
       JSONObject transInfoObject = (JSONObject)JSON.parse(res);
@@ -107,8 +103,11 @@ public class AccountBalanceDiff implements Callable<Integer> {
     return 0L;
   }
 
-  private static OkHttpClient createHttpClient(int maxTotalConnections, long connectionKeepAliveTimeInMillis) {
-    ConnectionPool connectionPool = new ConnectionPool(maxTotalConnections, connectionKeepAliveTimeInMillis, TimeUnit.MILLISECONDS);
+  private static OkHttpClient createHttpClient(int maxTotalConnections,
+                                               long connectionKeepAliveTimeInMillis) {
+    ConnectionPool connectionPool = new ConnectionPool(maxTotalConnections,
+        connectionKeepAliveTimeInMillis,
+        TimeUnit.MILLISECONDS);
     return new OkHttpClient.Builder()
         .followRedirects(false)
         .retryOnConnectionFailure(true)

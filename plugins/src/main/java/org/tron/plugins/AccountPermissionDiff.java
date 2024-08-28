@@ -2,20 +2,16 @@ package org.tron.plugins;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import java.net.SocketTimeoutException;
+import java.util.HashMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import picocli.CommandLine;
-
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-
 
 @Slf4j(topic = "accountpermission")
 @CommandLine.Command(name = "accountpermission", aliases = "accountpermission",
@@ -56,13 +52,12 @@ public class AccountPermissionDiff implements Callable<Integer> {
       return 404;
     }
     if (dest.isEmpty()) {
-      logger.info(" {} exist, please delete it first.", dest);
+      logger.info(" {} does not exist.", dest);
       spec.commandLine().getErr().println(spec.commandLine().getColorScheme()
-          .errorText(String.format("%s exist, please delete it first.", dest)));
-      return 402;
+          .errorText(String.format("%s does not exist.", dest)));
+      return 404;
     }
 
-    //
     HashMap<String, String> accountPermission1 = transAccountPermission(src, address);
     HashMap<String, String> accountPermission2 = transAccountPermission(dest, address);
     if (accountPermissionDiff(accountPermission1, accountPermission2)) {
@@ -76,51 +71,69 @@ public class AccountPermissionDiff implements Callable<Integer> {
     return 0;
   }
 
-  private boolean accountPermissionDiff(HashMap<String, String> accountPermission1
-      , HashMap<String, String> accountPermission2) {
-      boolean ret1 = false;
-      boolean ret2 = false;
-      boolean ret3 = false;
-      if (accountPermission1.get("owner_permission") ==null
-          && accountPermission2.get("owner_permission") ==null) {
-        ret1 = true;
-      }
-      if (accountPermission1.get("owner_permission") !=null
-          && accountPermission2.get("owner_permission") !=null
-          && accountPermission1.get("owner_permission").equals(accountPermission2.get("owner_permission"))
-      ) {
-        ret1 = true;
-      }
+  private boolean accountPermissionDiff(HashMap<String, String> accountPermission1,
+                                        HashMap<String, String> accountPermission2) {
+    if (accountPermission1.get("owner_permission") == null
+        && accountPermission2.get("owner_permission") != null
+    ) {
+      return false;
+    }
+    if (accountPermission1.get("owner_permission") != null
+        && accountPermission2.get("owner_permission") == null
+    ) {
+      return false;
+    }
+    if (accountPermission1.get("owner_permission") != null
+        && accountPermission2.get("owner_permission") != null
+        && !accountPermission1.get("owner_permission")
+        .equals(accountPermission2.get("owner_permission"))
+    ) {
+      return false;
+    }
 
-      if (accountPermission1.get("witness_permission") ==null
-          && accountPermission2.get("witness_permission") ==null) {
-        ret2 = true;
-      }
-      if (accountPermission1.get("witness_permission") !=null
-          && accountPermission2.get("witness_permission") !=null
-          && accountPermission1.get("witness_permission").equals(accountPermission2.get("witness_permission"))
-      ) {
-        ret2 = true;
-      }
+    if (accountPermission1.get("witness_permission") == null
+        && accountPermission2.get("witness_permission") != null
+    ) {
+      return false;
+    }
+    if (accountPermission1.get("witness_permission") != null
+        && accountPermission2.get("witness_permission") == null
+    ) {
+      return false;
+    }
+    if (accountPermission1.get("witness_permission") != null
+        && accountPermission2.get("witness_permission") != null
+        && !accountPermission1.get("witness_permission")
+        .equals(accountPermission2.get("witness_permission"))
+    ) {
+      return false;
+    }
+    if (accountPermission1.get("active_permission") == null
+        && accountPermission2.get("active_permission") != null
+    ) {
+      return false;
+    }
+    if (accountPermission1.get("active_permission") != null
+        && accountPermission2.get("active_permission") == null
+    ) {
+      return false;
+    }
+    if (accountPermission1.get("active_permission") != null
+        && accountPermission2.get("active_permission") != null
+        && !accountPermission1.get("active_permission")
+        .equals(accountPermission2.get("active_permission"))
+    ) {
+      return false;
+    }
 
-      if (accountPermission1.get("active_permission") ==null
-          && accountPermission2.get("active_permission") ==null) {
-        ret3 = true;
-      }
-      if (accountPermission1.get("active_permission") !=null
-          && accountPermission2.get("active_permission") !=null
-          && accountPermission1.get("active_permission").equals(accountPermission2.get("active_permission"))
-      ) {
-        ret3 = true;
-      }
-
-      return ret1 && ret2 && ret3;
+    return true;
   }
 
-  private HashMap<String, String> transAccountPermission(String apiNode, String address) throws IOException {
-      HashMap<String, String> accountPermission = getAccountPermission(apiNode, address);
-      logger.info("accountPermission {}", JSON.toJSON(accountPermission));
-      return accountPermission;
+  private HashMap<String, String> transAccountPermission(String apiNode,
+                                                         String address) {
+    HashMap<String, String> accountPermission = getAccountPermission(apiNode, address);
+    logger.info("accountPermission {}", JSON.toJSON(accountPermission));
+    return accountPermission;
   }
 
   private HashMap<String, String> getAccountPermission(String apiNode, String address) {
@@ -128,7 +141,7 @@ public class AccountPermissionDiff implements Callable<Integer> {
     String witness_permission = "";
     String active_permission = "";
 
-    String url = "http://"+apiNode+"/wallet/getaccount?address=" + address + "&visible=true";
+    String url = "http://" + apiNode + "/wallet/getaccount?address=" + address + "&visible=true";
     try {
       Request request = new Request.Builder()
           .addHeader("Content-Type", "application/json")
@@ -167,8 +180,11 @@ public class AccountPermissionDiff implements Callable<Integer> {
     return ret;
   }
 
-  private static OkHttpClient createHttpClient(int maxTotalConnections, long connectionKeepAliveTimeInMillis) {
-    ConnectionPool connectionPool = new ConnectionPool(maxTotalConnections, connectionKeepAliveTimeInMillis, TimeUnit.MILLISECONDS);
+  private static OkHttpClient createHttpClient(int maxTotalConnections,
+                                               long connectionKeepAliveTimeInMillis) {
+    ConnectionPool connectionPool = new ConnectionPool(maxTotalConnections,
+        connectionKeepAliveTimeInMillis,
+        TimeUnit.MILLISECONDS);
     return new OkHttpClient.Builder()
         .followRedirects(false)
         .retryOnConnectionFailure(true)
