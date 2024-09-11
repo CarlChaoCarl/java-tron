@@ -1244,7 +1244,6 @@ public class Manager {
         try (PendingManager pm = new PendingManager(this)) {
 
           if (!block.generatedByMyself) {
-
             if (!block.calcMerkleRoot().equals(block.getMerkleRoot())) {
               logger.warn("Num: {}, the merkle root doesn't match, expect is {} , actual is {}.",
                   block.getNum(), block.getMerkleRoot(), block.calcMerkleRoot());
