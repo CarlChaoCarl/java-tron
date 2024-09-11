@@ -22,6 +22,7 @@ import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 import org.tron.common.runtime.ProgramResult;
 import org.tron.common.runtime.RuntimeImpl;
 import org.tron.common.utils.Sha256Hash;
@@ -91,7 +92,8 @@ public class ManagerMockTest {
     // mock static
     PowerMockito.mockStatic(TransactionUtil.class);
 
-    dbManager.setChainBaseManager(chainBaseManagerMock);
+    Whitebox.setInternalState(dbManager, "chainBaseManager", chainBaseManagerMock);
+
     BlockCapsule blockCapMock = Mockito.mock(BlockCapsule.class);
 
     PowerMockito.when(TransactionUtil

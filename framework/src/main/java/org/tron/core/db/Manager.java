@@ -227,7 +227,6 @@ public class Manager {
   private Consensus consensus;
   @Autowired
   @Getter
-  @Setter
   private ChainBaseManager chainBaseManager;
   // transactions cache
   private BlockingQueue<TransactionCapsule> pendingTransactions;
