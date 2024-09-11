@@ -4,21 +4,19 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import java.nio.charset.StandardCharsets;
-import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
@@ -42,9 +40,8 @@ import org.tron.protos.contract.BalanceContract;
 @PrepareForTest({Manager.class, TransactionUtil.class})
 @Slf4j
 public class ManagerMockTest {
-  @InjectMocks
-  @Resource
-  private Manager dbManager;
+  @Spy
+  private Manager dbManager = new Manager();
 
   @Before
   public void setup() throws Exception {
@@ -58,7 +55,6 @@ public class ManagerMockTest {
 
   @Test
   public void processTransactionCostTimeMoreThan100() throws Exception {
-    Manager managerSpy = spy(dbManager);
     BalanceContract.TransferContract transferContract =
         BalanceContract.TransferContract.newBuilder()
             .setAmount(10)
@@ -95,7 +91,7 @@ public class ManagerMockTest {
     // mock static
     PowerMockito.mockStatic(TransactionUtil.class);
 
-    managerSpy.setChainBaseManager(chainBaseManagerMock);
+    dbManager.setChainBaseManager(chainBaseManagerMock);
     BlockCapsule blockCapMock = Mockito.mock(BlockCapsule.class);
 
     PowerMockito.when(TransactionUtil
@@ -121,9 +117,9 @@ public class ManagerMockTest {
     when(transactionInfoCapsuleMock.getId()).thenReturn(transactionId.getBytes());
     when(transactionInfoCapsuleMock.getInstance()).thenReturn(transactionInfo);
 
-    doNothing().when(managerSpy).validateTapos(trxCapMock);
-    doNothing().when(managerSpy).validateCommon(trxCapMock);
-    doNothing().when(managerSpy).validateDup(trxCapMock);
+    doNothing().when(dbManager).validateTapos(trxCapMock);
+    doNothing().when(dbManager).validateCommon(trxCapMock);
+    doNothing().when(dbManager).validateDup(trxCapMock);
 
     // mock construct
     PowerMockito.whenNew(RuntimeImpl.class).withAnyArguments().thenReturn(runtimeMock);
@@ -133,7 +129,7 @@ public class ManagerMockTest {
 
     doNothing().when(transactionStoreMock).put(transactionId.getBytes(), trxCapMock);
     doNothing().when(bandwidthProcessorMock).consume(trxCapMock, traceMock);
-    doNothing().when(managerSpy).consumeBandwidth(trxCapMock, traceMock);
+    doNothing().when(dbManager).consumeBandwidth(trxCapMock, traceMock);
     doNothing().when(balanceTraceStoreMock).initCurrentTransactionBalanceTrace(trxCapMock);
     doNothing().when(balanceTraceStoreMock).updateCurrentTransactionStatus(anyString());
     doNothing().when(balanceTraceStoreMock).resetCurrentTransactionTrace();
@@ -146,7 +142,7 @@ public class ManagerMockTest {
         Mockito.any(AccountStore.class),
         Mockito.any(DynamicPropertiesStore.class))).thenReturn(true);
 
-    assertNotNull(managerSpy.processTransaction(trxCapMock, blockCapMock));
+    assertNotNull(dbManager.processTransaction(trxCapMock, blockCapMock));
   }
 
 }
