@@ -30,7 +30,7 @@ public class RuntimeImplMockTest {
     Mockito.framework().clearInlineMocks();
   }
 
-    @Test
+  @Test
   public void testSetResultCode1() throws Exception {
     ProgramResult programResultSpy = new ProgramResult();
 

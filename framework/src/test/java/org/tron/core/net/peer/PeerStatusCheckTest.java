@@ -1,5 +1,8 @@
 package org.tron.core.net.peer;
 
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -9,9 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.spy;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PeerStatusCheck.class})

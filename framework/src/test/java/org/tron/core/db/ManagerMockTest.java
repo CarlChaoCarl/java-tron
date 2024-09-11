@@ -1,7 +1,16 @@
 package org.tron.core.db;
 
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import java.nio.charset.StandardCharsets;
+import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
@@ -28,16 +37,6 @@ import org.tron.core.store.BalanceTraceStore;
 import org.tron.core.store.DynamicPropertiesStore;
 import org.tron.protos.Protocol;
 import org.tron.protos.contract.BalanceContract;
-
-import javax.annotation.Resource;
-import java.nio.charset.StandardCharsets;
-
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Manager.class, TransactionUtil.class})
@@ -68,7 +67,7 @@ public class ManagerMockTest {
             .build();
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < 6666; i++) {
-      sb.append("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+      sb.append("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
     }
     Protocol.Transaction transaction = Protocol.Transaction.newBuilder().setRawData(
         Protocol.Transaction.raw.newBuilder()
@@ -99,7 +98,9 @@ public class ManagerMockTest {
     managerSpy.setChainBaseManager(chainBaseManagerMock);
     BlockCapsule blockCapMock = Mockito.mock(BlockCapsule.class);
 
-    PowerMockito.when(TransactionUtil.buildTransactionInfoInstance(trxCapMock, blockCapMock, traceMock)).thenReturn(transactionInfoCapsuleMock);
+    PowerMockito.when(TransactionUtil
+            .buildTransactionInfoInstance(trxCapMock, blockCapMock, traceMock))
+        .thenReturn(transactionInfoCapsuleMock);
 
     // this make cost > 100 cond is true
     PowerMockito.when(blockCapMock.isMerkleRootEmpty()).thenAnswer(new Answer<Boolean>() {
@@ -112,7 +113,8 @@ public class ManagerMockTest {
 
     when(chainBaseManagerMock.getBalanceTraceStore()).thenReturn(balanceTraceStoreMock);
     when(chainBaseManagerMock.getAccountStore()).thenReturn(mock(AccountStore.class));
-    when(chainBaseManagerMock.getDynamicPropertiesStore()).thenReturn(mock(DynamicPropertiesStore.class));
+    when(chainBaseManagerMock.getDynamicPropertiesStore())
+        .thenReturn(mock(DynamicPropertiesStore.class));
     when(chainBaseManagerMock.getTransactionStore()).thenReturn(transactionStoreMock);
     when(trxCapMock.getTransactionId()).thenReturn(transactionId);
     when(traceMock.getRuntimeResult()).thenReturn(result);
@@ -126,7 +128,8 @@ public class ManagerMockTest {
     // mock construct
     PowerMockito.whenNew(RuntimeImpl.class).withAnyArguments().thenReturn(runtimeMock);
     PowerMockito.whenNew(TransactionTrace.class).withAnyArguments().thenReturn(traceMock);
-    PowerMockito.whenNew(BandwidthProcessor.class).withAnyArguments().thenReturn(bandwidthProcessorMock);
+    PowerMockito.whenNew(BandwidthProcessor.class).withAnyArguments()
+        .thenReturn(bandwidthProcessorMock);
 
     doNothing().when(transactionStoreMock).put(transactionId.getBytes(), trxCapMock);
     doNothing().when(bandwidthProcessorMock).consume(trxCapMock, traceMock);

@@ -1,5 +1,9 @@
 package org.tron.core.consensus;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -13,10 +17,6 @@ import org.tron.common.utils.Sha256Hash;
 import org.tron.consensus.dpos.DposService;
 import org.tron.consensus.dpos.StateManager;
 import org.tron.core.capsule.BlockCapsule;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({StateManager.class})
@@ -37,6 +37,7 @@ public class StateManagerTest {
 
   @Test
   public void testReceiveBlockTimeOverInterval() {
+
     StateManager stateManagerSpy = spy(stateManager);
 
     BlockCapsule.BlockId blockId = new BlockCapsule.BlockId(Sha256Hash.ZERO_HASH, 1L);
