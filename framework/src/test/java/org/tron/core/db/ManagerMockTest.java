@@ -147,4 +147,9 @@ public class ManagerMockTest {
     assertNotNull(dbManager.processTransaction(trxCapMock, blockCapMock));
   }
 
+
+  
+
+
+
 }
