@@ -56,10 +56,10 @@ import org.tron.protos.Protocol;
 import org.tron.protos.contract.BalanceContract;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Manager.class
-    , CommonParameter.class
-    , Args.class
-    , TransactionUtil.class})
+@PrepareForTest({Manager.class,
+    CommonParameter.class,
+    Args.class,
+    TransactionUtil.class})
 @Slf4j
 public class ManagerMockTest {
   @Spy
@@ -168,10 +168,9 @@ public class ManagerMockTest {
     assertNotNull(dbManager.processTransaction(trxCapMock, blockCapMock));
   }
 
-  private void initMockEnv(long headNum, long headTime
-      , long exitHeight
-      , long exitCount
-      , String blockTime) throws Exception {
+  private void initMockEnv(long headNum, long headTime,
+                           long exitHeight, long exitCount, String blockTime)
+      throws Exception {
     ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
     Args argsMock = PowerMockito.mock(Args.class);
 
@@ -185,81 +184,89 @@ public class ManagerMockTest {
     when(argsMock.getShutdownBlockHeight()).thenReturn(exitHeight);
     when(argsMock.getShutdownBlockCount()).thenReturn(exitCount);
     when(argsMock.isP2pDisable()).thenReturn(false);
-    when(argsMock.getShutdownBlockTime()).thenReturn(new CronExpression(blockTime));  //"0 0 12 * * ?"
+    when(argsMock.getShutdownBlockTime())
+        .thenReturn(new CronExpression(blockTime));  //"0 0 12 * * ?"
 
-    Whitebox.setInternalState(dbManager, "chainBaseManager", chainBaseManagerMock);
+    Whitebox.setInternalState(dbManager,
+        "chainBaseManager", chainBaseManagerMock);
   }
 
   @Test
   public void testInitAutoStop() throws Exception {
-    initMockEnv(100L, 12345L
-        , 10L, 0L, "0 0 12 * * ?");
+    initMockEnv(100L, 12345L,
+        10L, 0L, "0 0 12 * * ?");
     try {
       Whitebox.invokeMethod(dbManager, "initAutoStop");
     } catch (Exception e) {
-      assertEquals("shutDownBlockHeight 10 is less than headNum 100", e.getMessage());
+      assertEquals("shutDownBlockHeight 10 is less than headNum 100",
+          e.getMessage());
     }
   }
 
   @Test
   public void testInitAutoStop1() throws Exception {
-    initMockEnv(10L, 12345L
-        , 100L, 0L, "0 0 12 * * ?");
+    initMockEnv(10L, 12345L,
+        100L, 0L, "0 0 12 * * ?");
     try {
       Whitebox.invokeMethod(dbManager, "initAutoStop");
     } catch (Exception e) {
-      assertEquals("shutDownBlockCount 0 is less than 1", e.getMessage());
+      assertEquals("shutDownBlockCount 0 is less than 1",
+          e.getMessage());
     }
   }
 
   @Test
   public void testInitAutoStop2() throws Exception {
-    initMockEnv(10L, 99726143865000L
-        , 100L, 1L, "0 0 12 * * ?");
+    initMockEnv(10L, 99726143865000L,
+        100L, 1L, "0 0 12 * * ?");
     try {
       Whitebox.invokeMethod(dbManager, "initAutoStop");
     } catch (Exception e) {
-      assertEquals("shutDownBlockTime 0 0 12 * * ? is illegal", e.getMessage());
+      assertEquals("shutDownBlockTime 0 0 12 * * ? is illegal",
+          e.getMessage());
     }
   }
 
   @Test
   public void testInitAutoStop3() throws Exception {
-    initMockEnv(10L, 12345L
-        , 100L, 1L, "0 0 12 * * ?");
+    initMockEnv(10L, 12345L,
+        100L, 1L, "0 0 12 * * ?");
     try {
       Whitebox.invokeMethod(dbManager, "initAutoStop");
     } catch (Exception e) {
-      assertEquals("shutDownBlockHeight 100 and shutDownBlockCount 1 set both", e.getMessage());
+      assertEquals("shutDownBlockHeight 100 and shutDownBlockCount 1 set both",
+          e.getMessage());
     }
   }
 
   @Test
   public void testInitAutoStop4() throws Exception {
-    initMockEnv(10L, 12345L
-        , 100L, -1L, "0 0 12 * * ?");
+    initMockEnv(10L, 12345L,
+        100L, -1L, "0 0 12 * * ?");
     try {
       Whitebox.invokeMethod(dbManager, "initAutoStop");
     } catch (Exception e) {
-      assertEquals("shutDownBlockHeight 100 and shutDownBlockTime 0 0 12 * * ? set both", e.getMessage());
+      assertEquals("shutDownBlockHeight 100 and shutDownBlockTime 0 0 12 * * ? set both",
+          e.getMessage());
     }
   }
 
   @Test
   public void testInitAutoStop5() throws Exception {
-    initMockEnv(10L, 12345L
-        , 0L, 1L, "0 0 12 * * ?");
+    initMockEnv(10L, 12345L,
+        0L, 1L, "0 0 12 * * ?");
     try {
       Whitebox.invokeMethod(dbManager, "initAutoStop");
     } catch (Exception e) {
-      assertEquals("shutDownBlockCount 1 and shutDownBlockTime 0 0 12 * * ? set both", e.getMessage());
+      assertEquals("shutDownBlockCount 1 and shutDownBlockTime 0 0 12 * * ? set both",
+          e.getMessage());
     }
   }
 
   @Test
   public void testInitAutoStop6() throws Exception {
-    initMockEnv(-10L, 12345L
-        , -10L, -1L, "0 0 12 * * ?");
+    initMockEnv(-10L, 12345L,
+        -10L, -1L, "0 0 12 * * ?");
     Whitebox.invokeMethod(dbManager, "initAutoStop");
     assertEquals(true, true);
   }
@@ -268,7 +275,8 @@ public class ManagerMockTest {
   public void testProcessTransaction() throws Exception {
     TransactionCapsule transactionCapsuleMock = null;
     BlockCapsule blockCapsuleMock = PowerMockito.mock(BlockCapsule.class);
-    Whitebox.invokeMethod(dbManager, "processTransaction", transactionCapsuleMock, blockCapsuleMock);
+    Whitebox.invokeMethod(dbManager, "processTransaction",
+        transactionCapsuleMock, blockCapsuleMock);
     assertEquals(true, true);
   }
 
@@ -282,7 +290,8 @@ public class ManagerMockTest {
 
     BlockCapsule blockCapsuleMock = PowerMockito.mock(BlockCapsule.class);
     try {
-      Whitebox.invokeMethod(dbManager, "processTransaction", trxCap, blockCapsuleMock);
+      Whitebox.invokeMethod(dbManager, "processTransaction",
+          trxCap, blockCapsuleMock);
     } catch (Exception e) {
       assertTrue(e instanceof ContractSizeNotEqualToOneException);
     }
@@ -341,7 +350,8 @@ public class ManagerMockTest {
 
   @Test
   public void testPostSolidityFilter() throws Exception {
-    Whitebox.invokeMethod(dbManager, "postSolidityFilter", 100L, 10L);
+    Whitebox.invokeMethod(dbManager, "postSolidityFilter",
+        100L, 10L);
     assertEquals(true, true);
   }
 
@@ -364,7 +374,7 @@ public class ManagerMockTest {
 
   @Test
   public void testGetContinuousBlockCapsule() {
-    
+
   }
 
 }
