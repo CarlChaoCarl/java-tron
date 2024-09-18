@@ -7,17 +7,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.mockito.Spy;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 import org.tron.core.vm.program.Program;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({RuntimeImpl.class})
 @Slf4j
 public class RuntimeImplMockTest {
-  @Spy
   private RuntimeImpl runtime = new RuntimeImpl();
 
   @Before
@@ -32,45 +30,45 @@ public class RuntimeImplMockTest {
 
   @Test
   public void testSetResultCode1() throws Exception {
-    ProgramResult programResultSpy = new ProgramResult();
+    ProgramResult programResult = new ProgramResult();
 
     // exception instanceof BadJumpDestinationException
     Program.BadJumpDestinationException badJumpDestinationException
         = new Program.BadJumpDestinationException("Operation with pc isn't 'JUMPDEST': PC[%d];", 0);
-    programResultSpy.setException(badJumpDestinationException);
+    programResult.setException(badJumpDestinationException);
     //power mock private method：setResultCode
-    PowerMockito.doNothing().when(runtime, "setResultCode", programResultSpy);
+    Whitebox.invokeMethod(runtime,"setResultCode", programResult);
 
     // exception instanceof OutOfTimeException
     Program.OutOfTimeException outOfTimeException
         = new Program.OutOfTimeException("CPU timeout for 0x0a executing");
-    programResultSpy.setException(outOfTimeException);
+    programResult.setException(outOfTimeException);
     //power mock private method：setResultCode
-    PowerMockito.doNothing().when(runtime, "setResultCode", programResultSpy);
+    Whitebox.invokeMethod(runtime,"setResultCode", programResult);
 
 
     // exception instanceof PrecompiledContractException
     Program.PrecompiledContractException precompiledContractException
         = new Program.PrecompiledContractException("precompiled contract exception");
-    programResultSpy.setException(precompiledContractException);
+    programResult.setException(precompiledContractException);
     //power mock private method：setResultCode
-    PowerMockito.doNothing().when(runtime, "setResultCode", programResultSpy);
+    Whitebox.invokeMethod(runtime,"setResultCode", programResult);
 
     // exception instanceof StackTooSmallException
     Program.StackTooSmallException stackTooSmallException
         = new Program.StackTooSmallException("Expected stack size %d but actual %d;", 100, 10);
-    programResultSpy.setException(stackTooSmallException);
+    programResult.setException(stackTooSmallException);
     //power mock private method：setResultCode
-    PowerMockito.doNothing().when(runtime, "setResultCode", programResultSpy);
+    Whitebox.invokeMethod(runtime,"setResultCode", programResult);
 
     // exception instanceof JVMStackOverFlowException
     Program.JVMStackOverFlowException jvmStackOverFlowException
         = new Program.JVMStackOverFlowException();
-    programResultSpy.setException(jvmStackOverFlowException);
+    programResult.setException(jvmStackOverFlowException);
     //power mock private method：setResultCode
-    PowerMockito.doNothing().when(runtime, "setResultCode", programResultSpy);
+    Whitebox.invokeMethod(runtime,"setResultCode", programResult);
 
-    Assert.assertEquals(true, true);
+    Assert.assertTrue(true);
   }
 
 }
