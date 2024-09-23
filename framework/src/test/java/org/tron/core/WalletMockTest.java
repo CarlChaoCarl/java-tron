@@ -80,7 +80,8 @@ import org.tron.protos.contract.ShieldContract;
 import org.tron.protos.contract.SmartContractOuterClass;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Wallet.class,
+@PrepareForTest({
+    Wallet.class,
     Args.class,
     CommonParameter.class,
     TransactionCapsule.class,
@@ -88,7 +89,8 @@ import org.tron.protos.contract.SmartContractOuterClass;
     ByteUtil.class,
     KeyIo.class,
     PaymentAddress.class,
-    Protocol.Transaction.Contract.ContractType.class})
+    Protocol.Transaction.Contract.ContractType.class
+})
 public class WalletMockTest {
   @Before
   public void init() {
