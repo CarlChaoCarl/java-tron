@@ -1,7 +1,7 @@
 package org.tron.core.db;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -18,7 +18,6 @@ import java.nio.charset.StandardCharsets;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -188,12 +187,14 @@ public class ManagerMockTest {
     Manager dbManager = spy(new Manager());
     initMockEnv(dbManager, 100L, 12345L,
         10L, 0L, "0 0 12 * * ?");
-    try {
-      Whitebox.invokeMethod(dbManager, "initAutoStop");
-    } catch (Exception e) {
-      assertEquals("shutDownBlockHeight 10 is less than headNum 100",
-          e.getMessage());
-    }
+
+    assertThrows(
+        "shutDownBlockHeight 10 is less than headNum 100",
+        Exception.class,
+        () -> {
+          Whitebox.invokeMethod(dbManager, "initAutoStop");
+        }
+    );
   }
 
   @Test
@@ -201,12 +202,14 @@ public class ManagerMockTest {
     Manager dbManager = spy(new Manager());
     initMockEnv(dbManager,10L, 12345L,
         100L, 0L, "0 0 12 * * ?");
-    try {
-      Whitebox.invokeMethod(dbManager, "initAutoStop");
-    } catch (Exception e) {
-      assertEquals("shutDownBlockCount 0 is less than 1",
-          e.getMessage());
-    }
+
+    assertThrows(
+        "shutDownBlockCount 0 is less than 1",
+        Exception.class,
+        () -> {
+          Whitebox.invokeMethod(dbManager, "initAutoStop");
+        }
+    );
   }
 
   @Test
@@ -214,12 +217,14 @@ public class ManagerMockTest {
     Manager dbManager = spy(new Manager());
     initMockEnv(dbManager,10L, 99726143865000L,
         100L, 1L, "0 0 12 * * ?");
-    try {
-      Whitebox.invokeMethod(dbManager, "initAutoStop");
-    } catch (Exception e) {
-      assertEquals("shutDownBlockTime 0 0 12 * * ? is illegal",
-          e.getMessage());
-    }
+
+    assertThrows(
+        "shutDownBlockTime 0 0 12 * * ? is illegal",
+        Exception.class,
+        () -> {
+          Whitebox.invokeMethod(dbManager, "initAutoStop");
+        }
+    );
   }
 
   @Test
@@ -227,12 +232,14 @@ public class ManagerMockTest {
     Manager dbManager = spy(new Manager());
     initMockEnv(dbManager,10L, 12345L,
         100L, 1L, "0 0 12 * * ?");
-    try {
-      Whitebox.invokeMethod(dbManager, "initAutoStop");
-    } catch (Exception e) {
-      assertEquals("shutDownBlockHeight 100 and shutDownBlockCount 1 set both",
-          e.getMessage());
-    }
+
+    assertThrows(
+        "shutDownBlockHeight 100 and shutDownBlockCount 1 set both",
+        Exception.class,
+        () -> {
+          Whitebox.invokeMethod(dbManager, "initAutoStop");
+        }
+    );
   }
 
   @Test
@@ -240,12 +247,14 @@ public class ManagerMockTest {
     Manager dbManager = spy(new Manager());
     initMockEnv(dbManager, 10L, 12345L,
         100L, -1L, "0 0 12 * * ?");
-    try {
-      Whitebox.invokeMethod(dbManager, "initAutoStop");
-    } catch (Exception e) {
-      assertEquals("shutDownBlockHeight 100 and shutDownBlockTime 0 0 12 * * ? set both",
-          e.getMessage());
-    }
+
+    assertThrows(
+        "shutDownBlockHeight 100 and shutDownBlockTime 0 0 12 * * ? set both",
+        Exception.class,
+        () -> {
+          Whitebox.invokeMethod(dbManager, "initAutoStop");
+        }
+    );
   }
 
   @Test
@@ -253,21 +262,14 @@ public class ManagerMockTest {
     Manager dbManager = spy(new Manager());
     initMockEnv(dbManager,10L, 12345L,
         0L, 1L, "0 0 12 * * ?");
-    try {
-      Whitebox.invokeMethod(dbManager, "initAutoStop");
-    } catch (Exception e) {
-      assertEquals("shutDownBlockCount 1 and shutDownBlockTime 0 0 12 * * ? set both",
-          e.getMessage());
-    }
-  }
 
-  @Test
-  public void testInitAutoStop6() throws Exception {
-    Manager dbManager = spy(new Manager());
-    initMockEnv(dbManager,-10L, 12345L,
-        -10L, -1L, "0 0 12 * * ?");
-    Whitebox.invokeMethod(dbManager, "initAutoStop");
-    assertEquals(true, true);
+    assertThrows(
+        "shutDownBlockCount 1 and shutDownBlockTime 0 0 12 * * ? set both",
+        Exception.class,
+        () -> {
+          Whitebox.invokeMethod(dbManager, "initAutoStop");
+        }
+    );
   }
 
   @Test
@@ -277,11 +279,11 @@ public class ManagerMockTest {
     BlockCapsule blockCapsuleMock = PowerMockito.mock(BlockCapsule.class);
     Whitebox.invokeMethod(dbManager, "processTransaction",
         transactionCapsuleMock, blockCapsuleMock);
-    assertEquals(true, true);
+    assertTrue(true);
   }
 
   @Test
-  public void testProcessTransaction1() throws Exception {
+  public void testProcessTransaction1() {
     Manager dbManager = spy(new Manager());
     Protocol.Transaction transaction = Protocol.Transaction.newBuilder().setRawData(
         Protocol.Transaction.raw.newBuilder()
@@ -290,12 +292,14 @@ public class ManagerMockTest {
     TransactionCapsule trxCap = new TransactionCapsule(transaction);
 
     BlockCapsule blockCapsuleMock = PowerMockito.mock(BlockCapsule.class);
-    try {
-      Whitebox.invokeMethod(dbManager, "processTransaction",
-          trxCap, blockCapsuleMock);
-    } catch (Exception e) {
-      assertTrue(e instanceof ContractSizeNotEqualToOneException);
-    }
+
+    assertThrows(
+        ContractSizeNotEqualToOneException.class,
+        () -> {
+          Whitebox.invokeMethod(dbManager, "processTransaction",
+              trxCap, blockCapsuleMock);
+        }
+    );
   }
 
   @SneakyThrows
@@ -312,7 +316,7 @@ public class ManagerMockTest {
     when(transactionStoreMock.has(any())).thenReturn(true);
 
     dbManager.rePush(trx);
-    assertEquals(true, true);
+    assertTrue(true);
   }
 
   @SneakyThrows
@@ -348,7 +352,7 @@ public class ManagerMockTest {
 
     doThrow(new TooBigTransactionResultException()).when(dbManager).pushTransaction(any());
     dbManager.rePush(trx);
-    assertEquals(true, true);
+    assertTrue(true);
   }
 
   @Test
@@ -356,7 +360,7 @@ public class ManagerMockTest {
     Manager dbManager = spy(new Manager());
     Whitebox.invokeMethod(dbManager, "postSolidityFilter",
         100L, 10L);
-    assertEquals(true, true);
+    assertTrue(true);
   }
 
   @Test
@@ -374,7 +378,7 @@ public class ManagerMockTest {
     doThrow(new ItemNotFoundException()).when(chainBaseManagerMock).getBlockById(any());
 
     Whitebox.invokeMethod(dbManager, "reOrgLogsFilter");
-    assertEquals(true, true);
+    assertTrue(true);
   }
 
 }

@@ -1,7 +1,9 @@
 package org.tron.core;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -24,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.protobuf.LazyStringArrayList;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -475,7 +476,7 @@ public class WalletMockTest {
     ByteString transactionId = null;
     Protocol.Transaction transaction = Whitebox.invokeMethod(wallet,
         "getTransactionById", transactionId);
-    assertEquals(transaction, null);
+    assertNull(transaction);
   }
 
   @Test
@@ -491,7 +492,7 @@ public class WalletMockTest {
 
     Protocol.Transaction transaction = Whitebox.invokeMethod(wallet,
         "getTransactionById", transactionId);
-    assertEquals(transaction, null);
+    assertNull(transaction);
   }
 
   @Test
@@ -519,7 +520,7 @@ public class WalletMockTest {
     ByteString transactionId = null;
     Protocol.Transaction transaction = Whitebox.invokeMethod(wallet,
         "getTransactionCapsuleById", transactionId);
-    assertEquals(transaction, null);
+    assertNull(transaction);
   }
 
   @Test
@@ -535,7 +536,7 @@ public class WalletMockTest {
 
     Protocol.Transaction transaction = Whitebox.invokeMethod(wallet,
         "getTransactionCapsuleById", transactionId);
-    assertEquals(transaction, null);
+    assertNull(transaction);
   }
 
   @Test
@@ -544,7 +545,7 @@ public class WalletMockTest {
     ByteString transactionId = null;
     Protocol.TransactionInfo transactionInfo = Whitebox.invokeMethod(wallet,
         "getTransactionInfoById", transactionId);
-    assertEquals(transactionInfo, null);
+    assertNull(transactionInfo);
   }
 
   @Test
@@ -560,7 +561,7 @@ public class WalletMockTest {
 
     Protocol.TransactionInfo transactionInfo = Whitebox.invokeMethod(wallet,
         "getTransactionInfoById", transactionId);
-    assertEquals(transactionInfo, null);
+    assertNull(transactionInfo);
   }
 
   @Test
@@ -582,7 +583,7 @@ public class WalletMockTest {
 
     Protocol.TransactionInfo transactionInfo = Whitebox.invokeMethod(wallet,
         "getTransactionInfoById", transactionId);
-    assertEquals(transactionInfo, null);
+    assertNull(transactionInfo);
   }
 
   @Test
@@ -591,7 +592,7 @@ public class WalletMockTest {
     ByteString proposalId = null;
     Protocol.TransactionInfo transactionInfo = Whitebox.invokeMethod(wallet,
         "getProposalById", proposalId);
-    assertEquals(transactionInfo, null);
+    assertNull(transactionInfo);
   }
 
   @Test
@@ -609,7 +610,7 @@ public class WalletMockTest {
 
     GrpcAPI.PricesResponseMessage responseMessage = Whitebox.invokeMethod(wallet,
         "getMemoFeePrices");
-    assertEquals(responseMessage, null);
+    assertNull(responseMessage);
   }
 
   @Test
@@ -647,7 +648,7 @@ public class WalletMockTest {
 
     GrpcAPI.PricesResponseMessage pricesResponseMessage = Whitebox.invokeMethod(wallet,
         "getEnergyPrices");
-    assertEquals(pricesResponseMessage, null);
+    assertNull(pricesResponseMessage);
   }
 
   @Test
@@ -665,7 +666,7 @@ public class WalletMockTest {
 
     GrpcAPI.PricesResponseMessage pricesResponseMessage = Whitebox.invokeMethod(wallet,
         "getBandwidthPrices");
-    assertEquals(pricesResponseMessage, null);
+    assertNull(pricesResponseMessage);
   }
 
   @Test
@@ -675,53 +676,64 @@ public class WalletMockTest {
         BalanceContract.BlockBalanceTrace.BlockIdentifier.newBuilder()
         .build();
     blockIdentifier = blockIdentifier.getDefaultInstanceForType();
-    try {
-      wallet.checkBlockIdentifier(blockIdentifier);
-    } catch (Exception e) {
-      assertTrue(e instanceof IllegalArgumentException);
-    }
 
-    blockIdentifier =
+    BalanceContract.BlockBalanceTrace.BlockIdentifier blockIdentifier1 =
+        blockIdentifier;
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          wallet.checkBlockIdentifier(blockIdentifier1);
+        }
+    );
+
+    BalanceContract.BlockBalanceTrace.BlockIdentifier blockIdentifier2 =
         BalanceContract.BlockBalanceTrace.BlockIdentifier.newBuilder()
             .setNumber(-1L)
             .build();
-    try {
-      wallet.checkBlockIdentifier(blockIdentifier);
-    } catch (Exception e) {
-      assertTrue(e instanceof IllegalArgumentException);
-    }
 
-    blockIdentifier =
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          wallet.checkBlockIdentifier(blockIdentifier2);
+        }
+    );
+
+    BalanceContract.BlockBalanceTrace.BlockIdentifier blockIdentifier3 =
         BalanceContract.BlockBalanceTrace.BlockIdentifier.newBuilder()
             .setHash(ByteString.copyFrom("".getBytes(StandardCharsets.UTF_8)))
             .build();
-    try {
-      wallet.checkBlockIdentifier(blockIdentifier);
-    } catch (Exception e) {
-      assertTrue(e instanceof IllegalArgumentException);
-    }
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          wallet.checkBlockIdentifier(blockIdentifier3);
+        }
+    );
   }
 
   @Test
   public void testCheckAccountIdentifier() {
     Wallet wallet = new Wallet();
     BalanceContract.AccountIdentifier accountIdentifier =
-        BalanceContract.AccountIdentifier.newBuilder()
-            .build();
+        BalanceContract.AccountIdentifier.newBuilder().build();
     accountIdentifier = accountIdentifier.getDefaultInstanceForType();
-    try {
-      wallet.checkAccountIdentifier(accountIdentifier);
-    } catch (Exception e) {
-      assertTrue(e instanceof IllegalArgumentException);
-    }
 
-    accountIdentifier = BalanceContract.AccountIdentifier.newBuilder()
-            .build();
-    try {
-      wallet.checkAccountIdentifier(accountIdentifier);
-    } catch (Exception e) {
-      assertTrue(e instanceof IllegalArgumentException);
-    }
+    BalanceContract.AccountIdentifier accountIdentifier2 = accountIdentifier;
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          wallet.checkAccountIdentifier(accountIdentifier2);
+        }
+    );
+
+    BalanceContract.AccountIdentifier accountIdentifier1
+        = BalanceContract.AccountIdentifier.newBuilder().build();
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> {
+          wallet.checkAccountIdentifier(accountIdentifier1);
+        }
+    );
   }
 
   @Test
@@ -743,12 +755,12 @@ public class WalletMockTest {
     when(CommonParameter.getInstance()).thenReturn(commonParameterMock);
     when(commonParameterMock.isFullNodeAllowShieldedTransactionArgs()).thenReturn(true);
 
-    try {
-      wallet.getTriggerInputForShieldedTRC20Contract(triggerParam.build());
-    } catch (Exception e) {
-      assertTrue( e instanceof  ZksnarkException);
-    }
-
+    assertThrows(
+        ZksnarkException.class,
+        () -> {
+          wallet.getTriggerInputForShieldedTRC20Contract(triggerParam.build());
+        }
+    );
   }
 
   @Test
@@ -778,18 +790,20 @@ public class WalletMockTest {
 
     GrpcAPI.BytesMessage reponse =
         wallet.getTriggerInputForShieldedTRC20Contract(triggerParam.build());
-    Assert.assertNotNull(reponse);
+    assertNotNull(reponse);
   }
 
   @Test
   public void testGetShieldedContractScalingFactorException() {
     Wallet wallet = new Wallet();
     byte[] contractAddress = "".getBytes(StandardCharsets.UTF_8);
-    try {
-      wallet.getShieldedContractScalingFactor(contractAddress);
-    } catch (Exception e) {
-      assertTrue(e instanceof ContractExeException);
-    }
+
+    assertThrows(
+        ContractExeException.class,
+        () -> {
+          wallet.getShieldedContractScalingFactor(contractAddress);
+        }
+    );
   }
 
   @Test
@@ -801,11 +815,12 @@ public class WalletMockTest {
     when(walletMock.triggerConstantContract(any(),any(),any(),any())).thenReturn(transaction);
     when(walletMock.getShieldedContractScalingFactor(any())).thenCallRealMethod();
 
-    try {
-      walletMock.getShieldedContractScalingFactor(contractAddress);
-    } catch (Exception e) {
-      assertTrue(e instanceof ContractExeException);
-    }
+    assertThrows(
+        ContractExeException.class,
+        () -> {
+          walletMock.getShieldedContractScalingFactor(contractAddress);
+        }
+    );
   }
 
   @Test
@@ -819,7 +834,7 @@ public class WalletMockTest {
     when(walletMock.getShieldedContractScalingFactor(any())).thenCallRealMethod();
     try {
       byte[] listBytes = walletMock.getShieldedContractScalingFactor(contractAddress);
-      Assert.assertNotNull(listBytes);
+      assertNotNull(listBytes);
     } catch (Exception e) {
       assertNull(e);
     }
@@ -836,22 +851,27 @@ public class WalletMockTest {
     when(walletMock.createTransactionCapsule(any(), any()))
         .thenReturn(new TransactionCapsule(transaction));
     when(walletMock.getShieldedContractScalingFactor(any())).thenCallRealMethod();
-    try {
-      walletMock.getShieldedContractScalingFactor(contractAddress);
-    } catch (Exception e) {
-      assertTrue(e instanceof ContractExeException);
-    }
+
+    assertThrows(
+        ContractExeException.class,
+        () -> {
+          walletMock.getShieldedContractScalingFactor(contractAddress);
+        }
+    );
   }
 
   @Test
   public void testCheckBigIntegerRange() {
     Wallet wallet = new Wallet();
-    try {
-      Whitebox.invokeMethod(wallet, "checkBigIntegerRange",
-          new BigInteger("-1"));
-    } catch (Exception e) {
-      assertEquals("public amount must be non-negative", e.getMessage());
-    }
+
+    assertThrows(
+        "public amount must be non-negative",
+        Exception.class,
+        () -> {
+          Whitebox.invokeMethod(wallet, "checkBigIntegerRange",
+              new BigInteger("-1"));
+        }
+    );
   }
 
   @Test
@@ -862,14 +882,16 @@ public class WalletMockTest {
     BigInteger fromAmount = new BigInteger("10");
     BigInteger toAmount = new BigInteger("10");
     doThrow(new ContractExeException("")).when(walletMock).getShieldedContractScalingFactor(any());
-    try {
-      PowerMockito.when(walletMock,
-          "checkPublicAmount",
-          address, fromAmount, toAmount
-      ).thenCallRealMethod();
-    } catch (Exception e) {
-      assertTrue( e instanceof ContractExeException);
-    }
+
+    assertThrows(
+        ContractExeException.class,
+        () -> {
+          PowerMockito.when(walletMock,
+              "checkPublicAmount",
+              address, fromAmount, toAmount
+          ).thenCallRealMethod();
+        }
+    );
   }
 
   @Test
@@ -883,14 +905,15 @@ public class WalletMockTest {
     byte[] scalingFactorBytes = ByteUtil.bigIntegerToBytes(new BigInteger("-1"));
 
     when(walletMock.getShieldedContractScalingFactor(any())).thenReturn(scalingFactorBytes);
-    try {
-      PowerMockito.when(walletMock,
-          "checkPublicAmount",
-          address, fromAmount, toAmount
-      ).thenCallRealMethod();
-    } catch (Exception e) {
-      assertTrue(e instanceof ContractValidateException);
-    }
+    assertThrows(
+        ContractValidateException.class,
+        () -> {
+          PowerMockito.when(walletMock,
+              "checkPublicAmount",
+              address, fromAmount, toAmount
+          ).thenCallRealMethod();
+        }
+    );
   }
 
   @Test
@@ -905,14 +928,16 @@ public class WalletMockTest {
     mockStatic(ByteUtil.class);
     when(ByteUtil.bytesToBigInteger(any())).thenReturn(new BigInteger("-1"));
     when(walletMock.getShieldedContractScalingFactor(any())).thenReturn(scalingFactorBytes);
-    try {
-      PowerMockito.when(walletMock,
-          "checkPublicAmount",
-          address, fromAmount, toAmount
-      ).thenCallRealMethod();
-    } catch (Exception e) {
-      assertTrue(e instanceof ContractValidateException);
-    }
+
+    assertThrows(
+        ContractValidateException.class,
+        () -> {
+          PowerMockito.when(walletMock,
+              "checkPublicAmount",
+              address, fromAmount, toAmount
+          ).thenCallRealMethod();
+        }
+    );
   }
 
   @Test
@@ -929,14 +954,16 @@ public class WalletMockTest {
     Wallet walletMock = mock(Wallet.class);
     mockStatic(KeyIo.class);
     when(KeyIo.decodePaymentAddress(any())).thenReturn(null);
-    try {
-      PowerMockito.when(walletMock,
-          "getShieldedTRC20Nullifier",
-          note, pos, ak, nk
-      ).thenCallRealMethod();
-    } catch (Exception e) {
-      assertTrue(e instanceof ZksnarkException);
-    }
+
+    assertThrows(
+        ZksnarkException.class,
+        () -> {
+          PowerMockito.when(walletMock,
+              "getShieldedTRC20Nullifier",
+              note, pos, ak, nk
+          ).thenCallRealMethod();
+        }
+    );
   }
 
   @Test
@@ -945,11 +972,13 @@ public class WalletMockTest {
     Protocol.TransactionInfo.Log log = Protocol.TransactionInfo.Log.newBuilder().build();
     byte[] contractAddress = "contractAddress".getBytes(StandardCharsets.UTF_8);
     LazyStringArrayList topicsList = new LazyStringArrayList();
-    try {
-      Whitebox.invokeMethod(walletMock, "getShieldedTRC20LogType", log, contractAddress, topicsList);
-    } catch (Exception e) {
-      assertTrue(e instanceof ZksnarkException);
-    }
+    assertThrows(
+        ZksnarkException.class,
+        () -> {
+          Whitebox.invokeMethod(walletMock, "getShieldedTRC20LogType",
+              log, contractAddress, topicsList);
+        }
+    );
   }
   @Test
   public void testGetShieldedTRC20LogType1() {
@@ -1025,20 +1054,22 @@ public class WalletMockTest {
     Wallet walletMock = mock(Wallet.class);
     mockStatic(KeyIo.class);
     when(KeyIo.decodePaymentAddress(any())).thenReturn(null);
-    try {
-      PowerMockito.when(walletMock,
-          "buildShieldedTRC20InputWithAK",
-          builder,
-          spendNote,
-          ak, nk
-      ).thenCallRealMethod();
-    } catch (Exception e) {
-      assertTrue(e instanceof ZksnarkException);
-    }
+
+    assertThrows(
+        ZksnarkException.class,
+        () -> {
+          PowerMockito.when(walletMock,
+              "buildShieldedTRC20InputWithAK",
+              builder,
+              spendNote,
+              ak, nk
+          ).thenCallRealMethod();
+        }
+    );
   }
 
   @Test
-  public void testBuildShieldedTRC20InputWithAK1() throws ZksnarkException {
+  public void testBuildShieldedTRC20InputWithAK1() throws Exception {
     ShieldedTRC20ParametersBuilder builder =  new ShieldedTRC20ParametersBuilder("transfer");
     GrpcAPI.Note note = GrpcAPI.Note.newBuilder()
         .setValue(100)
@@ -1062,16 +1093,14 @@ public class WalletMockTest {
     when(KeyIo.decodePaymentAddress(any())).thenReturn(paymentAddress);
     when(paymentAddress.getD()).thenReturn(diversifierT);
     when(paymentAddress.getPkD()).thenReturn("pkd".getBytes());
-    try {
-      PowerMockito.when(walletMock,
-          "buildShieldedTRC20InputWithAK",
-          builder,
-          spendNote,
-          ak, nk
-      ).thenCallRealMethod();
-    } catch (Exception e) {
-      assertTrue(e instanceof ZksnarkException);
-    }
+
+    PowerMockito.when(walletMock,
+        "buildShieldedTRC20InputWithAK",
+        builder,
+        spendNote,
+        ak, nk
+    ).thenCallRealMethod();
+    assertTrue(true);
   }
 
   @Test
@@ -1125,7 +1154,7 @@ public class WalletMockTest {
 
     SmartContractOuterClass.SmartContractDataWrapper smartContractDataWrapper =
         wallet.getContractInfo(bytesMessage);
-    assertEquals(null, smartContractDataWrapper);
+    assertNull(smartContractDataWrapper);
   }
 
   @Test
@@ -1166,6 +1195,6 @@ public class WalletMockTest {
 
     SmartContractOuterClass.SmartContractDataWrapper smartContractDataWrapper =
         wallet.getContractInfo(bytesMessage);
-    Assert.assertNotEquals(null, smartContractDataWrapper);
+    assertNotNull( smartContractDataWrapper);
   }
 }
