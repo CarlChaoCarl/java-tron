@@ -1,11 +1,15 @@
 package org.tron.core;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -21,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 import com.google.protobuf.LazyStringArrayList;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -34,10 +37,8 @@ import org.tron.common.parameter.CommonParameter;
 import org.tron.common.utils.ByteUtil;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.common.utils.client.WalletClient;
-import org.tron.core.capsule.AbiCapsule;
 import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.BlockCapsule;
-import org.tron.core.capsule.CodeCapsule;
 import org.tron.core.capsule.ContractCapsule;
 import org.tron.core.capsule.ContractStateCapsule;
 import org.tron.core.capsule.TransactionCapsule;
@@ -69,7 +70,6 @@ import org.tron.core.store.DynamicPropertiesStore;
 import org.tron.core.store.TransactionHistoryStore;
 import org.tron.core.store.TransactionRetStore;
 import org.tron.core.zen.ShieldedTRC20ParametersBuilder;
-import org.tron.core.zen.ZenTransactionBuilder;
 import org.tron.core.zen.address.DiversifierT;
 import org.tron.core.zen.address.ExpandedSpendingKey;
 import org.tron.core.zen.address.KeyIo;
@@ -92,9 +92,6 @@ import org.tron.protos.contract.SmartContractOuterClass;
     Protocol.Transaction.Contract.ContractType.class
 })
 public class WalletMockTest {
-  @Before
-  public void init() {
-  }
 
   @After
   public void  clearMocks() {
@@ -105,10 +102,10 @@ public class WalletMockTest {
   public void testSetTransactionNullException() throws Exception {
     Wallet wallet = new Wallet();
     TransactionCapsule transactionCapsuleMock
-        = PowerMockito.mock(TransactionCapsule.class);
+        = mock(TransactionCapsule.class);
     Whitebox.invokeMethod(wallet,
         "setTransaction", transactionCapsuleMock);
-    Assert.assertEquals(true, true);
+    assertTrue(true);
   }
 
   @Test
@@ -116,23 +113,24 @@ public class WalletMockTest {
       throws Exception {
     Wallet wallet = new Wallet();
     com.google.protobuf.Message message =
-        PowerMockito.mock(com.google.protobuf.Message.class);
+        mock(com.google.protobuf.Message.class);
     Protocol.Transaction.Contract.ContractType contractType =
-        PowerMockito.mock(Protocol.Transaction.Contract.ContractType.class);
+        mock(Protocol.Transaction.Contract.ContractType.class);
     long timeout = 100L;
-    TransactionCapsule transactionCapsuleMock = PowerMockito.mock(TransactionCapsule.class);
+    TransactionCapsule transactionCapsuleMock =
+        mock(TransactionCapsule.class);
 
-    PowerMockito.whenNew(TransactionCapsule.class)
+    whenNew(TransactionCapsule.class)
         .withAnyArguments().thenReturn(transactionCapsuleMock);
     try {
       Whitebox.invokeMethod(wallet,
           "createTransactionCapsuleWithoutValidateWithTimeout",
           message, contractType, timeout);
     } catch (Exception e) {
-      Assert.assertTrue(false);
+      assertTrue(false);
     }
 
-    Assert.assertTrue(true);
+    assertTrue(true);
   }
 
   @Test
@@ -140,24 +138,24 @@ public class WalletMockTest {
       throws Exception {
     Wallet wallet = new Wallet();
     com.google.protobuf.Message message =
-        PowerMockito.mock(com.google.protobuf.Message.class);
+        mock(com.google.protobuf.Message.class);
     Protocol.Transaction.Contract.ContractType contractType =
-        PowerMockito.mock(Protocol.Transaction.Contract.ContractType.class);
+        mock(Protocol.Transaction.Contract.ContractType.class);
     long timeout = 100L;
     BlockCapsule.BlockId blockId = new BlockCapsule.BlockId();
 
-    TransactionCapsule transactionCapsuleMock = PowerMockito.mock(TransactionCapsule.class);
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
+    TransactionCapsule transactionCapsuleMock = mock(TransactionCapsule.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
     Whitebox.setInternalState(wallet, "chainBaseManager", chainBaseManagerMock);
 
     when(chainBaseManagerMock.getHeadBlockId()).thenReturn(blockId);
 
-    PowerMockito.whenNew(TransactionCapsule.class)
+    whenNew(TransactionCapsule.class)
         .withAnyArguments().thenReturn(transactionCapsuleMock);
     Whitebox.invokeMethod(wallet,
         "createTransactionCapsuleWithoutValidateWithTimeout",
         message, contractType, timeout);
-    Assert.assertEquals(true, true);
+    assertTrue(true);
   }
 
 
@@ -166,7 +164,7 @@ public class WalletMockTest {
     Wallet wallet = new Wallet();
     Protocol.Transaction transaction = Protocol.Transaction.newBuilder().build();
 
-    TronNetDelegate tronNetDelegateMock = PowerMockito.mock(TronNetDelegate.class);
+    TronNetDelegate tronNetDelegateMock = mock(TronNetDelegate.class);
     when(tronNetDelegateMock.isBlockUnsolidified()).thenReturn(true);
 
     Whitebox.setInternalState(wallet, "tronNetDelegate", tronNetDelegateMock);
@@ -174,7 +172,7 @@ public class WalletMockTest {
     GrpcAPI.Return ret = Whitebox.invokeMethod(wallet,
         "broadcastTransaction", transaction);
 
-    Assert.assertEquals(GrpcAPI.Return.response_code.BLOCK_UNSOLIDIFIED, ret.getCode());
+    assertEquals(GrpcAPI.Return.response_code.BLOCK_UNSOLIDIFIED, ret.getCode());
   }
 
   @Test
@@ -183,7 +181,7 @@ public class WalletMockTest {
     Protocol.Transaction transaction = Protocol.Transaction.newBuilder().build();
     List<PeerConnection> peerConnections = new ArrayList<>();
 
-    TronNetDelegate tronNetDelegateMock = PowerMockito.mock(TronNetDelegate.class);
+    TronNetDelegate tronNetDelegateMock = mock(TronNetDelegate.class);
     when(tronNetDelegateMock.isBlockUnsolidified()).thenReturn(false);
 
     Whitebox.setInternalState(wallet, "tronNetDelegate", tronNetDelegateMock);
@@ -193,7 +191,7 @@ public class WalletMockTest {
     GrpcAPI.Return ret = Whitebox.invokeMethod(wallet,
         "broadcastTransaction", transaction);
 
-    Assert.assertEquals(GrpcAPI.Return.response_code.NO_CONNECTION, ret.getCode());
+    assertEquals(GrpcAPI.Return.response_code.NO_CONNECTION, ret.getCode());
   }
 
   @Test
@@ -206,7 +204,7 @@ public class WalletMockTest {
     peerConnections.add(p1);
     peerConnections.add(p2);
 
-    TronNetDelegate tronNetDelegateMock = PowerMockito.mock(TronNetDelegate.class);
+    TronNetDelegate tronNetDelegateMock = mock(TronNetDelegate.class);
     when(tronNetDelegateMock.isBlockUnsolidified()).thenReturn(false);
 
     Whitebox.setInternalState(wallet, "tronNetDelegate", tronNetDelegateMock);
@@ -216,7 +214,7 @@ public class WalletMockTest {
     GrpcAPI.Return ret = Whitebox.invokeMethod(wallet,
         "broadcastTransaction", transaction);
 
-    Assert.assertEquals(GrpcAPI.Return.response_code.NOT_ENOUGH_EFFECTIVE_CONNECTION,
+    assertEquals(GrpcAPI.Return.response_code.NOT_ENOUGH_EFFECTIVE_CONNECTION,
         ret.getCode());
   }
 
@@ -225,8 +223,8 @@ public class WalletMockTest {
     Wallet wallet = new Wallet();
     Protocol.Transaction transaction = Protocol.Transaction.newBuilder().build();
 
-    TronNetDelegate tronNetDelegateMock = PowerMockito.mock(TronNetDelegate.class);
-    Manager managerMock = PowerMockito.mock(Manager.class);
+    TronNetDelegate tronNetDelegateMock = mock(TronNetDelegate.class);
+    Manager managerMock = mock(Manager.class);
     when(tronNetDelegateMock.isBlockUnsolidified()).thenReturn(false);
     when(managerMock.isTooManyPending()).thenReturn(true);
 
@@ -236,7 +234,7 @@ public class WalletMockTest {
     GrpcAPI.Return ret = Whitebox.invokeMethod(wallet,
         "broadcastTransaction", transaction);
 
-    Assert.assertEquals(GrpcAPI.Return.response_code.SERVER_BUSY, ret.getCode());
+    assertEquals(GrpcAPI.Return.response_code.SERVER_BUSY, ret.getCode());
   }
 
   @Test
@@ -252,8 +250,8 @@ public class WalletMockTest {
         .expireAfterWrite(1, TimeUnit.HOURS).recordStats().build();
     transactionIdCache.put(txID, true);
 
-    TronNetDelegate tronNetDelegateMock = PowerMockito.mock(TronNetDelegate.class);
-    Manager managerMock = PowerMockito.mock(Manager.class);
+    TronNetDelegate tronNetDelegateMock = mock(TronNetDelegate.class);
+    Manager managerMock = mock(Manager.class);
     when(tronNetDelegateMock.isBlockUnsolidified()).thenReturn(false);
     when(managerMock.isTooManyPending()).thenReturn(false);
     when(managerMock.getTransactionIdCache()).thenReturn(transactionIdCache);
@@ -265,7 +263,7 @@ public class WalletMockTest {
     GrpcAPI.Return ret = Whitebox.invokeMethod(wallet,
         "broadcastTransaction", transaction);
 
-    Assert.assertEquals(GrpcAPI.Return.response_code.DUP_TRANSACTION_ERROR,
+    assertEquals(GrpcAPI.Return.response_code.DUP_TRANSACTION_ERROR,
         ret.getCode());
   }
 
@@ -275,11 +273,11 @@ public class WalletMockTest {
     Wallet wallet = new Wallet();
     Protocol.Transaction transaction = Protocol.Transaction.newBuilder().build();
 
-    TronNetDelegate tronNetDelegateMock = PowerMockito.mock(TronNetDelegate.class);
-    Manager managerMock = PowerMockito.mock(Manager.class);
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
+    TronNetDelegate tronNetDelegateMock = mock(TronNetDelegate.class);
+    Manager managerMock = mock(Manager.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
     DynamicPropertiesStore dynamicPropertiesStoreMock
-        = PowerMockito.mock(DynamicPropertiesStore.class);
+        = mock(DynamicPropertiesStore.class);
     when(tronNetDelegateMock.isBlockUnsolidified()).thenReturn(false);
     when(managerMock.isTooManyPending()).thenReturn(false);
     when(chainBaseManagerMock.getDynamicPropertiesStore())
@@ -294,7 +292,7 @@ public class WalletMockTest {
     GrpcAPI.Return ret = Whitebox.invokeMethod(wallet,
         "broadcastTransaction", transaction);
 
-    Assert.assertEquals(GrpcAPI.Return.response_code.CONTRACT_VALIDATE_ERROR,
+    assertEquals(GrpcAPI.Return.response_code.CONTRACT_VALIDATE_ERROR,
         ret.getCode());
   }
 
@@ -303,11 +301,11 @@ public class WalletMockTest {
     Wallet wallet = new Wallet();
     Protocol.Transaction transaction = getExampleTrans();
 
-    TronNetDelegate tronNetDelegateMock = PowerMockito.mock(TronNetDelegate.class);
-    Manager managerMock = PowerMockito.mock(Manager.class);
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
+    TronNetDelegate tronNetDelegateMock = mock(TronNetDelegate.class);
+    Manager managerMock = mock(Manager.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
     DynamicPropertiesStore dynamicPropertiesStoreMock
-        = PowerMockito.mock(DynamicPropertiesStore.class);
+        = mock(DynamicPropertiesStore.class);
     when(tronNetDelegateMock.isBlockUnsolidified()).thenReturn(false);
     when(managerMock.isTooManyPending()).thenReturn(false);
     when(chainBaseManagerMock.getDynamicPropertiesStore())
@@ -322,7 +320,7 @@ public class WalletMockTest {
     GrpcAPI.Return ret = Whitebox.invokeMethod(wallet,
         "broadcastTransaction", transaction);
 
-    Assert.assertEquals(GrpcAPI.Return.response_code.OTHER_ERROR, ret.getCode());
+    assertEquals(GrpcAPI.Return.response_code.OTHER_ERROR, ret.getCode());
   }
 
   private Protocol.Transaction getExampleTrans() {
@@ -347,21 +345,21 @@ public class WalletMockTest {
   }
 
   private void mockEnv(Wallet wallet, TronException tronException) throws Exception {
-    TronNetDelegate tronNetDelegateMock = PowerMockito.mock(TronNetDelegate.class);
-    Manager managerMock = PowerMockito.mock(Manager.class);
+    TronNetDelegate tronNetDelegateMock = mock(TronNetDelegate.class);
+    Manager managerMock = mock(Manager.class);
     ChainBaseManager chainBaseManagerMock
-        = PowerMockito.mock(ChainBaseManager.class);
+        = mock(ChainBaseManager.class);
     DynamicPropertiesStore dynamicPropertiesStoreMock
-        = PowerMockito.mock(DynamicPropertiesStore.class);
+        = mock(DynamicPropertiesStore.class);
     TransactionMessage transactionMessageMock
-        = PowerMockito.mock(TransactionMessage.class);
+        = mock(TransactionMessage.class);
 
     when(tronNetDelegateMock.isBlockUnsolidified()).thenReturn(false);
     when(managerMock.isTooManyPending()).thenReturn(false);
     when(chainBaseManagerMock.getDynamicPropertiesStore())
         .thenReturn(dynamicPropertiesStoreMock);
     when(dynamicPropertiesStoreMock.supportVM()).thenReturn(false);
-    PowerMockito.whenNew(TransactionMessage.class)
+    whenNew(TransactionMessage.class)
         .withAnyArguments().thenReturn(transactionMessageMock);
     doThrow(tronException).when(managerMock).pushTransaction(any());
 
@@ -378,7 +376,7 @@ public class WalletMockTest {
     mockEnv(wallet, new ValidateSignatureException());
     GrpcAPI.Return ret = Whitebox.invokeMethod(wallet,
         "broadcastTransaction", transaction);
-    Assert.assertEquals(GrpcAPI.Return.response_code.SIGERROR, ret.getCode());
+    assertEquals(GrpcAPI.Return.response_code.SIGERROR, ret.getCode());
   }
 
   @Test
@@ -388,7 +386,7 @@ public class WalletMockTest {
     mockEnv(wallet, new ContractExeException());
     GrpcAPI.Return ret = Whitebox.invokeMethod(wallet,
         "broadcastTransaction", transaction);
-    Assert.assertEquals(GrpcAPI.Return.response_code.CONTRACT_EXE_ERROR, ret.getCode());
+    assertEquals(GrpcAPI.Return.response_code.CONTRACT_EXE_ERROR, ret.getCode());
   }
 
   @Test
@@ -399,7 +397,7 @@ public class WalletMockTest {
     mockEnv(wallet, new AccountResourceInsufficientException(""));
     GrpcAPI.Return ret = Whitebox.invokeMethod(wallet,
         "broadcastTransaction", transaction);
-    Assert.assertEquals(GrpcAPI.Return.response_code.BANDWITH_ERROR, ret.getCode());
+    assertEquals(GrpcAPI.Return.response_code.BANDWITH_ERROR, ret.getCode());
   }
 
   @Test
@@ -410,7 +408,7 @@ public class WalletMockTest {
     mockEnv(wallet, new DupTransactionException(""));
     GrpcAPI.Return ret = Whitebox.invokeMethod(wallet,
         "broadcastTransaction", transaction);
-    Assert.assertEquals(GrpcAPI.Return.response_code.DUP_TRANSACTION_ERROR, ret.getCode());
+    assertEquals(GrpcAPI.Return.response_code.DUP_TRANSACTION_ERROR, ret.getCode());
   }
 
   @Test
@@ -420,7 +418,7 @@ public class WalletMockTest {
     mockEnv(wallet, new TaposException(""));
     GrpcAPI.Return ret = Whitebox.invokeMethod(wallet,
         "broadcastTransaction", transaction);
-    Assert.assertEquals(GrpcAPI.Return.response_code.TAPOS_ERROR, ret.getCode());
+    assertEquals(GrpcAPI.Return.response_code.TAPOS_ERROR, ret.getCode());
   }
 
   @Test
@@ -432,43 +430,43 @@ public class WalletMockTest {
 
     GrpcAPI.Return ret = Whitebox.invokeMethod(wallet,
         "broadcastTransaction", transaction);
-    Assert.assertEquals(GrpcAPI.Return.response_code.TOO_BIG_TRANSACTION_ERROR, ret.getCode());
+    assertEquals(GrpcAPI.Return.response_code.TOO_BIG_TRANSACTION_ERROR, ret.getCode());
   }
 
   @Test
   public void testGetBlockByNum() throws Exception {
     Wallet wallet = new Wallet();
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
     Whitebox.setInternalState(wallet, "chainBaseManager", chainBaseManagerMock);
     doThrow(new ItemNotFoundException()).when(chainBaseManagerMock).getBlockByNum(anyLong());
 
     Protocol.Block block = Whitebox.invokeMethod(wallet,
         "getBlockByNum", 0L);
-    Assert.assertNull(block);
+    assertNull(block);
   }
 
   @Test
   public void testGetBlockCapsuleByNum() throws Exception {
     Wallet wallet = new Wallet();
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
     Whitebox.setInternalState(wallet, "chainBaseManager", chainBaseManagerMock);
     doThrow(new ItemNotFoundException()).when(chainBaseManagerMock).getBlockByNum(anyLong());
 
     Protocol.Block block = Whitebox.invokeMethod(wallet,
         "getBlockCapsuleByNum", 0L);
-    Assert.assertNull(block);
+    assertNull(block);
   }
 
   @Test
   public void testGetTransactionCountByBlockNum() throws Exception {
     Wallet wallet = new Wallet();
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
     Whitebox.setInternalState(wallet, "chainBaseManager", chainBaseManagerMock);
     doThrow(new ItemNotFoundException()).when(chainBaseManagerMock).getBlockByNum(anyLong());
 
     long count = Whitebox.invokeMethod(wallet,
         "getTransactionCountByBlockNum", 0L);
-    Assert.assertEquals(count, 0L);
+    assertEquals(count, 0L);
   }
 
   @Test
@@ -477,15 +475,15 @@ public class WalletMockTest {
     ByteString transactionId = null;
     Protocol.Transaction transaction = Whitebox.invokeMethod(wallet,
         "getTransactionById", transactionId);
-    Assert.assertEquals(transaction, null);
+    assertEquals(transaction, null);
   }
 
   @Test
   public void testGetTransactionById2() throws Exception {
     Wallet wallet = new Wallet();
     ByteString transactionId = ByteString.empty();
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
-    TransactionStore transactionStoreMock = PowerMockito.mock(TransactionStore.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
+    TransactionStore transactionStoreMock = mock(TransactionStore.class);
 
     when(chainBaseManagerMock.getTransactionStore()).thenReturn(transactionStoreMock);
     Whitebox.setInternalState(wallet, "chainBaseManager", chainBaseManagerMock);
@@ -493,16 +491,16 @@ public class WalletMockTest {
 
     Protocol.Transaction transaction = Whitebox.invokeMethod(wallet,
         "getTransactionById", transactionId);
-    Assert.assertEquals(transaction, null);
+    assertEquals(transaction, null);
   }
 
   @Test
   public void testGetTransactionById3() throws Exception {
     Wallet wallet = new Wallet();
     ByteString transactionId = ByteString.empty();
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
-    TransactionStore transactionStoreMock = PowerMockito.mock(TransactionStore.class);
-    TransactionCapsule transactionCapsuleMock = PowerMockito.mock(TransactionCapsule.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
+    TransactionStore transactionStoreMock = mock(TransactionStore.class);
+    TransactionCapsule transactionCapsuleMock = mock(TransactionCapsule.class);
     Protocol.Transaction transaction = Protocol.Transaction.newBuilder().build();
 
     when(chainBaseManagerMock.getTransactionStore()).thenReturn(transactionStoreMock);
@@ -512,7 +510,7 @@ public class WalletMockTest {
 
     Protocol.Transaction transactionRet = Whitebox.invokeMethod(wallet,
         "getTransactionById", transactionId);
-    Assert.assertEquals(transaction, transactionRet);
+    assertEquals(transaction, transactionRet);
   }
 
   @Test
@@ -521,15 +519,15 @@ public class WalletMockTest {
     ByteString transactionId = null;
     Protocol.Transaction transaction = Whitebox.invokeMethod(wallet,
         "getTransactionCapsuleById", transactionId);
-    Assert.assertEquals(transaction, null);
+    assertEquals(transaction, null);
   }
 
   @Test
   public void testGetTransactionCapsuleById1() throws Exception {
     Wallet wallet = new Wallet();
     ByteString transactionId = ByteString.empty();
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
-    TransactionStore transactionStoreMock = PowerMockito.mock(TransactionStore.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
+    TransactionStore transactionStoreMock = mock(TransactionStore.class);
 
     when(chainBaseManagerMock.getTransactionStore()).thenReturn(transactionStoreMock);
     Whitebox.setInternalState(wallet, "chainBaseManager", chainBaseManagerMock);
@@ -537,7 +535,7 @@ public class WalletMockTest {
 
     Protocol.Transaction transaction = Whitebox.invokeMethod(wallet,
         "getTransactionCapsuleById", transactionId);
-    Assert.assertEquals(transaction, null);
+    assertEquals(transaction, null);
   }
 
   @Test
@@ -546,15 +544,15 @@ public class WalletMockTest {
     ByteString transactionId = null;
     Protocol.TransactionInfo transactionInfo = Whitebox.invokeMethod(wallet,
         "getTransactionInfoById", transactionId);
-    Assert.assertEquals(transactionInfo, null);
+    assertEquals(transactionInfo, null);
   }
 
   @Test
   public void testGetTransactionInfoById1() throws Exception {
     Wallet wallet = new Wallet();
     ByteString transactionId = ByteString.empty();
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
-    TransactionRetStore transactionRetStoreMock = PowerMockito.mock(TransactionRetStore.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
+    TransactionRetStore transactionRetStoreMock = mock(TransactionRetStore.class);
 
     when(chainBaseManagerMock.getTransactionRetStore()).thenReturn(transactionRetStoreMock);
     Whitebox.setInternalState(wallet, "chainBaseManager", chainBaseManagerMock);
@@ -562,17 +560,17 @@ public class WalletMockTest {
 
     Protocol.TransactionInfo transactionInfo = Whitebox.invokeMethod(wallet,
         "getTransactionInfoById", transactionId);
-    Assert.assertEquals(transactionInfo, null);
+    assertEquals(transactionInfo, null);
   }
 
   @Test
   public void testGetTransactionInfoById2() throws Exception {
     Wallet wallet = new Wallet();
     ByteString transactionId = ByteString.empty();
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
-    TransactionRetStore transactionRetStoreMock = PowerMockito.mock(TransactionRetStore.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
+    TransactionRetStore transactionRetStoreMock = mock(TransactionRetStore.class);
     TransactionHistoryStore transactionHistoryStoreMock =
-        PowerMockito.mock(TransactionHistoryStore.class);
+        mock(TransactionHistoryStore.class);
 
     when(chainBaseManagerMock.getTransactionRetStore())
         .thenReturn(transactionRetStoreMock);
@@ -584,7 +582,7 @@ public class WalletMockTest {
 
     Protocol.TransactionInfo transactionInfo = Whitebox.invokeMethod(wallet,
         "getTransactionInfoById", transactionId);
-    Assert.assertEquals(transactionInfo, null);
+    assertEquals(transactionInfo, null);
   }
 
   @Test
@@ -593,15 +591,15 @@ public class WalletMockTest {
     ByteString proposalId = null;
     Protocol.TransactionInfo transactionInfo = Whitebox.invokeMethod(wallet,
         "getProposalById", proposalId);
-    Assert.assertEquals(transactionInfo, null);
+    assertEquals(transactionInfo, null);
   }
 
   @Test
   public void testGetMemoFeePrices() throws Exception {
     Wallet wallet = new Wallet();
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
     DynamicPropertiesStore dynamicPropertiesStoreMock =
-        PowerMockito.mock(DynamicPropertiesStore.class);
+        mock(DynamicPropertiesStore.class);
 
     when(chainBaseManagerMock.getDynamicPropertiesStore()).thenReturn(dynamicPropertiesStoreMock);
     doThrow(new IllegalArgumentException("not found MEMO_FEE_HISTORY"))
@@ -611,15 +609,15 @@ public class WalletMockTest {
 
     GrpcAPI.PricesResponseMessage responseMessage = Whitebox.invokeMethod(wallet,
         "getMemoFeePrices");
-    Assert.assertEquals(responseMessage, null);
+    assertEquals(responseMessage, null);
   }
 
   @Test
   public void testGetEnergyFeeByTime() throws Exception {
     Wallet wallet = new Wallet();
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
     DynamicPropertiesStore dynamicPropertiesStoreMock =
-        PowerMockito.mock(DynamicPropertiesStore.class);
+        mock(DynamicPropertiesStore.class);
     long now = System.currentTimeMillis();
 
     when(chainBaseManagerMock.getDynamicPropertiesStore()).thenReturn(dynamicPropertiesStoreMock);
@@ -631,15 +629,15 @@ public class WalletMockTest {
 
     long energyFee = Whitebox.invokeMethod(wallet,
         "getEnergyFee", now);
-    Assert.assertEquals(energyFee, 10L);
+    assertEquals(energyFee, 10L);
   }
 
   @Test
   public void testGetEnergyPrices() throws Exception {
     Wallet wallet = new Wallet();
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
     DynamicPropertiesStore dynamicPropertiesStoreMock =
-        PowerMockito.mock(DynamicPropertiesStore.class);
+        mock(DynamicPropertiesStore.class);
 
     when(chainBaseManagerMock.getDynamicPropertiesStore()).thenReturn(dynamicPropertiesStoreMock);
     doThrow(new IllegalArgumentException("not found ENERGY_PRICE_HISTORY"))
@@ -649,15 +647,15 @@ public class WalletMockTest {
 
     GrpcAPI.PricesResponseMessage pricesResponseMessage = Whitebox.invokeMethod(wallet,
         "getEnergyPrices");
-    Assert.assertEquals(pricesResponseMessage, null);
+    assertEquals(pricesResponseMessage, null);
   }
 
   @Test
   public void testGetBandwidthPrices() throws Exception {
     Wallet wallet = new Wallet();
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
     DynamicPropertiesStore dynamicPropertiesStoreMock =
-        PowerMockito.mock(DynamicPropertiesStore.class);
+        mock(DynamicPropertiesStore.class);
 
     when(chainBaseManagerMock.getDynamicPropertiesStore()).thenReturn(dynamicPropertiesStoreMock);
     doThrow(new IllegalArgumentException("not found BANDWIDTH_PRICE_HISTORY"))
@@ -667,7 +665,7 @@ public class WalletMockTest {
 
     GrpcAPI.PricesResponseMessage pricesResponseMessage = Whitebox.invokeMethod(wallet,
         "getBandwidthPrices");
-    Assert.assertEquals(pricesResponseMessage, null);
+    assertEquals(pricesResponseMessage, null);
   }
 
   @Test
@@ -680,7 +678,7 @@ public class WalletMockTest {
     try {
       wallet.checkBlockIdentifier(blockIdentifier);
     } catch (Exception e) {
-      Assert.assertTrue(e instanceof IllegalArgumentException);
+      assertTrue(e instanceof IllegalArgumentException);
     }
 
     blockIdentifier =
@@ -690,7 +688,7 @@ public class WalletMockTest {
     try {
       wallet.checkBlockIdentifier(blockIdentifier);
     } catch (Exception e) {
-      Assert.assertTrue(e instanceof IllegalArgumentException);
+      assertTrue(e instanceof IllegalArgumentException);
     }
 
     blockIdentifier =
@@ -700,7 +698,7 @@ public class WalletMockTest {
     try {
       wallet.checkBlockIdentifier(blockIdentifier);
     } catch (Exception e) {
-      Assert.assertTrue(e instanceof IllegalArgumentException);
+      assertTrue(e instanceof IllegalArgumentException);
     }
   }
 
@@ -714,7 +712,7 @@ public class WalletMockTest {
     try {
       wallet.checkAccountIdentifier(accountIdentifier);
     } catch (Exception e) {
-      Assert.assertTrue(e instanceof IllegalArgumentException);
+      assertTrue(e instanceof IllegalArgumentException);
     }
 
     accountIdentifier = BalanceContract.AccountIdentifier.newBuilder()
@@ -722,7 +720,7 @@ public class WalletMockTest {
     try {
       wallet.checkAccountIdentifier(accountIdentifier);
     } catch (Exception e) {
-      Assert.assertTrue(e instanceof IllegalArgumentException);
+      assertTrue(e instanceof IllegalArgumentException);
     }
   }
 
@@ -740,15 +738,15 @@ public class WalletMockTest {
     triggerParam.setShieldedTRC20Parameters(shieldedTRC20Parameters);
     triggerParam.addSpendAuthoritySignature(bytesMessage);
 
-    CommonParameter commonParameterMock = PowerMockito.mock(Args.class);
-    PowerMockito.mockStatic(CommonParameter.class);
-    PowerMockito.when(CommonParameter.getInstance()).thenReturn(commonParameterMock);
+    CommonParameter commonParameterMock = mock(Args.class);
+    mockStatic(CommonParameter.class);
+    when(CommonParameter.getInstance()).thenReturn(commonParameterMock);
     when(commonParameterMock.isFullNodeAllowShieldedTransactionArgs()).thenReturn(true);
 
     try {
       wallet.getTriggerInputForShieldedTRC20Contract(triggerParam.build());
     } catch (Exception e) {
-      Assert.assertTrue( e instanceof  ZksnarkException);
+      assertTrue( e instanceof  ZksnarkException);
     }
 
   }
@@ -773,9 +771,9 @@ public class WalletMockTest {
     triggerParam.setShieldedTRC20Parameters(shieldedTRC20Parameters);
     triggerParam.addSpendAuthoritySignature(bytesMessage);
 
-    CommonParameter commonParameterMock = PowerMockito.mock(Args.class);
-    PowerMockito.mockStatic(CommonParameter.class);
-    PowerMockito.when(CommonParameter.getInstance()).thenReturn(commonParameterMock);
+    CommonParameter commonParameterMock = mock(Args.class);
+    mockStatic(CommonParameter.class);
+    when(CommonParameter.getInstance()).thenReturn(commonParameterMock);
     when(commonParameterMock.isFullNodeAllowShieldedTransactionArgs()).thenReturn(true);
 
     GrpcAPI.BytesMessage reponse =
@@ -790,7 +788,7 @@ public class WalletMockTest {
     try {
       wallet.getShieldedContractScalingFactor(contractAddress);
     } catch (Exception e) {
-      Assert.assertTrue(e instanceof ContractExeException);
+      assertTrue(e instanceof ContractExeException);
     }
   }
 
@@ -806,7 +804,7 @@ public class WalletMockTest {
     try {
       walletMock.getShieldedContractScalingFactor(contractAddress);
     } catch (Exception e) {
-      Assert.assertTrue(e instanceof ContractExeException);
+      assertTrue(e instanceof ContractExeException);
     }
   }
 
@@ -823,7 +821,7 @@ public class WalletMockTest {
       byte[] listBytes = walletMock.getShieldedContractScalingFactor(contractAddress);
       Assert.assertNotNull(listBytes);
     } catch (Exception e) {
-      Assert.assertNull(e);
+      assertNull(e);
     }
   }
 
@@ -841,7 +839,7 @@ public class WalletMockTest {
     try {
       walletMock.getShieldedContractScalingFactor(contractAddress);
     } catch (Exception e) {
-      Assert.assertTrue(e instanceof ContractExeException);
+      assertTrue(e instanceof ContractExeException);
     }
   }
 
@@ -852,7 +850,7 @@ public class WalletMockTest {
       Whitebox.invokeMethod(wallet, "checkBigIntegerRange",
           new BigInteger("-1"));
     } catch (Exception e) {
-      Assert.assertEquals("public amount must be non-negative", e.getMessage());
+      assertEquals("public amount must be non-negative", e.getMessage());
     }
   }
 
@@ -870,7 +868,7 @@ public class WalletMockTest {
           address, fromAmount, toAmount
       ).thenCallRealMethod();
     } catch (Exception e) {
-      Assert.assertTrue( e instanceof ContractExeException);
+      assertTrue( e instanceof ContractExeException);
     }
   }
 
@@ -891,7 +889,7 @@ public class WalletMockTest {
           address, fromAmount, toAmount
       ).thenCallRealMethod();
     } catch (Exception e) {
-      Assert.assertTrue(e instanceof ContractValidateException);
+      assertTrue(e instanceof ContractValidateException);
     }
   }
 
@@ -904,8 +902,8 @@ public class WalletMockTest {
     BigInteger toAmount = new BigInteger("255");
 
     byte[] scalingFactorBytes = ByteUtil.bigIntegerToBytes(new BigInteger("-1"));
-    PowerMockito.mockStatic(ByteUtil.class);
-    PowerMockito.when(ByteUtil.bytesToBigInteger(any())).thenReturn(new BigInteger("-1"));
+    mockStatic(ByteUtil.class);
+    when(ByteUtil.bytesToBigInteger(any())).thenReturn(new BigInteger("-1"));
     when(walletMock.getShieldedContractScalingFactor(any())).thenReturn(scalingFactorBytes);
     try {
       PowerMockito.when(walletMock,
@@ -913,7 +911,7 @@ public class WalletMockTest {
           address, fromAmount, toAmount
       ).thenCallRealMethod();
     } catch (Exception e) {
-      Assert.assertTrue(e instanceof ContractValidateException);
+      assertTrue(e instanceof ContractValidateException);
     }
   }
 
@@ -929,15 +927,15 @@ public class WalletMockTest {
     byte[] ak = "ak".getBytes(StandardCharsets.UTF_8);
     byte[] nk = "nk".getBytes(StandardCharsets.UTF_8);
     Wallet walletMock = mock(Wallet.class);
-    PowerMockito.mockStatic(KeyIo.class);
-    PowerMockito.when(KeyIo.decodePaymentAddress(any())).thenReturn(null);
+    mockStatic(KeyIo.class);
+    when(KeyIo.decodePaymentAddress(any())).thenReturn(null);
     try {
       PowerMockito.when(walletMock,
           "getShieldedTRC20Nullifier",
           note, pos, ak, nk
       ).thenCallRealMethod();
     } catch (Exception e) {
-      Assert.assertTrue(e instanceof ZksnarkException);
+      assertTrue(e instanceof ZksnarkException);
     }
   }
 
@@ -950,7 +948,7 @@ public class WalletMockTest {
     try {
       Whitebox.invokeMethod(walletMock, "getShieldedTRC20LogType", log, contractAddress, topicsList);
     } catch (Exception e) {
-      Assert.assertTrue(e instanceof ZksnarkException);
+      assertTrue(e instanceof ZksnarkException);
     }
   }
   @Test
@@ -973,9 +971,9 @@ public class WalletMockTest {
           contractAddress,
           topicsList);
     } catch (Exception e) {
-      Assert.assertTrue(false);
+      assertTrue(false);
     }
-    Assert.assertTrue(true);
+    assertTrue(true);
   }
 
 
@@ -1001,9 +999,9 @@ public class WalletMockTest {
           contractAddress,
           topicsList);
     } catch (Exception e) {
-      Assert.assertTrue(false);
+      assertTrue(false);
     }
-    Assert.assertTrue(true);
+    assertTrue(true);
   }
 
   @Test
@@ -1025,8 +1023,8 @@ public class WalletMockTest {
     byte[] ak = "ak".getBytes(StandardCharsets.UTF_8);
     byte[] nk = "nk".getBytes(StandardCharsets.UTF_8);
     Wallet walletMock = mock(Wallet.class);
-    PowerMockito.mockStatic(KeyIo.class);
-    PowerMockito.when(KeyIo.decodePaymentAddress(any())).thenReturn(null);
+    mockStatic(KeyIo.class);
+    when(KeyIo.decodePaymentAddress(any())).thenReturn(null);
     try {
       PowerMockito.when(walletMock,
           "buildShieldedTRC20InputWithAK",
@@ -1035,7 +1033,7 @@ public class WalletMockTest {
           ak, nk
       ).thenCallRealMethod();
     } catch (Exception e) {
-      Assert.assertTrue(e instanceof ZksnarkException);
+      assertTrue(e instanceof ZksnarkException);
     }
   }
 
@@ -1060,8 +1058,8 @@ public class WalletMockTest {
     PaymentAddress paymentAddress = mock(PaymentAddress.class);
     DiversifierT diversifierT = mock(DiversifierT.class);
     Wallet walletMock = mock(Wallet.class);
-    PowerMockito.mockStatic(KeyIo.class);
-    PowerMockito.when(KeyIo.decodePaymentAddress(any())).thenReturn(paymentAddress);
+    mockStatic(KeyIo.class);
+    when(KeyIo.decodePaymentAddress(any())).thenReturn(paymentAddress);
     when(paymentAddress.getD()).thenReturn(diversifierT);
     when(paymentAddress.getPkD()).thenReturn("pkd".getBytes());
     try {
@@ -1072,7 +1070,7 @@ public class WalletMockTest {
           ak, nk
       ).thenCallRealMethod();
     } catch (Exception e) {
-      Assert.assertTrue(e instanceof ZksnarkException);
+      assertTrue(e instanceof ZksnarkException);
     }
   }
 
@@ -1096,8 +1094,8 @@ public class WalletMockTest {
     PaymentAddress paymentAddress = mock(PaymentAddress.class);
     DiversifierT diversifierT = mock(DiversifierT.class);
     Wallet walletMock = mock(Wallet.class);
-    PowerMockito.mockStatic(KeyIo.class);
-    PowerMockito.when(KeyIo.decodePaymentAddress(any())).thenReturn(paymentAddress);
+    mockStatic(KeyIo.class);
+    when(KeyIo.decodePaymentAddress(any())).thenReturn(paymentAddress);
     when(paymentAddress.getD()).thenReturn(diversifierT);
     when(paymentAddress.getPkD()).thenReturn("pkd".getBytes());
     try {
@@ -1108,7 +1106,7 @@ public class WalletMockTest {
           expandedSpendingKey
       ).thenCallRealMethod();
     } catch (Exception e) {
-      Assert.assertTrue(false);
+      assertTrue(false);
     }
   }
 
@@ -1119,15 +1117,15 @@ public class WalletMockTest {
         .setValue(ByteString.copyFrom("test".getBytes()))
         .build();
 
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
-    AccountStore accountStore = PowerMockito.mock(AccountStore.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
+    AccountStore accountStore = mock(AccountStore.class);
     Whitebox.setInternalState(wallet, "chainBaseManager", chainBaseManagerMock);
     when(chainBaseManagerMock.getAccountStore()).thenReturn(accountStore);
     when(accountStore.get(any())).thenReturn(null);
 
     SmartContractOuterClass.SmartContractDataWrapper smartContractDataWrapper =
         wallet.getContractInfo(bytesMessage);
-    Assert.assertEquals(null, smartContractDataWrapper);
+    assertEquals(null, smartContractDataWrapper);
   }
 
   @Test
@@ -1137,9 +1135,9 @@ public class WalletMockTest {
         .setValue(ByteString.copyFrom("test".getBytes()))
         .build();
 
-    ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
-    AccountStore accountStore = PowerMockito.mock(AccountStore.class);
-    ContractStore contractStore = PowerMockito.mock(ContractStore.class);
+    ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
+    AccountStore accountStore = mock(AccountStore.class);
+    ContractStore contractStore = mock(ContractStore.class);
     AbiStore abiStore = mock(AbiStore.class);
     CodeStore codeStore = mock(CodeStore.class);
     ContractStateStore contractStateStore = mock(ContractStateStore.class);

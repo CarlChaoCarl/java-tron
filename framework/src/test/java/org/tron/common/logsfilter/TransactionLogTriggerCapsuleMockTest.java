@@ -82,7 +82,7 @@ public class TransactionLogTriggerCapsuleMockTest {
 
     ProgramResult programResult = ProgramResult.createEmpty();
     programResult.setHReturn("hreturn".getBytes());
-    programResult.setContractAddress("address".getBytes());
+    programResult.setContractAddress(CONTRACT_ADDRESS.getBytes());
 
     when(transactionCapsule.getTrxTrace()).thenReturn(trace);
     when(trace.getReceipt()).thenReturn(receiptCapsule);

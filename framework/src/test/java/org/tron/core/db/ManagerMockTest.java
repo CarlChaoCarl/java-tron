@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.spy;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
@@ -21,8 +22,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
@@ -62,14 +61,6 @@ import org.tron.protos.contract.BalanceContract;
     TransactionUtil.class})
 @Slf4j
 public class ManagerMockTest {
-  @Spy
-  private Manager dbManager = new Manager();
-
-  @Before
-  public void setup() throws Exception {
-    MockitoAnnotations.openMocks(this);
-  }
-
   @After
   public void  clearMocks() {
     Mockito.framework().clearInlineMocks();
@@ -77,6 +68,7 @@ public class ManagerMockTest {
 
   @Test
   public void processTransactionCostTimeMoreThan100() throws Exception {
+    Manager dbManager = spy(new Manager());
     BalanceContract.TransferContract transferContract =
         BalanceContract.TransferContract.newBuilder()
             .setAmount(10)
@@ -168,7 +160,7 @@ public class ManagerMockTest {
     assertNotNull(dbManager.processTransaction(trxCapMock, blockCapMock));
   }
 
-  private void initMockEnv(long headNum, long headTime,
+  private void initMockEnv(Manager dbManager, long headNum, long headTime,
                            long exitHeight, long exitCount, String blockTime)
       throws Exception {
     ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
@@ -193,7 +185,8 @@ public class ManagerMockTest {
 
   @Test
   public void testInitAutoStop() throws Exception {
-    initMockEnv(100L, 12345L,
+    Manager dbManager = spy(new Manager());
+    initMockEnv(dbManager, 100L, 12345L,
         10L, 0L, "0 0 12 * * ?");
     try {
       Whitebox.invokeMethod(dbManager, "initAutoStop");
@@ -205,7 +198,8 @@ public class ManagerMockTest {
 
   @Test
   public void testInitAutoStop1() throws Exception {
-    initMockEnv(10L, 12345L,
+    Manager dbManager = spy(new Manager());
+    initMockEnv(dbManager,10L, 12345L,
         100L, 0L, "0 0 12 * * ?");
     try {
       Whitebox.invokeMethod(dbManager, "initAutoStop");
@@ -217,7 +211,8 @@ public class ManagerMockTest {
 
   @Test
   public void testInitAutoStop2() throws Exception {
-    initMockEnv(10L, 99726143865000L,
+    Manager dbManager = spy(new Manager());
+    initMockEnv(dbManager,10L, 99726143865000L,
         100L, 1L, "0 0 12 * * ?");
     try {
       Whitebox.invokeMethod(dbManager, "initAutoStop");
@@ -229,7 +224,8 @@ public class ManagerMockTest {
 
   @Test
   public void testInitAutoStop3() throws Exception {
-    initMockEnv(10L, 12345L,
+    Manager dbManager = spy(new Manager());
+    initMockEnv(dbManager,10L, 12345L,
         100L, 1L, "0 0 12 * * ?");
     try {
       Whitebox.invokeMethod(dbManager, "initAutoStop");
@@ -241,7 +237,8 @@ public class ManagerMockTest {
 
   @Test
   public void testInitAutoStop4() throws Exception {
-    initMockEnv(10L, 12345L,
+    Manager dbManager = spy(new Manager());
+    initMockEnv(dbManager, 10L, 12345L,
         100L, -1L, "0 0 12 * * ?");
     try {
       Whitebox.invokeMethod(dbManager, "initAutoStop");
@@ -253,7 +250,8 @@ public class ManagerMockTest {
 
   @Test
   public void testInitAutoStop5() throws Exception {
-    initMockEnv(10L, 12345L,
+    Manager dbManager = spy(new Manager());
+    initMockEnv(dbManager,10L, 12345L,
         0L, 1L, "0 0 12 * * ?");
     try {
       Whitebox.invokeMethod(dbManager, "initAutoStop");
@@ -265,7 +263,8 @@ public class ManagerMockTest {
 
   @Test
   public void testInitAutoStop6() throws Exception {
-    initMockEnv(-10L, 12345L,
+    Manager dbManager = spy(new Manager());
+    initMockEnv(dbManager,-10L, 12345L,
         -10L, -1L, "0 0 12 * * ?");
     Whitebox.invokeMethod(dbManager, "initAutoStop");
     assertEquals(true, true);
@@ -273,6 +272,7 @@ public class ManagerMockTest {
 
   @Test
   public void testProcessTransaction() throws Exception {
+    Manager dbManager = spy(new Manager());
     TransactionCapsule transactionCapsuleMock = null;
     BlockCapsule blockCapsuleMock = PowerMockito.mock(BlockCapsule.class);
     Whitebox.invokeMethod(dbManager, "processTransaction",
@@ -282,6 +282,7 @@ public class ManagerMockTest {
 
   @Test
   public void testProcessTransaction1() throws Exception {
+    Manager dbManager = spy(new Manager());
     Protocol.Transaction transaction = Protocol.Transaction.newBuilder().setRawData(
         Protocol.Transaction.raw.newBuilder()
             .setData(ByteString.copyFrom("sb.toString()".getBytes(StandardCharsets.UTF_8))))
@@ -300,6 +301,7 @@ public class ManagerMockTest {
   @SneakyThrows
   @Test
   public void testRePush() {
+    Manager dbManager = spy(new Manager());
     Protocol.Transaction transaction = Protocol.Transaction.newBuilder().build();
     TransactionCapsule trx = new TransactionCapsule(transaction);
     TransactionStore transactionStoreMock = mock(TransactionStore.class);
@@ -316,6 +318,7 @@ public class ManagerMockTest {
   @SneakyThrows
   @Test
   public void testRePush1() {
+    Manager dbManager = spy(new Manager());
     Protocol.Transaction transaction = Protocol.Transaction.newBuilder().build();
     TransactionCapsule trx = new TransactionCapsule(transaction);
     TransactionStore transactionStoreMock = mock(TransactionStore.class);
@@ -350,6 +353,7 @@ public class ManagerMockTest {
 
   @Test
   public void testPostSolidityFilter() throws Exception {
+    Manager dbManager = spy(new Manager());
     Whitebox.invokeMethod(dbManager, "postSolidityFilter",
         100L, 10L);
     assertEquals(true, true);
@@ -357,6 +361,7 @@ public class ManagerMockTest {
 
   @Test
   public void testReOrgLogsFilter() throws Exception {
+    Manager dbManager = spy(new Manager());
     CommonParameter commonParameterMock = PowerMockito.mock(Args.class);
     PowerMockito.mockStatic(CommonParameter.class);
     ChainBaseManager chainBaseManagerMock = PowerMockito.mock(ChainBaseManager.class);
@@ -370,11 +375,6 @@ public class ManagerMockTest {
 
     Whitebox.invokeMethod(dbManager, "reOrgLogsFilter");
     assertEquals(true, true);
-  }
-
-  @Test
-  public void testGetContinuousBlockCapsule() {
-
   }
 
 }

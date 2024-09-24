@@ -3,7 +3,6 @@ package org.tron.common.runtime;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -16,13 +15,6 @@ import org.tron.core.vm.program.Program;
 @PrepareForTest({RuntimeImpl.class})
 @Slf4j
 public class RuntimeImplMockTest {
-  private RuntimeImpl runtime = new RuntimeImpl();
-
-  @Before
-  public void init() {
-
-  }
-
   @After
   public void  clearMocks() {
     Mockito.framework().clearInlineMocks();
@@ -30,6 +22,7 @@ public class RuntimeImplMockTest {
 
   @Test
   public void testSetResultCode1() throws Exception {
+    RuntimeImpl runtime = new RuntimeImpl();
     ProgramResult programResult = new ProgramResult();
 
     // exception instanceof BadJumpDestinationException
@@ -45,7 +38,6 @@ public class RuntimeImplMockTest {
     programResult.setException(outOfTimeException);
     //power mock private method：setResultCode
     Whitebox.invokeMethod(runtime,"setResultCode", programResult);
-
 
     // exception instanceof PrecompiledContractException
     Program.PrecompiledContractException precompiledContractException
