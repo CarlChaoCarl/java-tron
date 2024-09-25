@@ -161,14 +161,14 @@ offlinsCoverage {
 
     reports {
         html.enabled.set true // Optional. By default `true`
-        html.location.set project.file('build/custom/html') // Optional. By default `build/reports/jacoco/html`
+        html.location.set project.file('build/reports/jacoco/test/html') // Optional. By default `build/reports/jacoco/html`
 
         xml.enabled.set true // Optional. By default `false`
-        xml.location.set project.file('build/custom/xmlCoverage.xml')
+        xml.location.set project.file('build/reports/jacoco/test/jacocoTestReport.xml')
         // Optional. By default `build/reports/jacoco/coverageReport.xml`
 
         csv.enabled.set true // Optional. By default `false`
-        csv.location.set project.file('build/custom/csvCoverage.csv')
+        csv.location.set project.file('build/reports/jacoco/test/csvCoverage.csv')
         // Optional. By default `build/reports/jacoco/coverageReport.csv`
     }
 }

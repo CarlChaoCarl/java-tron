@@ -30,10 +30,6 @@ import java.util.List;
     Util.class,
 })
 public class UtilMockTest  {
-  @Before
-  public void init() {
-  }
-
   @After
   public void  clearMocks() {
     Mockito.framework().clearInlineMocks();

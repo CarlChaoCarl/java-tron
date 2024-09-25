@@ -26,10 +26,6 @@ import static org.junit.Assert.assertThrows;
     JsonFormat.class,
 })
 public class JsonFormatTest {
-  @Before
-  public void init() {
-  }
-
   @After
   public void  clearMocks() {
     Mockito.framework().clearInlineMocks();
