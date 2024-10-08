@@ -24,8 +24,6 @@ import org.tron.protos.Protocol;
 import org.tron.protos.contract.BalanceContract;
 import org.tron.protos.contract.SmartContractOuterClass;
 
-
-
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
     Util.class,

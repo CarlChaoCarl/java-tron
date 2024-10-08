@@ -43,13 +43,16 @@ public class TransactionLogTriggerCapsuleMockTest {
   private static final String RECEIVER_ADDRESS = "41abd4b9367799eaa3197fecb144eb71de1e049150";
   private static final String CONTRACT_ADDRESS = "111111";
 
-  public TransactionCapsule transactionCapsule;
-  public BlockCapsule blockCapsule;
+  private TransactionCapsule transactionCapsule;
+  private BlockCapsule blockCapsule;
 
   @Before
   public void setup() {
-    blockCapsule = new BlockCapsule(1, Sha256Hash.ZERO_HASH,
-        System.currentTimeMillis(), Sha256Hash.ZERO_HASH.getByteString());
+    blockCapsule = new BlockCapsule(1,
+        Sha256Hash.ZERO_HASH,
+        System.currentTimeMillis(),
+        Sha256Hash.ZERO_HASH.getByteString()
+    );
   }
 
   @After
