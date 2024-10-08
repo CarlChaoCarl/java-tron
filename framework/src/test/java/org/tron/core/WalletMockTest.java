@@ -17,6 +17,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.LazyStringArrayList;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -24,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.google.protobuf.LazyStringArrayList;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -800,8 +800,10 @@ public class WalletMockTest {
     Wallet walletMock = mock(Wallet.class);
     byte[] contractAddress = "".getBytes(StandardCharsets.UTF_8);
     Protocol.Transaction transaction = Protocol.Transaction.newBuilder().build();
-    when(walletMock.triggerConstantContract(any(),any(),any(),any())).thenReturn(transaction);
-    when(walletMock.createTransactionCapsule(any(), any())).thenReturn(new TransactionCapsule(transaction));
+    when(walletMock.triggerConstantContract(any(),any(),any(),any()))
+        .thenReturn(transaction);
+    when(walletMock.createTransactionCapsule(any(), any()))
+        .thenReturn(new TransactionCapsule(transaction));
     when(walletMock.getShieldedContractScalingFactor(any())).thenCallRealMethod();
     try {
       byte[] listBytes = walletMock.getShieldedContractScalingFactor(contractAddress);
@@ -951,6 +953,7 @@ public class WalletMockTest {
         }
     );
   }
+
   @Test
   public void testGetShieldedTRC20LogType1() {
     Wallet wallet = new Wallet();
@@ -1166,6 +1169,6 @@ public class WalletMockTest {
 
     SmartContractOuterClass.SmartContractDataWrapper smartContractDataWrapper =
         wallet.getContractInfo(bytesMessage);
-    assertNotNull( smartContractDataWrapper);
+    assertNotNull(smartContractDataWrapper);
   }
 }

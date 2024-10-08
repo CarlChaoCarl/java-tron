@@ -1,10 +1,17 @@
 package org.tron.core.services.http;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.UnknownFieldSet;
+
+import java.io.CharArrayReader;
+import java.io.IOException;
+import java.io.StringWriter;
+
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -12,14 +19,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 import org.tron.protos.Protocol;
-
-import java.io.CharArrayReader;
-import java.io.IOException;
-import java.io.StringWriter;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
@@ -82,10 +81,10 @@ public class JsonFormatTest {
   @Test
   public void testUnsignedToString() throws Exception {
     String out1 = Whitebox.invokeMethod(JsonFormat.class,
-        "unsignedToString", 100l);
+        "unsignedToString", 100L);
     assertEquals("100", out1);
     String out2 = Whitebox.invokeMethod(JsonFormat.class,
-        "unsignedToString", -100l);
+        "unsignedToString", -100L);
     assertNotNull(out2);
 
     String out3 = Whitebox.invokeMethod(JsonFormat.class,

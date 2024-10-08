@@ -1,6 +1,14 @@
 package org.tron.common.logsfilter;
 
+import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.spy;
+import static org.powermock.api.mockito.PowerMockito.when;
+
 import com.google.protobuf.ByteString;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -23,14 +31,6 @@ import org.tron.core.db.TransactionTrace;
 import org.tron.p2p.utils.ByteArray;
 import org.tron.protos.Protocol;
 import org.tron.protos.contract.BalanceContract;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.spy;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
@@ -107,11 +107,11 @@ public class TransactionLogTriggerCapsuleMockTest {
     transactionCapsule = new TransactionCapsule(builder2.build(),
         Protocol.Transaction.Contract.ContractType.TransferContract);
     InternalTransaction internalTransaction = new InternalTransaction(
-      "parentHash".getBytes(), 10, 0,
-      "sendAddress".getBytes(),
-      "transferToAddress".getBytes(),
-      100L, "data".getBytes(), "note",
-      0L, new HashMap<>()
+        "parentHash".getBytes(), 10, 0,
+        "sendAddress".getBytes(),
+        "transferToAddress".getBytes(),
+        100L, "data".getBytes(), "note",
+        0L, new HashMap<>()
     );
     List<InternalTransaction> internalTransactionList = new ArrayList<>();
     internalTransactionList.add(internalTransaction);

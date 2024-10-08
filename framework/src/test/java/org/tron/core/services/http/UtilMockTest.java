@@ -2,10 +2,14 @@ package org.tron.core.services.http;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
+
+import java.security.InvalidParameterException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -20,9 +24,6 @@ import org.tron.protos.Protocol;
 import org.tron.protos.contract.BalanceContract;
 import org.tron.protos.contract.SmartContractOuterClass;
 
-import java.security.InvalidParameterException;
-import java.util.ArrayList;
-import java.util.List;
 
 
 @RunWith(PowerMockRunner.class)
@@ -77,8 +78,10 @@ public class UtilMockTest  {
     final String RECEIVER_ADDRESS = "41abd4b9367799eaa3197fecb144eb71de1e049150";
     BalanceContract.TransferContract.Builder builder2 =
         BalanceContract.TransferContract.newBuilder()
-            .setOwnerAddress(ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS)))
-            .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(RECEIVER_ADDRESS)));
+            .setOwnerAddress(
+                ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS)))
+            .setToAddress(
+                ByteString.copyFrom(ByteArray.fromHexString(RECEIVER_ADDRESS)));
     return new TransactionCapsule(builder2.build(),
         Protocol.Transaction.Contract.ContractType.TransferContract);
   }
@@ -86,12 +89,14 @@ public class UtilMockTest  {
   @Test
   public void testPrintTransactionSignWeight() {
     TransactionCapsule transactionCapsule = getTransactionCapsuleExample();
-    GrpcAPI.TransactionExtention transactionExtention = GrpcAPI.TransactionExtention.newBuilder()
-        .setTransaction(transactionCapsule.getInstance())
-        .build();
-    GrpcAPI.TransactionSignWeight txSignWeight = GrpcAPI.TransactionSignWeight.newBuilder()
-        .setTransaction(transactionExtention)
-        .build();
+    GrpcAPI.TransactionExtention transactionExtention =
+        GrpcAPI.TransactionExtention.newBuilder()
+            .setTransaction(transactionCapsule.getInstance())
+            .build();
+    GrpcAPI.TransactionSignWeight txSignWeight =
+        GrpcAPI.TransactionSignWeight.newBuilder()
+            .setTransaction(transactionExtention)
+            .build();
 
     String out = Util.printTransactionSignWeight(txSignWeight, true);
     Assert.assertNotNull(out);
@@ -100,13 +105,16 @@ public class UtilMockTest  {
   @Test
   public void testPrintTransactionApprovedList() {
     TransactionCapsule transactionCapsule = getTransactionCapsuleExample();
-    GrpcAPI.TransactionExtention transactionExtention = GrpcAPI.TransactionExtention.newBuilder()
-        .setTransaction(transactionCapsule.getInstance())
-        .build();
-    GrpcAPI.TransactionApprovedList transactionApprovedList = GrpcAPI.TransactionApprovedList.newBuilder()
-        .setTransaction(transactionExtention)
-        .build();
-    String out = Util.printTransactionApprovedList(transactionApprovedList, true);
+    GrpcAPI.TransactionExtention transactionExtention =
+        GrpcAPI.TransactionExtention.newBuilder()
+            .setTransaction(transactionCapsule.getInstance())
+            .build();
+    GrpcAPI.TransactionApprovedList transactionApprovedList =
+        GrpcAPI.TransactionApprovedList.newBuilder()
+            .setTransaction(transactionExtention)
+            .build();
+    String out = Util.printTransactionApprovedList(
+        transactionApprovedList, true);
     Assert.assertNotNull(out);
   }
 
@@ -124,7 +132,8 @@ public class UtilMockTest  {
     final String OWNER_ADDRESS = "41548794500882809695a8a687866e76d4271a1abc";
     SmartContractOuterClass.CreateSmartContract.Builder builder2 =
         SmartContractOuterClass.CreateSmartContract.newBuilder()
-            .setOwnerAddress(ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS)));
+            .setOwnerAddress(
+                ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS)));
     TransactionCapsule transactionCapsule = new TransactionCapsule(builder2.build(),
         Protocol.Transaction.Contract.ContractType.CreateSmartContract);
 
@@ -188,7 +197,8 @@ public class UtilMockTest  {
 
     Protocol.TransactionInfo.Builder builder = Protocol.TransactionInfo.newBuilder()
         .addAllLog(logs);
-    List<Protocol.TransactionInfo.Log>  logList = Util.convertLogAddressToTronAddress(builder.build());
+    List<Protocol.TransactionInfo.Log>  logList =
+        Util.convertLogAddressToTronAddress(builder.build());
     Assert.assertNotNull(logList.size() > 0);
   }
 
@@ -202,7 +212,8 @@ public class UtilMockTest  {
         }
     );
     String contract1 =
-        "{\"owner_address\":\"owner_address\", \"contract_address1\":\"contract_address\", \"data1\":\"data\"}";
+        "{\"owner_address\":\"owner_address\","
+            + " \"contract_address1\":\"contract_address\", \"data1\":\"data\"}";
     Assert.assertThrows(
         InvalidParameterException.class,
         () -> {
@@ -210,7 +221,8 @@ public class UtilMockTest  {
         }
     );
     String contract2 =
-        "{\"owner_address\":\"owner_address\", \"function_selector\":\"function_selector\", \"data\":\"data\"}";
+        "{\"owner_address\":\"owner_address\", "
+            + "\"function_selector\":\"function_selector\", \"data\":\"data\"}";
     Assert.assertThrows(
         InvalidParameterException.class,
         () -> {
@@ -231,7 +243,9 @@ public class UtilMockTest  {
 
     String str2 = "owner_address=owner_address&contract_address=contract_address";
     String ret2 = Util.getJsonString(str2);
-    String expect = "{\"owner_address\":\"owner_address\",\"contract_address\":\"contract_address\"}";
+    String expect =
+        "{\"owner_address\":\"owner_address\","
+            + "\"contract_address\":\"contract_address\"}";
     Assert.assertEquals(expect, ret2);
   }
 
