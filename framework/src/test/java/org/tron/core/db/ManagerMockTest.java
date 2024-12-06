@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Test;
 import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -72,7 +73,8 @@ public class ManagerMockTest {
          });
          MockedConstruction<BandwidthProcessor> mockedConstruction3 = mockConstruction(BandwidthProcessor.class,(mock, context) -> {
            when(mock).thenReturn(bandwidthProcessorMock);
-         })) {
+         });
+         MockedStatic<TransactionUtil> mockedStatic = mockStatic(TransactionUtil.class)) {
       Manager dbManager = mock(Manager.class);
       BalanceContract.TransferContract transferContract =
           BalanceContract.TransferContract.newBuilder()
@@ -104,9 +106,6 @@ public class ManagerMockTest {
       TransactionStore transactionStoreMock = mock(TransactionStore.class);
       TransactionInfoCapsule transactionInfoCapsuleMock = mock(TransactionInfoCapsule.class);
       Protocol.TransactionInfo transactionInfo = Protocol.TransactionInfo.newBuilder().build();
-
-      // mock static
-      mockStatic(TransactionUtil.class);
 
       Field field = dbManager.getClass().getDeclaredField("chainBaseManager");
       field.setAccessible(true);
@@ -169,8 +168,6 @@ public class ManagerMockTest {
     ChainBaseManager chainBaseManagerMock = mock(ChainBaseManager.class);
     Args argsMock = mock(Args.class);
 
-    mockStatic(CommonParameter.class);
-    mockStatic(Args.class);
     when(Args.getInstance()).thenReturn(argsMock);
 
     when(chainBaseManagerMock.getHeadBlockNum()).thenReturn(headNum);
@@ -190,109 +187,132 @@ public class ManagerMockTest {
   @Test
   public void testInitAutoStop() throws Exception {
     Manager dbManager = spy(new Manager());
-    initMockEnv(dbManager, 100L, 12345L,
-        10L, 0L, "0 0 12 * * ?");
+    try (MockedStatic<CommonParameter> methodTestMockedStatic
+             = mockStatic(CommonParameter.class)) {
+      initMockEnv(dbManager, 100L, 12345L,
+          10L, 0L, "0 0 12 * * ?");
 
-    assertThrows(
-        "shutDownBlockHeight 10 is less than headNum 100",
-        Exception.class,
-        () -> {
-          Method privateMethod = Manager.class.getDeclaredMethod(
-              "initAutoStop");
-          privateMethod.setAccessible(true);
-          privateMethod.invoke(dbManager);
-        }
-    );
+      assertThrows(
+          "shutDownBlockHeight 10 is less than headNum 100",
+          Exception.class,
+          () -> {
+            Method privateMethod = Manager.class.getDeclaredMethod(
+                "initAutoStop");
+            privateMethod.setAccessible(true);
+            privateMethod.invoke(dbManager);
+          }
+      );
+    }
+
   }
 
   @Test
   public void testInitAutoStop1() throws Exception {
     Manager dbManager = spy(new Manager());
-    initMockEnv(dbManager,10L, 12345L,
-        100L, 0L, "0 0 12 * * ?");
+    try (MockedStatic<CommonParameter> methodTestMockedStatic
+             = mockStatic(CommonParameter.class)) {
+      initMockEnv(dbManager,10L, 12345L,
+          100L, 0L, "0 0 12 * * ?");
 
-    assertThrows(
-        "shutDownBlockCount 0 is less than 1",
-        Exception.class,
-        () -> {
-          Method privateMethod = Manager.class.getDeclaredMethod(
-              "initAutoStop");
-          privateMethod.setAccessible(true);
-          privateMethod.invoke(dbManager);
-        }
-    );
+      assertThrows(
+          "shutDownBlockCount 0 is less than 1",
+          Exception.class,
+          () -> {
+            Method privateMethod = Manager.class.getDeclaredMethod(
+                "initAutoStop");
+            privateMethod.setAccessible(true);
+            privateMethod.invoke(dbManager);
+          }
+      );
+    }
   }
 
   @Test
   public void testInitAutoStop2() throws Exception {
     Manager dbManager = spy(new Manager());
-    initMockEnv(dbManager,10L, 99726143865000L,
-        100L, 1L, "0 0 12 * * ?");
+    try (MockedStatic<CommonParameter> methodTestMockedStatic
+             = mockStatic(CommonParameter.class)) {
+      initMockEnv(dbManager,10L, 99726143865000L,
+          100L, 1L, "0 0 12 * * ?");
 
-    assertThrows(
-        "shutDownBlockTime 0 0 12 * * ? is illegal",
-        Exception.class,
-        () -> {
-          Method privateMethod = Manager.class.getDeclaredMethod(
-              "initAutoStop");
-          privateMethod.setAccessible(true);
-          privateMethod.invoke(dbManager);
-        }
-    );
+      assertThrows(
+          "shutDownBlockTime 0 0 12 * * ? is illegal",
+          Exception.class,
+          () -> {
+            Method privateMethod = Manager.class.getDeclaredMethod(
+                "initAutoStop");
+            privateMethod.setAccessible(true);
+            privateMethod.invoke(dbManager);
+          }
+      );
+    }
+
   }
 
   @Test
   public void testInitAutoStop3() throws Exception {
     Manager dbManager = spy(new Manager());
-    initMockEnv(dbManager,10L, 12345L,
-        100L, 1L, "0 0 12 * * ?");
+    try (MockedStatic<CommonParameter> methodTestMockedStatic
+             = mockStatic(CommonParameter.class)) {
+      initMockEnv(dbManager,10L, 12345L,
+          100L, 1L, "0 0 12 * * ?");
 
-    assertThrows(
-        "shutDownBlockHeight 100 and shutDownBlockCount 1 set both",
-        Exception.class,
-        () -> {
-          Method privateMethod = Manager.class.getDeclaredMethod(
-              "initAutoStop");
-          privateMethod.setAccessible(true);
-          privateMethod.invoke(dbManager);
-        }
-    );
+      assertThrows(
+          "shutDownBlockHeight 100 and shutDownBlockCount 1 set both",
+          Exception.class,
+          () -> {
+            Method privateMethod = Manager.class.getDeclaredMethod(
+                "initAutoStop");
+            privateMethod.setAccessible(true);
+            privateMethod.invoke(dbManager);
+          }
+      );
+    }
+
   }
 
   @Test
   public void testInitAutoStop4() throws Exception {
     Manager dbManager = spy(new Manager());
-    initMockEnv(dbManager, 10L, 12345L,
-        100L, -1L, "0 0 12 * * ?");
+    try (MockedStatic<CommonParameter> methodTestMockedStatic
+             = mockStatic(CommonParameter.class)) {
+      initMockEnv(dbManager, 10L, 12345L,
+          100L, -1L, "0 0 12 * * ?");
 
-    assertThrows(
-        "shutDownBlockHeight 100 and shutDownBlockTime 0 0 12 * * ? set both",
-        Exception.class,
-        () -> {
-          Method privateMethod = Manager.class.getDeclaredMethod(
-              "initAutoStop");
-          privateMethod.setAccessible(true);
-          privateMethod.invoke(dbManager);
-        }
-    );
+      assertThrows(
+          "shutDownBlockHeight 100 and shutDownBlockTime 0 0 12 * * ? set both",
+          Exception.class,
+          () -> {
+            Method privateMethod = Manager.class.getDeclaredMethod(
+                "initAutoStop");
+            privateMethod.setAccessible(true);
+            privateMethod.invoke(dbManager);
+          }
+      );
+    }
+
   }
 
   @Test
   public void testInitAutoStop5() throws Exception {
     Manager dbManager = spy(new Manager());
-    initMockEnv(dbManager,10L, 12345L,
-        0L, 1L, "0 0 12 * * ?");
+    try (MockedStatic<CommonParameter> methodTestMockedStatic
+             = mockStatic(CommonParameter.class)) {
+      initMockEnv(dbManager,10L, 12345L,
+          0L, 1L, "0 0 12 * * ?");
 
-    assertThrows(
-        "shutDownBlockCount 1 and shutDownBlockTime 0 0 12 * * ? set both",
-        Exception.class,
-        () -> {
-          Method privateMethod = Manager.class.getDeclaredMethod(
-              "initAutoStop");
-          privateMethod.setAccessible(true);
-          privateMethod.invoke(dbManager);
-        }
-    );
+      assertThrows(
+          "shutDownBlockCount 1 and shutDownBlockTime 0 0 12 * * ? set both",
+          Exception.class,
+          () -> {
+            Method privateMethod = Manager.class.getDeclaredMethod(
+                "initAutoStop");
+            privateMethod.setAccessible(true);
+            privateMethod.invoke(dbManager);
+          }
+      );
+    }
+
   }
 
   @Test

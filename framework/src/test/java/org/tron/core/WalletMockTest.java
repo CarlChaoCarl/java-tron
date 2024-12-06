@@ -32,6 +32,7 @@ import com.google.protobuf.ProtocolStringList;
 import org.junit.After;
 import org.junit.Test;
 import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.tron.api.GrpcAPI;
 import org.tron.common.parameter.CommonParameter;
@@ -116,18 +117,13 @@ public class WalletMockTest {
         (mock, context) -> {
           when(mock.getInstance()).thenReturn(Protocol.Transaction.newBuilder().build());
         })) {
-      try {
-        Method privateMethod = Wallet.class.getDeclaredMethod(
+      Method privateMethod = Wallet.class.getDeclaredMethod(
             "createTransactionCapsuleWithoutValidateWithTimeout",
             com.google.protobuf.Message.class,
             Protocol.Transaction.Contract.ContractType.class,
             long.class);
-        privateMethod.setAccessible(true);
-        privateMethod.invoke(wallet, message, contractType, timeout);
-      } catch (Exception e) {
-        assertTrue(false);
-      }
-
+      privateMethod.setAccessible(true);
+      privateMethod.invoke(wallet, message, contractType, timeout);
       assertTrue(true);
     }
   }
@@ -836,13 +832,14 @@ public class WalletMockTest {
     triggerParam.addSpendAuthoritySignature(bytesMessage);
 
     CommonParameter commonParameterMock = mock(Args.class);
-    mockStatic(CommonParameter.class);
-    when(CommonParameter.getInstance()).thenReturn(commonParameterMock);
-    when(commonParameterMock.isFullNodeAllowShieldedTransactionArgs()).thenReturn(true);
+    try (MockedStatic<CommonParameter> mockedStatic = mockStatic(CommonParameter.class)) {
+      when(CommonParameter.getInstance()).thenReturn(commonParameterMock);
+      when(commonParameterMock.isFullNodeAllowShieldedTransactionArgs()).thenReturn(true);
 
-    assertThrows(ZksnarkException.class, () -> {
-      wallet.getTriggerInputForShieldedTRC20Contract(triggerParam.build());
-    });
+      assertThrows(ZksnarkException.class, () -> {
+        wallet.getTriggerInputForShieldedTRC20Contract(triggerParam.build());
+      });
+    }
   }
 
   @Test
@@ -866,13 +863,15 @@ public class WalletMockTest {
     triggerParam.addSpendAuthoritySignature(bytesMessage);
 
     CommonParameter commonParameterMock = mock(Args.class);
-    mockStatic(CommonParameter.class);
-    when(CommonParameter.getInstance()).thenReturn(commonParameterMock);
-    when(commonParameterMock.isFullNodeAllowShieldedTransactionArgs()).thenReturn(true);
+    try (MockedStatic<CommonParameter> mockedStatic = mockStatic(CommonParameter.class)) {
+      when(CommonParameter.getInstance()).thenReturn(commonParameterMock);
+      when(commonParameterMock.isFullNodeAllowShieldedTransactionArgs()).thenReturn(true);
 
-    GrpcAPI.BytesMessage reponse =
-        wallet.getTriggerInputForShieldedTRC20Contract(triggerParam.build());
-    assertNotNull(reponse);
+      GrpcAPI.BytesMessage reponse =
+          wallet.getTriggerInputForShieldedTRC20Contract(triggerParam.build());
+      assertNotNull(reponse);
+    }
+
   }
 
   @Test
@@ -1007,19 +1006,21 @@ public class WalletMockTest {
     BigInteger toAmount = new BigInteger("255");
 
     byte[] scalingFactorBytes = ByteUtil.bigIntegerToBytes(new BigInteger("-1"));
-    mockStatic(ByteUtil.class);
-    when(ByteUtil.bytesToBigInteger(any())).thenReturn(new BigInteger("-1"));
-    when(walletMock.getShieldedContractScalingFactor(any())).thenReturn(scalingFactorBytes);
+    try (MockedStatic<ByteUtil> mockedStatic = mockStatic(ByteUtil.class)) {
+      when(ByteUtil.bytesToBigInteger(any())).thenReturn(new BigInteger("-1"));
+      when(walletMock.getShieldedContractScalingFactor(any())).thenReturn(scalingFactorBytes);
 
-    Throwable thrown = assertThrows(InvocationTargetException.class, () -> {
-      Method privateMethod = Wallet.class.getDeclaredMethod(
-          "checkPublicAmount",
-          byte[].class, BigInteger.class, BigInteger.class);
-      privateMethod.setAccessible(true);
-      privateMethod.invoke(walletMock, address, fromAmount, toAmount);
-    });
-    Throwable cause = thrown.getCause();
-    assertTrue(cause instanceof ContractValidateException);
+      Throwable thrown = assertThrows(InvocationTargetException.class, () -> {
+        Method privateMethod = Wallet.class.getDeclaredMethod(
+            "checkPublicAmount",
+            byte[].class, BigInteger.class, BigInteger.class);
+        privateMethod.setAccessible(true);
+        privateMethod.invoke(walletMock, address, fromAmount, toAmount);
+      });
+      Throwable cause = thrown.getCause();
+      assertTrue(cause instanceof ContractValidateException);
+    }
+
   }
 
   @Test
@@ -1034,21 +1035,21 @@ public class WalletMockTest {
     long pos = 100L;
     byte[] ak = "ak".getBytes(StandardCharsets.UTF_8);
     byte[] nk = "nk".getBytes(StandardCharsets.UTF_8);
-    Wallet walletMock = mock(Wallet.class);
-    mockStatic(KeyIo.class);
-    when(KeyIo.decodePaymentAddress(any())).thenReturn(null);
+    try (MockedStatic<KeyIo> keyIoMockedStatic = mockStatic(KeyIo.class)) {
+      when(KeyIo.decodePaymentAddress(any())).thenReturn(null);
 
-    Throwable thrown = assertThrows(InvocationTargetException.class, () -> {
-      Method privateMethod = Wallet.class.getDeclaredMethod(
-          "getShieldedTRC20Nullifier",
-          GrpcAPI.Note.class, long.class, byte[].class,
-          byte[].class);
-      privateMethod.setAccessible(true);
-      privateMethod.invoke(wallet,
-          note, pos, ak, nk);
-    });
-    Throwable cause = thrown.getCause();
-    assertTrue(cause instanceof ZksnarkException);
+      Throwable thrown = assertThrows(InvocationTargetException.class, () -> {
+        Method privateMethod = Wallet.class.getDeclaredMethod(
+            "getShieldedTRC20Nullifier",
+            GrpcAPI.Note.class, long.class, byte[].class,
+            byte[].class);
+        privateMethod.setAccessible(true);
+        privateMethod.invoke(wallet,
+            note, pos, ak, nk);
+      });
+      Throwable cause = thrown.getCause();
+      assertTrue(cause instanceof ZksnarkException);
+    }
   }
 
   @Test
@@ -1156,24 +1157,26 @@ public class WalletMockTest {
         .build();
     byte[] ak = "ak".getBytes(StandardCharsets.UTF_8);
     byte[] nk = "nk".getBytes(StandardCharsets.UTF_8);
-    Wallet walletMock = mock(Wallet.class);
-    mockStatic(KeyIo.class);
-    when(KeyIo.decodePaymentAddress(any())).thenReturn(null);
 
-    Throwable thrown = assertThrows(InvocationTargetException.class, () -> {
-      Method privateMethod = Wallet.class.getDeclaredMethod(
-          "buildShieldedTRC20InputWithAK",
-          ShieldedTRC20ParametersBuilder.class,
-          GrpcAPI.SpendNoteTRC20.class,
-          byte[].class, byte[].class);
-      privateMethod.setAccessible(true);
-      privateMethod.invoke(wallet,
-          builder,
-          spendNote,
-          ak, nk);
-    });
-    Throwable cause = thrown.getCause();
-    assertTrue(cause instanceof ZksnarkException);
+    try (MockedStatic<KeyIo> keyIoMockedStatic = mockStatic(KeyIo.class)) {
+      when(KeyIo.decodePaymentAddress(any())).thenReturn(null);
+
+      Throwable thrown = assertThrows(InvocationTargetException.class, () -> {
+        Method privateMethod = Wallet.class.getDeclaredMethod(
+            "buildShieldedTRC20InputWithAK",
+            ShieldedTRC20ParametersBuilder.class,
+            GrpcAPI.SpendNoteTRC20.class,
+            byte[].class, byte[].class);
+        privateMethod.setAccessible(true);
+        privateMethod.invoke(wallet,
+            builder,
+            spendNote,
+            ak, nk);
+      });
+      Throwable cause = thrown.getCause();
+      assertTrue(cause instanceof ZksnarkException);
+    }
+
   }
 
   @Test
@@ -1197,27 +1200,29 @@ public class WalletMockTest {
     byte[] nk = "nk".getBytes(StandardCharsets.UTF_8);
     PaymentAddress paymentAddress = mock(PaymentAddress.class);
     DiversifierT diversifierT = mock(DiversifierT.class);
-    Wallet walletMock = mock(Wallet.class);
-    mockStatic(KeyIo.class);
-    when(KeyIo.decodePaymentAddress(any())).thenReturn(paymentAddress);
-    when(paymentAddress.getD()).thenReturn(diversifierT);
-    when(paymentAddress.getPkD()).thenReturn("pkd".getBytes());
 
-    Method privateMethod = Wallet.class.getDeclaredMethod(
-        "buildShieldedTRC20InputWithAK",
-        ShieldedTRC20ParametersBuilder.class,
-        GrpcAPI.SpendNoteTRC20.class,
-        byte[].class, byte[].class);
-    privateMethod.setAccessible(true);
-    privateMethod.invoke(wallet,
-        builder,
-        spendNote,
-        ak, nk);
-    assertTrue(true);
+    try (MockedStatic<KeyIo> keyIoMockedStatic = mockStatic(KeyIo.class)) {
+      when(KeyIo.decodePaymentAddress(any())).thenReturn(paymentAddress);
+      when(paymentAddress.getD()).thenReturn(diversifierT);
+      when(paymentAddress.getPkD()).thenReturn("pkd".getBytes());
+
+      Method privateMethod = Wallet.class.getDeclaredMethod(
+          "buildShieldedTRC20InputWithAK",
+          ShieldedTRC20ParametersBuilder.class,
+          GrpcAPI.SpendNoteTRC20.class,
+          byte[].class, byte[].class);
+      privateMethod.setAccessible(true);
+      privateMethod.invoke(wallet,
+          builder,
+          spendNote,
+          ak, nk);
+      assertTrue(true);
+    }
+
   }
 
   @Test
-  public void testBuildShieldedTRC20Input() throws ZksnarkException {
+  public void testBuildShieldedTRC20Input() throws Exception {
     Wallet wallet = new Wallet();
     ShieldedTRC20ParametersBuilder builder =  new ShieldedTRC20ParametersBuilder("transfer");
     GrpcAPI.Note note = GrpcAPI.Note.newBuilder()
@@ -1237,11 +1242,10 @@ public class WalletMockTest {
     PaymentAddress paymentAddress = mock(PaymentAddress.class);
     DiversifierT diversifierT = mock(DiversifierT.class);
 
-    mockStatic(KeyIo.class);
-    when(KeyIo.decodePaymentAddress(any())).thenReturn(paymentAddress);
-    when(paymentAddress.getD()).thenReturn(diversifierT);
-    when(paymentAddress.getPkD()).thenReturn("pkd".getBytes());
-    try {
+    try (MockedStatic<KeyIo> keyIoMockedStatic = mockStatic(KeyIo.class)) {
+      when(KeyIo.decodePaymentAddress(any())).thenReturn(paymentAddress);
+      when(paymentAddress.getD()).thenReturn(diversifierT);
+      when(paymentAddress.getPkD()).thenReturn("pkd".getBytes());
       Method privateMethod = Wallet.class.getDeclaredMethod(
           "buildShieldedTRC20Input",
           ShieldedTRC20ParametersBuilder.class,
@@ -1252,8 +1256,6 @@ public class WalletMockTest {
           builder,
           spendNote,
           expandedSpendingKey);
-    } catch (Exception e) {
-      assertTrue(false);
     }
   }
 
