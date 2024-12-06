@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.protobuf.ProtocolStringList;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
@@ -83,6 +84,11 @@ import org.tron.protos.contract.SmartContractOuterClass;
 
 
 public class WalletMockTest {
+
+  @Before
+  public void init() {
+    CommonParameter.PARAMETER.setMinEffectiveConnection(0);
+  }
 
   @After
   public void  clearMocks() {
