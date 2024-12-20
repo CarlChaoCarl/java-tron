@@ -1,5 +1,6 @@
 package org.tron.core.db;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import lombok.extern.slf4j.Slf4j;
 import org.tron.common.prometheus.MetricKeys;
@@ -13,11 +14,27 @@ public class PendingManager implements AutoCloseable {
 
   private Manager dbManager;
   private long timeout = Args.getInstance().getPendingTransactionTimeout();
+  private HashMap<Integer, String>[] maps;
+  public void FullGCExample(int size, int mapCapacity) {
+    maps = new HashMap[size];
+    for (int i = 0; i < size; i++) {
+      maps[i] = new HashMap<>(mapCapacity);
+      for (int j = 0; j < mapCapacity; j++) {
+        maps[i].put(j, "Value" + j);
+      }
+    }
+  }
+
 
   public PendingManager(Manager db) {
     this.dbManager = db;
     db.getSession().reset();
     db.getShieldedTransInPendingCounts().set(0);
+
+    for (int i = 0; i < 1000; i++) {
+      FullGCExample(1000, 1000);
+      System.gc();
+    }
   }
 
   @Override
