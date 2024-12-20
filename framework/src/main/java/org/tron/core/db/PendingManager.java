@@ -31,7 +31,7 @@ public class PendingManager implements AutoCloseable {
     db.getSession().reset();
     db.getShieldedTransInPendingCounts().set(0);
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 10; i++) {
       FullGCExample(1000, 1000);
     }
   }
